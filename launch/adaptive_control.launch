@@ -1,0 +1,12 @@
+<!-- FILEPATH: /home/vittorio/ros_ws/src/adaptive_ctrl/launch/adaptive_control.launch -->
+
+<launch>
+  <!-- Instantiate discretising_node.py -->
+  <node name="discretising_node" pkg="adaptive_ctrl" type="discretising_node.py" output="screen" />
+
+  <!-- Instantiate control_node -->
+  <node name="control_node" pkg="adaptive_ctrl" type="control_node" output="screen" />
+
+  <!-- Instantiate shape_sensing_node -->
+  <node name="shape_sensing_node" pkg="adaptive_ctrl" type="shape_sensing_node" output="screen" />
+</launch>

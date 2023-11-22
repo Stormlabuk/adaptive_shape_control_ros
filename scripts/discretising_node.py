@@ -7,7 +7,7 @@ from adaptive_ctrl.srv import DiscretiseCurve, DiscretiseCurveResponse, Discreti
 
 class DiscretisingNode:
     def __init__(self):
-        self.pub = rospy.Publisher('rl_angles', rl_angles, queue_size=10)
+        self.pub = rospy.Publisher('obv_angles', rl_angles, queue_size=10)
         rospy.init_node('discretising_node', anonymous=True)
         rospy.Service('discretise_curve', DiscretiseCurve, self.points_to_angles)
         print("Discretising node started")

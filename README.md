@@ -17,20 +17,26 @@ Instructions on how to install and set up the project.
 ### To-Do
 
 - [x] Annotate Discretisation Node
-- [ ] Make number of joints in disc node a ros_param
+- [ ] Write out a skeleton of the whole system, to implement later
 - [ ] Make a precomputation node
 - [ ] Implement error calculating node
 - [ ] Implement control loop node
+- [ ] Make a path extractor node
 - [ ] Implement an image processing node
 - [ ] Make it pass the centre-line to the discretisation node
+- [ ] Make number of joints in disc node a ros_param
 
 ### Nodes
 
 - [Control Loop](src/control_loop.cpp) takes in the shape info and figures out the error. It will publish either the updated field or the the error, TBD.
 
+- [Precomputation Node](src/precomputation_node.cpp) takes in desired shape and calculates the required field.
+
 - [Shape Sensing](src/shape_sensing.cpp) takes in sensor input to calculate the observed shape and publish it out.
 
 - [Discretisation Node](scripts/discretising_node.py) Takes a centre-line using service [DiscreteCurve](srv/DiscretiseCurve.srv) and publishes its rigid-link joint representation through [rl_angles](msg/rl_angles.msg). The number of joints is currently hardcoded, but should be passed in [DiscreteCurve](srv/DiscretiseCurve.srv) call, this will likely be an integer advertised by the [Control Loop](src/control_loop.cpp).
+
+- [Path extractor node](src/path_extractor.cpp) Takes in an image of the phantom and calculates a center-line, which is then translated to joint desired joint angles, which arefed to the [precomputation node](src/precomputation_node.cpp).
 
 ### Topics
 
