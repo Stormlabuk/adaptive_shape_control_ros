@@ -8,7 +8,6 @@ from adaptive_ctrl.srv import DiscretiseCurve, DiscretiseCurveResponse, Discreti
 class DiscretisingNode:
     def __init__(self):
         self.pub = rospy.Publisher('rl_angles', rl_angles, queue_size=10)
-        self.joint_no = 6 # needs to be ros_param later
         rospy.init_node('discretising_node', anonymous=True)
         rospy.Service('discretise_curve', DiscretiseCurve, self.points_to_angles)
         print("Discretising node started")
@@ -18,7 +17,7 @@ class DiscretisingNode:
         x = np.array(req.px)
         y = np.array(req.py)
         
-        xinter, yinter = self.disc_points(x, y)
+        xinter, yinter = self.disc_points(x, y, req.num_points)
         dx = xinter[+1:]-xinter[:-1]
         dy = yinter[+1:]-yinter[:-1]
         
@@ -28,16 +27,16 @@ class DiscretisingNode:
         angles = th * 180 / np.pi
         
         res = DiscretiseCurveResponse(angles)
-        angles_msg = rl_angles(angles=res.angles, count=self.joint_no)
+        angles_msg = rl_angles(angles=res.angles, count=req.num_points)
         self.pub.publish(angles_msg)
         return res
 
-    def disc_points(self, x, y):
+    def disc_points(self, x, y, num_points = 6):
         dx, dy = x[+1:]-x[:-1],  y[+1:]-y[:-1]
         ds = np.array((0, *np.sqrt(dx*dx+dy*dy)))
         s = np.cumsum(ds)
-        xinter = np.interp(np.linspace(0, s[-1], self.joint_no), s, x)
-        yinter = np.interp(np.linspace(0, s[-1], self.joint_no), s, y)
+        xinter = np.interp(np.linspace(0, s[-1], num_points), s, x)
+        yinter = np.interp(np.linspace(0, s[-1], num_points), s, y)
         xinter = np.insert(xinter, 0, xinter[0])
         yinter = np.insert(yinter, 0, 0)
         

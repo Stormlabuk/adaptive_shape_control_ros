@@ -16,25 +16,28 @@ def read_csv():
     data = np.array(selected_data)
     x = data[:, 0].astype(float)
     y = data[:, 1].astype(float)
-    if(len(x) != len(y)):
+    if (len(x) != len(y)):
         print("Error: x and y are not the same length")
     else:
-        return x, y, len(x)
+        return x, y
+
 
 def sample_trigger():
     print("Waiting for service")
-    
-    px, py, num_points = read_csv()
-    
+    num_points = 6  # desired number of joints.
+    # angles will be calculated for num_points-1
+    # this should be a ros_param soon
+    px, py = read_csv()
+
     rospy.wait_for_service('discretise_curve')
     try:
         print("Service found")
-        discretise_curve = rospy.ServiceProxy('discretise_curve', DiscretiseCurve)
+        discretise_curve = rospy.ServiceProxy(
+            'discretise_curve', DiscretiseCurve)
         resp1 = discretise_curve(num_points, px, py)
     except rospy.ServiceException as e:
-        print("Service call failed: %s"%e)
+        print("Service call failed: %s" % e)
 
 
 if __name__ == "__main__":
     angles = sample_trigger()
-    
