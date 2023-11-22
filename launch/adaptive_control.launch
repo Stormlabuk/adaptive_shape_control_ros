@@ -9,4 +9,6 @@
 
   <!-- Instantiate shape_sensing_node -->
   <node name="shape_sensing_node" pkg="adaptive_ctrl" type="shape_sensing_node" output="screen" />
+
+  <node name="precomputation_node" pkg="adaptive_ctrl" type="precomputation_node" output="screen" />
 </launch>
