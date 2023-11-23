@@ -188,7 +188,7 @@ target_link_libraries(example
 catkin_install_python(PROGRAMS
   scripts/discretising_node.py
   scripts/sample_trigger.py
-  scripts/sensing_disc_bridge.py
+  scripts/sample_trigger_bridge.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
