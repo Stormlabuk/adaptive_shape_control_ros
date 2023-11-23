@@ -146,7 +146,9 @@ include_directories(
 add_executable(shape_sensing_node src/shape_sensing.cpp)
 add_executable(control_node src/control_loop.cpp)
 add_executable(precomputation_node src/precomputation_node.cpp)
+add_executable(path_extraction_node src/path_extractor.cpp)
 add_executable(example src/example.cpp)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -160,6 +162,7 @@ add_executable(example src/example.cpp)
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+
 target_link_libraries(shape_sensing_node
   ${catkin_LIBRARIES}
   ${OpenCV_LIBS}
@@ -174,6 +177,10 @@ target_link_libraries(precomputation_node
 )
 
 target_link_libraries(example
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(path_extraction_node
   ${catkin_LIBRARIES}
 )
 #############

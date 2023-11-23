@@ -17,8 +17,10 @@ Instructions on how to install and set up the project.
 ### To-Do
 
 - [x] Annotate Discretisation Node
-- [ ] Wire up all the nodes, implementation follows later.
+- [x] Wire up all the nodes, implementation follows later.
+  - [x] Centre-line extractor
 - [ ] Implement precomputation node
+  - [ ] Ensure field precals are trigger-based
 - [ ] Implement error calculating node
 - [ ] Implement control loop node
 - [ ] Implement path extractor node
@@ -36,7 +38,7 @@ Instructions on how to install and set up the project.
 
 - [Discretisation Node](scripts/discretising_node.py) Takes a centre-line using service [DiscreteCurve](srv/DiscretiseCurve.srv) and publishes its rigid-link joint representation through [rl_angles](msg/rl_angles.msg). The number of joints is currently hardcoded, but should be passed in [DiscreteCurve](srv/DiscretiseCurve.srv) call, this will likely be an integer advertised by the [Control Loop](src/control_loop.cpp).
 
-- [Path extractor node](src/path_extractor.cpp) Takes in an image of the phantom and calculates a center-line, which is then translated to joint desired joint angles, which arefed to the [precomputation node](src/precomputation_node.cpp).
+- [Path extractor node](src/path_extractor.cpp) Takes in an image of the phantom and calculates a centre-line, which is then translated to joint desired joint angles, which arefed to the [precomputation node](src/precomputation_node.cpp).
 
 ### Node graph
 
