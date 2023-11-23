@@ -38,6 +38,9 @@ int main(int argc, char** argv)
     {
         // Create a new "tent_curvature" message
         adaptive_ctrl::tent_curvature msg;
+        msg.num_points = 0;
+        msg.px = {};
+        msg.py = {};
 
         // TODO: Fill in the message fields with your desired values
 

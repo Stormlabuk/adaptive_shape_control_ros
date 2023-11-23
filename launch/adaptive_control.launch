@@ -3,7 +3,7 @@
 <launch>
   <!-- Instantiate discretising_node.py -->
   <node name="discretising_node" pkg="adaptive_ctrl" type="discretising_node.py" output="screen" />
-
+  
   <!-- Instantiate control_node -->
   <node name="control_node" pkg="adaptive_ctrl" type="control_node" output="screen" />
 
@@ -11,4 +11,6 @@
   <node name="shape_sensing_node" pkg="adaptive_ctrl" type="shape_sensing_node" output="screen" />
 
   <node name="precomputation_node" pkg="adaptive_ctrl" type="precomputation_node" output="screen" />
+
+  
 </launch>
