@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   message_generation
+  cv_bridge
+  image_transport
 )
 
 ## System dependencies are found with CMake's conventions
@@ -148,7 +150,7 @@ add_executable(control_node src/control_loop.cpp)
 add_executable(precomputation_node src/precomputation_node.cpp)
 add_executable(path_extraction_node src/path_extractor.cpp)
 add_executable(example src/example.cpp)
-
+add_executable(occupancy_grid src/occupancy_grid.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -183,6 +185,11 @@ target_link_libraries(example
 target_link_libraries(path_extraction_node
   ${catkin_LIBRARIES}
 )
+
+target_link_libraries(occupancy_grid
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBS}
+)
 #############
 ## Install ##
 #############
@@ -196,6 +203,7 @@ catkin_install_python(PROGRAMS
   scripts/discretising_node.py
   scripts/sample_trigger.py
   scripts/sample_trigger_bridge.py
+  scripts/occ_grid.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
