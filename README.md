@@ -11,9 +11,10 @@ ROS implementation of the Shape-Forming Adaptive Controller found in [Tentacle A
 ## Installation
 
 ```bash
-sudo apt install python3-rosdep
+sudo apt install python3-rosdep python3-catkin-tools
 cd ~/ros_ws
 rosdep update && rosdep install --from-paths src/ -y -r
+catkin build
 ```
 
 ### Other dependencies
