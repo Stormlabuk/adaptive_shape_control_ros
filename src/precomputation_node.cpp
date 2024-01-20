@@ -1,4 +1,4 @@
-#include <adaptive_ctrl/rl_angles.h>
+#include <shapeforming_msgs/rl_angles.h>
 #include <ros/ros.h>
 #include <ros_coils/magField.h>
 #include <std_srvs/Trigger.h>
@@ -20,7 +20,7 @@ class PrecomputationNode {
         magFieldPub = nh.advertise<ros_coils::magField>("/base_field", 10);
     }
 
-    void rlAnglesCallback(const adaptive_ctrl::rl_angles::ConstPtr& msg) {
+    void rlAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg) {
         // Create a new "magField" message
         ROS_INFO("Received new angles");
         precompClient = nh.serviceClient<std_srvs::Trigger>("/precomp");

@@ -1,4 +1,4 @@
-# Project Name
+# Adaptive Shape Control
 
 ROS implementation of the Shape-Forming Adaptive Controller found in [Tentacle Adaptive Controller](https://github.com/VFrancescon/TentacleAdaptiveController).
 
@@ -10,7 +10,15 @@ ROS implementation of the Shape-Forming Adaptive Controller found in [Tentacle A
 
 ## Installation
 
-Instructions on how to install and set up the project.
+```bash
+sudo apt install python3-rosdep
+cd ~/ros_ws
+rosdep update && rosdep install --from-paths src/ -y -r
+```
+
+### Other dependencies
+
+[Messages](https://github.com/Stormlabuk/shapeforming_msgs)
 
 ## Dev Notes
 

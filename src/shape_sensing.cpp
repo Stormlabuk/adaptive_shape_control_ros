@@ -2,7 +2,7 @@
 #define SHAPE_SENSING_CPP
 
 #include <ros/ros.h>
-#include <adaptive_ctrl/tent_curvature.h>
+#include <shapeforming_msgs/tent_curvature.h>
 #include <sensor_msgs/Image.h>
 #include <opencv2/opencv.hpp>
 
@@ -26,7 +26,7 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
 
     // Create a publisher for the "tent_curvature" message
-    ros::Publisher shape_pub = nh.advertise<adaptive_ctrl::tent_curvature>("tent_curvature_topic", 10);
+    ros::Publisher shape_pub = nh.advertise<shapeforming_msgs::tent_curvature>("tent_curvature_topic", 10);
 
     // Create a subscriber for the "camera_input" topic
     ros::Subscriber image_sub = nh.subscribe("camera_input", 10, imageCallback);
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     while (ros::ok())
     {
         // Create a new "tent_curvature" message
-        adaptive_ctrl::tent_curvature msg;
+        shapeforming_msgs::tent_curvature msg;
         msg.num_points = 0;
         msg.px = {};
         msg.py = {};

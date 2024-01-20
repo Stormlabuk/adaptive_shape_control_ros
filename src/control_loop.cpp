@@ -1,18 +1,18 @@
 #include <ros/ros.h>
 #include <eigen3/Eigen/Core>
-#include <adaptive_ctrl/rl_angles.h>
-#include <adaptive_ctrl/error.h>
+#include <shapeforming_msgs/rl_angles.h>
+#include <shapeforming_msgs/error.h>
 #include <ros_coils/magField.h>
 
 
-void desAnglesCallback(const adaptive_ctrl::rl_angles::ConstPtr msg)
+void desAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr msg)
 {
     // Process desired angles
     std::vector<float> desAngles = msg->angles;
     // TODO: Add your desired angles processing code here
 }
 
-void obvAnglesCallback(const adaptive_ctrl::rl_angles::ConstPtr& msg)
+void obvAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg)
 {
     // Process observed angles
     std::vector<float> obvAngles = msg->angles;
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 
     // Create publisher for field topic
     fieldPub = nh.advertise<ros_coils::magField>("/field", 10);
-    errorPub = nh.advertise<adaptive_ctrl::error>("/error", 10);
+    errorPub = nh.advertise<shapeforming_msgs::error>("/error", 10);
     // TODO: Add your control loop code here
 
     ros::spin();

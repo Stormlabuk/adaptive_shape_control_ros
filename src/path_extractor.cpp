@@ -1,6 +1,6 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
-#include <adaptive_ctrl/rl_angles.h>
+#include <shapeforming_msgs/rl_angles.h>
 
 class CameraSubscriber
 {
@@ -9,7 +9,7 @@ public:
     {
         ros::NodeHandle nh;
         camera_sub_ = nh.subscribe("/camera_input", 10, &CameraSubscriber::cameraCallback, this);
-        des_angles_pub_ = nh.advertise<adaptive_ctrl::rl_angles>("/des_angles", 10);
+        des_angles_pub_ = nh.advertise<shapeforming_msgs::rl_angles>("/des_angles", 10);
     }
 
     void cameraCallback(const sensor_msgs::Image::ConstPtr& msg)

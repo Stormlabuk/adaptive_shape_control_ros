@@ -9,9 +9,9 @@ project(adaptive_ctrl)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   ros_coils
+  shapeforming_msgs
   roscpp
   rospy
-  message_generation
   cv_bridge
   image_transport
 )
@@ -57,18 +57,6 @@ find_package( OpenCV REQUIRED )
 #   Message2.msg
 # )
 
-add_message_files(
-  FILES
-  error.msg
-  rl_angles.msg
-  tent_curvature.msg
-)
-
-# Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  DiscretiseCurve.srv
-)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -78,10 +66,10 @@ add_service_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs  # Or other packages containing msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -115,7 +103,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES adaptive_ctrl
- CATKIN_DEPENDS ros_coils roscpp rospy message_runtime
+ CATKIN_DEPENDS ros_coils shapeforming_msgs roscpp rospy message_runtime
 #  DEPENDS system_lib
 )
 
