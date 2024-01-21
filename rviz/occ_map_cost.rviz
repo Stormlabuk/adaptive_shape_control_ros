@@ -4,9 +4,10 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /Global Options1
         - /OccupancyGrid CostMap1
         - /OccupancyGrid Map1
-      Splitter Ratio: 0.699999988079071
+      Splitter Ratio: 0.4882352948188782
     Tree Height: 725
   - Class: rviz/Selection
     Name: Selection
@@ -81,7 +82,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/path_line_markers
       Name: Path Line Markers
       Namespaces:
-        lazythetastarsafetycost: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -129,7 +130,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/path_points_markers
       Name: Path Point Markers
       Namespaces:
-        lazythetastarsafetycost: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 0.5
@@ -208,7 +209,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 746.8591918945312
+      Distance: 656.9057006835938
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -216,17 +217,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 266.91009521484375
-        Y: 24.609371185302734
-        Z: 9.312585461884737e-06
+        X: 226.92410278320312
+        Y: 33.361358642578125
+        Z: 3.4444961784174666e-05
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.544796347618103
+      Pitch: 1.1047967672348022
       Target Frame: <Fixed Frame>
-      Yaw: 4.427608489990234
+      Yaw: 4.535794734954834
     Saved: ~
 Window Geometry:
   Displays:
@@ -244,5 +245,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 36
-  Y: 776
+  X: 376
+  Y: 745

@@ -2,10 +2,9 @@
     <arg name="output" default="screen"/>
     
     <arg name="algorithm_name"      default="thetastar"/>
-    <arg name="use_costs"           default="false"/>
+    <arg name="use_costs"           default="true"/>
     <!-- This param is very important -->   
     <arg name="use3d"               default="false"/>
-
     <arg name="world_size_x"        default="600"/>
     <arg name="world_size_y"        default="600"/>
     <arg name="resolution"          default="1"/>
@@ -16,7 +15,7 @@
 
     <arg name="save_data"           default="false"/>
     <!-- This should be a folder -->
-    <arg name="data_folder"         default="$(env HOME)"/>
+    <arg name="data_folder"         default="$(find adaptive_ctrl)/output_data"/>
     <arg name="overlay_markers"     default="false"/>
 
     <arg name="cost_weight" default="2.0"/>
@@ -25,13 +24,13 @@
     <arg name="cost_scaling_factor" default="0.8"/>
     <arg name="robot_radius"        default="0.4"/>
         
-    <!-- <node pkg="adaptive_ctrl" type="occ_grid.py" name="grid_py" output="$(arg output)"/> -->
+    <node pkg="adaptive_ctrl" type="occ_grid.py" name="grid_py" output="$(arg output)"/>
     
     <node pkg="heuristic_planners" type="planner_ros_node" name="planner_ros_node" output="$(arg output)">
         <!-- <remap from="points" to="/grid3d/map_point_cloud"/> -->
-        <!-- <remap from="grid" to="/map"                        unless="$(arg use_costs)"/>
-        <remap from="grid" to="/costmap_2d/costmap/costmap" if="$(arg use_costs)"/>
-        <param name="map_path"              value="$(arg map)"/> -->
+        <!-- <remap from="grid" to="/map"                        unless="$(arg use_costs)"/> -->
+        <remap from="grid" to="/costmap" if="$(arg use_costs)"/>
+        <!-- <param name="map_path"              value="$(arg map)"/> -->
         <param name="world_size_x"          value="$(arg world_size_x)"/>
         <param name="world_size_y"          value="$(arg world_size_y)"/>
         <param name="world_size_z"          value="$(arg world_size_z)"/>
@@ -52,5 +51,5 @@
         <param name="robot_radius"          value="$(arg robot_radius)"/>
     </node>
   
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_markers.rviz"/>
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_cost.rviz"/>
 </launch>
