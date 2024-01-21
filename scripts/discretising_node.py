@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 import rospy
 import numpy as np
-import matplotlib.pyplot as plt
-from adaptive_ctrl.msg import rl_angles
-from adaptive_ctrl.msg import tent_curvature
-from adaptive_ctrl.srv import DiscretiseCurve, DiscretiseCurveResponse, DiscretiseCurveRequest
+from shapeforming_msgs.msg import rl_angles
+from shapeforming_msgs.msg import tent_curvature
+from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveResponse, DiscretiseCurveRequest
 
 class DiscretisingNode:
     def __init__(self):

@@ -3,7 +3,7 @@ import rospy
 import csv
 import numpy as np
 import os.path
-from adaptive_ctrl.srv import DiscretiseCurve, DiscretiseCurveResponse, DiscretiseCurveRequest
+from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveResponse, DiscretiseCurveRequest
 
 
 def read_csv():

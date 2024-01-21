@@ -1,6 +1,6 @@
 import rospy
-from adaptive_ctrl.msg import tent_curvature
-from adaptive_ctrl.srv import DiscretiseCurve
+from shapeforming_msgs.msg import tent_curvature
+from shapeforming_msgs.srv import DiscretiseCurve
 
 class SensingDiscBridge:
     def __init__(self):

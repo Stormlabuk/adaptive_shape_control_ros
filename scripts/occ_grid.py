@@ -4,7 +4,6 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from nav_msgs.msg import OccupancyGrid
 from std_srvs.srv import Trigger
-import tf2_ros
 import cv2
 import sys, os
 import numpy as np
