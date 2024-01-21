@@ -7,12 +7,12 @@ from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveResponse
 
 class DiscretisingNode:
     def __init__(self):
-        rospy.init_node('discretising_node', anonymous=True)
+        rospy.init_node('discretising_node', anonymous=False)
         
-        
+        angle_pub_type = rospy.get_param('~angle_pub_type', 'des_')
 
         # Pubs and subs
-        self.obvAnglesPub_ = rospy.Publisher('obv_angles', rl_angles, queue_size=10)
+        self.obvAnglesPub_ = rospy.Publisher(angle_pub_type + 'angles', rl_angles, queue_size=10)
         
         # Services
         rospy.Service('discretise_curve', DiscretiseCurve, self.points_to_angles)

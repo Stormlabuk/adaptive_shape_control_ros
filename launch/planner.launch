@@ -22,10 +22,7 @@
     <arg name="max_line_of_sight_distance" default="1.0"/>
 
     <arg name="cost_scaling_factor" default="0.8"/>
-    <arg name="robot_radius"        default="0.4"/>
-        
-    <node pkg="adaptive_ctrl" type="occ_grid.py" name="grid_py" output="$(arg output)"/>
-    
+    <arg name="robot_radius"        default="0.4"/>    
     <node pkg="heuristic_planners" type="planner_ros_node" name="planner_ros_node" output="$(arg output)">
         <!-- <remap from="points" to="/grid3d/map_point_cloud"/> -->
         <!-- <remap from="grid" to="/map"                        unless="$(arg use_costs)"/> -->
@@ -52,4 +49,10 @@
     </node>
   
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_cost.rviz"/>
+
+    <node pkg="adaptive_ctrl" type="occ_grid.py" name="grid_py" output="$(arg output)"/>
+    <node pkg="adaptive_ctrl" type="path_extractor.py" name="path_extractor" output="$(arg output)"/>
+    <node pkg="adaptive_ctrl" type="discretising_node.py" name="discretising_node" output="$(arg output)">
+        <param name="angle_pub_type" value="des_"/>
+    </node>
 </launch>
