@@ -21,6 +21,8 @@ catkin build
 
 [Messages](https://github.com/Stormlabuk/shapeforming_msgs)
 
+[Path Planner](https://github.com/VFrancescon/Heuristic_path_planners) - own fork.
+
 ## Dev Notes
 
 ### To-Do
