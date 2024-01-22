@@ -2,8 +2,8 @@
 import rospy
 import numpy as np
 from shapeforming_msgs.msg import rl_angles
-from shapeforming_msgs.msg import tent_cont
 from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveResponse
+import cv2
 
 class DiscretisingNode:
     def __init__(self):
@@ -37,6 +37,7 @@ class DiscretisingNode:
             res = DiscretiseCurveResponse(angles)
             angles_msg = rl_angles(angles=res.angles, count=num_points)
             self.obvAnglesPub_.publish(angles_msg)
+
             return res
         else:
             return DiscretiseCurveResponse([])

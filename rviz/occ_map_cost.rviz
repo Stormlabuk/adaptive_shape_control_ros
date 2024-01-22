@@ -5,8 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /OccupancyGrid CostMap1
-        - /OccupancyGrid Map1
+        - /Marker1
       Splitter Ratio: 0.4882352948188782
     Tree Height: 725
   - Class: rviz/Selection
@@ -82,7 +81,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/path_line_markers
       Name: Path Line Markers
       Namespaces:
-        {}
+        thetastar: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -130,7 +129,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/path_points_markers
       Name: Path Point Markers
       Namespaces:
-        {}
+        thetastar: true
       Queue Size: 100
       Value: true
     - Alpha: 0.5
@@ -180,6 +179,14 @@ Visualization Manager:
       Topic: /map
       Unreliable: false
       Use Timestamp: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /viz_angles
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -245,5 +252,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 376
-  Y: 745
+  X: 344
+  Y: 713

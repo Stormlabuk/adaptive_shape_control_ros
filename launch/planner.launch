@@ -51,7 +51,7 @@
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_cost.rviz"/>
 
     <node pkg="adaptive_ctrl" type="occ_grid.py" name="grid_py" output="$(arg output)"/>
-    <node pkg="adaptive_ctrl" type="path_extractor.py" name="path_extractor" output="$(arg output)"/>
+    <!-- <node pkg="adaptive_ctrl" type="path_extractor.py" name="path_extractor" output="$(arg output)"/> -->
     <node pkg="adaptive_ctrl" type="discretising_node.py" name="discretising_node" output="$(arg output)">
         <param name="angle_pub_type" value="des_"/>
     </node>
