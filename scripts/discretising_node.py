@@ -24,15 +24,19 @@ class DiscretisingNode:
         num_points = req.tentacle.num_points
         x = np.array(req.tentacle.px)
         y = np.array(req.tentacle.py)
+        x = np.flip(x)
+        y = np.flip(y)
         # print(req)
         if(num_points > 0):
-            xinter, yinter = self.disc_points(x, y, num_points)
-            dx = xinter[+1:]-xinter[:-1]
-            dy = yinter[+1:]-yinter[:-1]
-            
-            vects = np.array([dx, dy]).T
-            th = np.arctan2(vects[+1:, 0] * vects[:-1, 1] - vects[+1:, 1] * vects[:-1, 0], vects[+1:, 0] * vects[:-1, 0] + vects[+1:, 1] * vects[:-1, 1])
-            angles = th * 180 / np.pi
+            dx, dy = x[+1:]-x[:-1],  y[+1:]-y[:-1]
+            ds = np.array((0, *np.sqrt(dx*dx+dy*dy)))
+
+            s = np.cumsum(ds)
+            xinter = np.interp(np.linspace(0, s[-1], num_points), s, x)
+            yinter = np.interp(np.linspace(0, s[-1], num_points), s, y)
+
+            dx, dy = xinter[1:] - xinter[:-1], yinter[1:] - yinter[:-1]
+            angles = np.arctan2(dy, dx) * 180 / np.pi
             
             res = DiscretiseCurveResponse(angles)
             angles_msg = rl_angles(angles=res.angles, count=num_points)
@@ -42,19 +46,19 @@ class DiscretisingNode:
         else:
             return DiscretiseCurveResponse([])
 
-    def disc_points(self, x, y, num_points = 6):
-        dx, dy = x[+1:]-x[:-1],  y[+1:]-y[:-1]
-        ds = np.array((0, *np.sqrt(dx*dx+dy*dy)))
-        s = np.cumsum(ds)
-        xinter = np.interp(np.linspace(0, s[-1], num_points), s, x)
-        yinter = np.interp(np.linspace(0, s[-1], num_points), s, y)
-        xinter = np.insert(xinter, 0, xinter[0])
-        yinter = np.insert(yinter, 0, 0)
+    # def disc_points(self, x, y, num_points = 6):
+    #     dx, dy = x[+1:]-x[:-1],  y[+1:]-y[:-1]
+    #     ds = np.array((0, *np.sqrt(dx*dx+dy*dy)))
+    #     s = np.cumsum(ds)
+    #     xinter = np.interp(np.linspace(0, s[-1], num_points), s, x)
+    #     yinter = np.interp(np.linspace(0, s[-1], num_points), s, y)
+    #     xinter = np.insert(xinter, 0, xinter[0])
+    #     yinter = np.insert(yinter, 0, 0)
         
-        # Invert xinter and yinter
-        xinter = np.flip(xinter)
-        yinter = np.flip(yinter)
-        return xinter, yinter
+    #     # Invert xinter and yinter
+    #     xinter = np.flip(xinter)
+    #     yinter = np.flip(yinter)
+    #     return xinter, yinter
 
 if __name__ == '__main__':
     try:

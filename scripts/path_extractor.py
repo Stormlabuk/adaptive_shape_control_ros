@@ -7,6 +7,7 @@ from scipy import interpolate
 from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveRequest, DiscretiseCurveResponse
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
+import csv
 
 class PathExtractor:
     def __init__(self):
@@ -28,13 +29,15 @@ class PathExtractor:
         for pose in msg.poses:
             x.append(pose.pose.position.x)
             y.append(pose.pose.position.y)
+        x = np.array(x)
+        y = np.array(y)
 
         points = self.evenly_spaced_points(x, y, 300)
         tent_cont_msg = tent_cont()
-        tent_cont_msg.num_points = 6
+        tent_cont_msg.num_points = 7
         # print(points.shape)
-        tent_cont_msg.px = points[:, 0].tolist()
-        tent_cont_msg.py = points[:, 1].tolist()
+        tent_cont_msg.px = points[:, 0].astype(int).tolist()
+        tent_cont_msg.py = points[:, 1].astype(int).tolist()
         # self.PathPub_.publish(tent_cont_msg)
 
         rospy.wait_for_service('discretise_curve')
@@ -50,8 +53,12 @@ class PathExtractor:
         rl_points = np.zeros((len(angles_np), 2))
         rl_points[0] = points[-1]
         for i in range(1, len(angles_np)):
-            rl_points[i] = rl_points[i-1] + [dx[i-1] *-1, dy[i-1] ]
+            rl_points[i] = rl_points[i-1] + [dx[i-1], dy[i-1] ]
 
+        # with open('src/adaptive_ctrl/csv/path.csv', 'w') as f:
+        #     writer = csv.writer(f)
+        #     writer.writerow(['x', 'y'])
+        #     writer.writerows(zip(x, y))
         # print(rl_points.shape)
         # print(rl_points)
         # print(angles_np)

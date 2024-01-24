@@ -164,12 +164,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: true
+      Enabled: false
       Name: OccupancyGrid CostMap
       Topic: /costmap
       Unreliable: false
       Use Timestamp: false
-      Value: true
+      Value: false
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -216,7 +216,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 656.9057006835938
+      Distance: 499.0757141113281
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -252,5 +252,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 344
-  Y: 713
+  X: 158
+  Y: 781
