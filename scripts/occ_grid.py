@@ -9,8 +9,32 @@ import sys, os
 import numpy as np
 
 class OccGrid:
+    """
+    Represents an occupancy grid.
+
+    Attributes:
+        bridge (CvBridge): OpenCV bridge for image conversion.
+        img_pub (rospy.Publisher): Publisher for debug image.
+        map_pub (rospy.Publisher): Publisher for occupancy grid map.
+        grid_pub (rospy.Publisher): Publisher for occupancy grid.
+        costmap_pub (rospy.Publisher): Publisher for costmap.
+        grid_srv (rospy.Service): Service for grid triggering.
+        map_srv (rospy.Service): Service for map triggering.
+        phantomSub (rospy.Subscriber): Subscriber for phantom image.
+        imgSub (rospy.Subscriber): Subscriber for image.
+        img_path (str): Path to the image file.
+        img (numpy.ndarray): Image array.
+        width (int): Width of the image.
+        height (int): Height of the image.
+        img_gray (numpy.ndarray): Grayscale image array.
+        grid (OccupancyGrid): Occupancy grid.
+        cost_map (OccupancyGrid): Costmap.
+    """
 
     def __init__(self):
+        """
+        Initializes the OccGrid object.
+        """
         self.bridge = CvBridge()
         self.img_pub = rospy.Publisher('/img_debug', Image, queue_size=1)
         self.map_pub = rospy.Publisher('/map', OccupancyGrid, queue_size=1)
@@ -18,7 +42,8 @@ class OccGrid:
         self.costmap_pub = rospy.Publisher('/costmap', OccupancyGrid, queue_size=1)
         self.grid_srv = rospy.Service('/srv_grid', Trigger, self.trig_grid)
         self.map_srv = rospy.Service('/srv_map', Trigger, self.trig_map)
-        # self.img_path = os.getcwd() + '/src/adaptive_ctrl/img/disp_cnt.png'
+        self.phantomSub = rospy.Subscriber('/phantom_img', Image, self.phantom_callback)
+        self.imgSub = rospy.Subscriber('/img', Image, self.img_callback)
         self.img_path = '/home/vittorio/ros_ws/src/adaptive_ctrl/img/disp_cnt.png'
         self.img = cv2.imread(self.img_path, cv2.IMREAD_GRAYSCALE)
         if(self.img is None):
@@ -46,7 +71,56 @@ class OccGrid:
         self.img2costmap()
 
 
+    def phantom_callback(self, msg):
+        """
+        Callback function for phantom subscriber.
+
+        Args:
+            msg (Image): Image message.
+
+        """
+        self.img = msg
+        self.img = self.bridge.imgmsg_to_cv2(self.img, desired_encoding="passthrough")
+        self.img[self.img > 0] = 100
+        self.img_gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+        elem = cv2.getStructuringElement(cv2.MORPH_RECT, (11,11))
+        self.img_gray = cv2.dilate(self.img_gray, elem)
+        gray_vals = np.array(self.img_gray.tolist())
+        gray_vals = gray_vals / 255.0 * 100
+        self.img_gray = gray_vals.astype(np.uint8)
+        self.img_gray = self.bridge.cv2_to_imgmsg(self.img_gray, encoding="passthrough")
+        self.img2costmap()
+        self.publish_map()
+
+    def img_callback(self, msg):
+        """
+        Callback function for image subscriber.
+
+        Args:
+            msg (Image): Image message.
+
+        """
+        self.img = msg
+        self.img = self.bridge.imgmsg_to_cv2(self.img, desired_encoding="passthrough")
+        self.img[self.img > 0] = 100
+        # self.img = self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough")
+        # self.img_gray = self.bridge.imgmsg_to_cv2(self.img, desired_encoding="passthrough")
+        # # elem = cv2.getStructuringElement(cv2.MORPH_RECT, (11,11))
+        # # self.img_gray = cv2.dilate(self.img_gray, elem)
+        # # gray_vals = np.array(self.img_gray.tolist())
+        # # gray_vals = gray_vals / 255.0 * 100
+        # self.img_gray = gray_vals.astype(np.uint8)
+        self.img_gray = self.bridge.cv2_to_imgmsg(self.img_gray, encoding="passthrough")
+        self.img2occ_grid()
+        self.publish_grid()
+        # self.img2costmap()
+        # self.publish_map()
+
     def img2costmap(self):
+        """
+        Converts image to costmap.
+
+        """
         self.cost_map.header.stamp = rospy.Time.now()
         self.cost_map.header.frame_id = "costmap"
         self.cost_map.info.resolution = 1
@@ -60,11 +134,12 @@ class OccGrid:
         self.cost_map.info.origin.orientation.z = 0
         self.cost_map.info.origin.orientation.w = 1
         self.cost_map.data = self.img_gray.data
-        # print the type of self.cost_map.data
-        
-
 
     def img2occ_grid(self):
+        """
+        Converts image to occupancy grid.
+
+        """
         self.grid.header.stamp = rospy.Time.now()
         self.grid.header.frame_id = "map"
         self.grid.info.resolution = 1
@@ -80,20 +155,30 @@ class OccGrid:
         self.grid.data = self.img.data
 
     def publish_image(self):
+        """
+        Publishes the debug image.
+
+        """
         print("Publishing occ_img")
         self.img.header.stamp = rospy.Time.now()
         self.img.header.frame_id = "occ_grid_img"
         self.img_pub.publish(self.img)
 
-
     def publish_grid(self):
+        """
+        Publishes the occupancy grid.
+
+        """
         print("Publishing occ_grid")
         self.grid.header.stamp = rospy.Time.now()
         self.grid.header.frame_id = "grid"
         self.grid_pub.publish(self.grid)
 
-
     def publish_map(self):
+        """
+        Publishes the occupancy grid map and costmap.
+
+        """
         print("Publishing map")
         self.grid.header.stamp = rospy.Time.now()
         self.grid.header.frame_id = "map"
@@ -103,10 +188,33 @@ class OccGrid:
         self.costmap_pub.publish(self.cost_map)
         
     def trig_grid(self, req):
+        """
+        Triggers the grid publishing.
+
+        Args:
+            req (TriggerRequest): Trigger request.
+
+        Returns:
+            bool: True if successful, False otherwise.
+            str: Message indicating the result.
+
+        """
         print("Triggering grid")
         self.publish_grid()
         return True, "Grid published"
+
     def trig_map(self, req):
+        """
+        Triggers the map publishing.
+
+        Args:
+            req (TriggerRequest): Trigger request.
+
+        Returns:
+            bool: True if successful, False otherwise.
+            str: Message indicating the result.
+
+        """
         print("Triggering map")
         self.publish_map()
         return True, "Map published"
