@@ -55,4 +55,5 @@
     <node pkg="adaptive_ctrl" type="discretising_node.py" name="discretising_node" output="$(arg output)">
         <param name="angle_pub_type" value="des_"/>
     </node>
+    <node pkg="adaptive_ctrl" type="find_inserter.py" name="find_inserter" output="$(arg output)"/>
 </launch>

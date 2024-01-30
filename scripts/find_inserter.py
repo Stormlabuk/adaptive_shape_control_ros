@@ -38,8 +38,8 @@ class FindInserterNode:
         self.insertionPub = rospy.Publisher('/insertion_point', Point, queue_size=1)
         self.phantomPub = rospy.Publisher('/phantom_img', Image, queue_size=1)
         self.img_pub = rospy.Publisher('/img', Image, queue_size=1)
-        self.img_to_pub = self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough")
-        self.img_pub.publish(self.img_to_pub)
+        # self.img_to_pub = self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough")
+        # self.img_pub.publish(self.img_to_pub)
 
     def find_inserter(self, req):
         """
@@ -52,14 +52,22 @@ class FindInserterNode:
         - success: A boolean indicating whether the insertion point was found.
         - message: A string message indicating the result of the service call.
         """
-        polygon = self.getPoly(self.img)
+        img = np.array(self.img)
+        img = img.astype(self.img.copy())
+        polygon = self.getPoly(img)
         insertion_point = self.getInsertionPoint(polygon)
         insertion_point_msg = Point()
         insertion_point_msg.x = insertion_point[0]
         insertion_point_msg.y = insertion_point[1]
         insertion_point_msg.z = 0.0
         self.insertionPub.publish(insertion_point_msg)
+        self.pub_imgs()
         return True, "Found insertion point"
+
+    def pub_imgs(self):
+        self.deleteInserter(self.getPoly(self.img))
+        self.img_pub.publish(self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough"))
+        return
 
     def deleteInserter(self, poly):
         """
