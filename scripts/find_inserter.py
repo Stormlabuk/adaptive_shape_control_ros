@@ -3,6 +3,7 @@ import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from std_srvs.srv import Trigger
+from shapeforming_msgs.srv import GetInsertion
 from geometry_msgs.msg import Point
 import cv2
 import numpy as np
@@ -34,7 +35,7 @@ class FindInserterNode:
             print("Image not found")
             sys.exit()
         _, self.img = cv2.threshold(self.img, 127, 255, cv2.THRESH_BINARY)
-        self.inserter_srv = rospy.Service('/find_inserter', Trigger, self.find_inserter)
+        self.inserter_srv = rospy.Service('/find_inserter', GetInsertion, self.find_inserter)
         self.insertionPub = rospy.Publisher('/insertion_point', Point, queue_size=1)
         self.phantomPub = rospy.Publisher('/phantom_img', Image, queue_size=1)
         self.img_pub = rospy.Publisher('/img', Image, queue_size=1)
@@ -62,7 +63,7 @@ class FindInserterNode:
         insertion_point_msg.z = 0.0
         self.insertionPub.publish(insertion_point_msg)
         self.pub_imgs(polygon)
-        return True, "Found insertion point"
+        return True, insertion_point_msg
 
     def pub_imgs(self, polygon):
         """
