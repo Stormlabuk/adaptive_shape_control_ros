@@ -81,7 +81,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/path_line_markers
       Name: Path Line Markers
       Namespaces:
-        {}
+        thetastar: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -129,7 +129,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/path_points_markers
       Name: Path Point Markers
       Namespaces:
-        {}
+        thetastar: true
       Queue Size: 100
       Value: true
     - Alpha: 0.5
@@ -164,12 +164,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: true
+      Enabled: false
       Name: OccupancyGrid CostMap
       Topic: /costmap
       Unreliable: false
       Use Timestamp: false
-      Value: true
+      Value: false
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -216,7 +216,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 499.0757141113281
+      Distance: 543.25390625
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -224,17 +224,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 226.92410278320312
-        Y: 33.361358642578125
+        X: 250.23202514648438
+        Y: 72.31482696533203
         Z: 3.4444961784174666e-05
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.1047967672348022
+      Pitch: 0.9597964882850647
       Target Frame: <Fixed Frame>
-      Yaw: 4.535794734954834
+      Yaw: 4.6907958984375
     Saved: ~
 Window Geometry:
   Displays:
@@ -252,5 +252,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 126
-  Y: 749
+  X: 893
+  Y: 489

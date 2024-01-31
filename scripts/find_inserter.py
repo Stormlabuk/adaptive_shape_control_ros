@@ -2,9 +2,9 @@
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-from std_srvs.srv import Trigger
 from shapeforming_msgs.srv import GetInsertion
 from geometry_msgs.msg import Point
+from std_msgs.msg import String
 import cv2
 import numpy as np
 import sys
@@ -27,7 +27,7 @@ class FindInserterNode:
 
     def __init__(self):
         rospy.init_node('find_inserter_node', anonymous=False)
-        default_path = '/home/vittorio/ros_ws/src/adaptive_ctrl/img/disp_cnt_inserter.png'
+        default_path = '/home/vittorio/ros_ws/src/adaptive_ctrl/img/disp_cnt_inserter_pos1.png'
         self.img_path = rospy.get_param('~img_path', default_path)
         self.bridge = CvBridge()
         self.img = cv2.imread(self.img_path, cv2.IMREAD_GRAYSCALE)
@@ -35,6 +35,8 @@ class FindInserterNode:
             print("Image not found")
             sys.exit()
         _, self.img = cv2.threshold(self.img, 127, 255, cv2.THRESH_BINARY)
+        self.pathSub_ = rospy.Subscriber(
+            '/img_path', String, self.img_path_callback)
         self.inserter_srv = rospy.Service(
             '/find_inserter', GetInsertion, self.find_inserter)
         self.insertionPub = rospy.Publisher(
@@ -43,6 +45,23 @@ class FindInserterNode:
         self.img_pub = rospy.Publisher('/img', Image, queue_size=1)
         # self.img_to_pub = self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough")
         # self.img_pub.publish(self.img_to_pub)
+
+    def img_path_callback(self, msg): 
+        """
+        Callback function for processing image path messages.
+
+        Args:
+            msg (str): The file path of the image.
+
+        Returns:
+            None
+        """
+        file_path = msg.data
+        self.img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+        if self.img is None:
+            print("Image not found")
+            sys.exit()
+        _, self.img = cv2.threshold(self.img, 127, 255, cv2.THRESH_BINARY)
 
     def find_inserter(self, req):
         """
@@ -140,7 +159,7 @@ class FindInserterNode:
         else:
             print("Orientation is not 90, rotating polygon")
             rotated_poly = self.rotatePolygon(poly, orientation)
-            
+
         insertion_point = self.constructPoint(rotated_poly)
 
         if orientation != 90:
@@ -214,8 +233,6 @@ def main():
     # Initialize the ROS node
     rospy.init_node('find_inserter_node')
     FindInserterNode()
-    # Add your code here
-
     # Spin the node
     rospy.spin()
 
