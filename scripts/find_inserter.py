@@ -53,7 +53,7 @@ class FindInserterNode:
         - message: A string message indicating the result of the service call.
         """
         img = np.array(self.img)
-        img = img.astype(self.img.copy())
+        img = self.img.copy()
         polygon = self.getPoly(img)
         insertion_point = self.getInsertionPoint(polygon)
         insertion_point_msg = Point()
@@ -61,12 +61,21 @@ class FindInserterNode:
         insertion_point_msg.y = insertion_point[1]
         insertion_point_msg.z = 0.0
         self.insertionPub.publish(insertion_point_msg)
-        self.pub_imgs()
+        self.pub_imgs(polygon)
         return True, "Found insertion point"
 
-    def pub_imgs(self):
-        self.deleteInserter(self.getPoly(self.img))
+    def pub_imgs(self, polygon):
+        """
+        Publishes the image and deletes the inserter.
+
+        Args:
+            polygon: The polygon representing the inserter.
+
+        Returns:
+            None
+        """
         self.img_pub.publish(self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough"))
+        self.deleteInserter(polygon)
         return
 
     def deleteInserter(self, poly):
@@ -79,9 +88,13 @@ class FindInserterNode:
         Returns:
         None
         """
-        cv2.fillPoly(self.img, [poly], 0)
-        self.img = self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough")
-        self.phantomPub.publish(self.img)
+        mask = np.zeros(self.img.shape, dtype=np.uint8)
+        cv2.fillPoly(mask, [poly], 255, cv2.LINE_8)
+        element = cv2.getStructuringElement(cv2.MORPH_RECT, (11, 11))
+        mask = cv2.dilate(mask, element)
+        phantom_less_img = self.img.copy()
+        phantom_less_img[mask == 255] = 0
+        self.phantomPub.publish(self.bridge.cv2_to_imgmsg(phantom_less_img, encoding="passthrough"))
 
     def getPoly(self, img):
         """

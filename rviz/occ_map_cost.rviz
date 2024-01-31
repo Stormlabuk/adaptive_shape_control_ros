@@ -81,7 +81,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/path_line_markers
       Name: Path Line Markers
       Namespaces:
-        thetastar: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -129,7 +129,7 @@ Visualization Manager:
       Marker Topic: /planner_ros_node/path_points_markers
       Name: Path Point Markers
       Namespaces:
-        thetastar: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 0.5
@@ -164,12 +164,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: OccupancyGrid CostMap
       Topic: /costmap
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -185,7 +185,7 @@ Visualization Manager:
       Marker Topic: /viz_angles
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -252,5 +252,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 158
-  Y: 781
+  X: 126
+  Y: 749
