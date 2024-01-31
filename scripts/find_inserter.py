@@ -27,7 +27,7 @@ class FindInserterNode:
 
     def __init__(self):
         rospy.init_node('find_inserter_node', anonymous=False)
-        default_path = '/home/vittorio/ros_ws/src/adaptive_ctrl/img/disp_cnt_inserter_pos2.png'
+        default_path = '/home/vittorio/ros_ws/src/adaptive_ctrl/img/disp_cnt_inserter.png'
         self.img_path = rospy.get_param('~img_path', default_path)
         self.bridge = CvBridge()
         self.img = cv2.imread(self.img_path, cv2.IMREAD_GRAYSCALE)
@@ -35,8 +35,10 @@ class FindInserterNode:
             print("Image not found")
             sys.exit()
         _, self.img = cv2.threshold(self.img, 127, 255, cv2.THRESH_BINARY)
-        self.inserter_srv = rospy.Service('/find_inserter', GetInsertion, self.find_inserter)
-        self.insertionPub = rospy.Publisher('/insertion_point', Point, queue_size=1)
+        self.inserter_srv = rospy.Service(
+            '/find_inserter', GetInsertion, self.find_inserter)
+        self.insertionPub = rospy.Publisher(
+            '/insertion_point', Point, queue_size=1)
         self.phantomPub = rospy.Publisher('/phantom_img', Image, queue_size=1)
         self.img_pub = rospy.Publisher('/img', Image, queue_size=1)
         # self.img_to_pub = self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough")
@@ -75,7 +77,8 @@ class FindInserterNode:
         Returns:
             None
         """
-        self.img_pub.publish(self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough"))
+        self.img_pub.publish(self.bridge.cv2_to_imgmsg(
+            self.img, encoding="passthrough"))
         self.deleteInserter(polygon)
         return
 
@@ -95,7 +98,8 @@ class FindInserterNode:
         mask = cv2.dilate(mask, element)
         phantom_less_img = self.img.copy()
         phantom_less_img[mask == 255] = 0
-        self.phantomPub.publish(self.bridge.cv2_to_imgmsg(phantom_less_img, encoding="passthrough"))
+        self.phantomPub.publish(self.bridge.cv2_to_imgmsg(
+            phantom_less_img, encoding="passthrough"))
 
     def getPoly(self, img):
         """
@@ -112,8 +116,8 @@ class FindInserterNode:
             img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
         min_contour = min(contours, key=cv2.contourArea)
-        approx = cv2.approxPolyDP( 
-                min_contour, 0.01 * cv2.arcLength(min_contour, True), True) 
+        approx = cv2.approxPolyDP(
+            min_contour, 0.01 * cv2.arcLength(min_contour, True), True)
         approx = approx.reshape(approx.shape[0], approx.shape[2])
         return approx
 
@@ -129,10 +133,21 @@ class FindInserterNode:
         """
         bounding_rect = cv2.minAreaRect(poly)
         orientation = bounding_rect[2]
-        rotated_poly = self.rotatePolygon(poly, orientation)
+        rospy.loginfo("Orientation: %f", orientation)
+        if orientation == 90:
+            print("Orientation is 90, no rotation needed")
+            rotated_poly = poly
+        else:
+            print("Orientation is not 90, rotating polygon")
+            rotated_poly = self.rotatePolygon(poly, orientation)
+            
         insertion_point = self.constructPoint(rotated_poly)
-        center = np.mean(poly, axis=0)
-        insertion_point = self.rotate_point(insertion_point, center, -orientation)
+
+        if orientation != 90:
+            print("Orientation is not 90, rotating insertion point")
+            center = np.mean(poly, axis=0)
+            insertion_point = self.rotate_point(
+                insertion_point, center, -orientation)
         return insertion_point
 
     def constructPoint(self, poly):
@@ -146,8 +161,12 @@ class FindInserterNode:
         Returns:
         - point: The constructed point as a numpy array.
         """
+        print("X: ", poly[:, 0])
+        print("y: ", poly[:, 1])
         max_y = np.max(poly[:, 1])
         avg_x = np.mean(poly[:, 0])
+        print("Max y: ", max_y)
+        print("Avg x: ", avg_x)
         return np.array([avg_x, max_y])
 
     def rotatePolygon(self, pts, angle):
@@ -167,7 +186,8 @@ class FindInserterNode:
         rotation_matrix = np.array([[np.cos(angle_rad), -np.sin(angle_rad)],
                                     [np.sin(angle_rad), np.cos(angle_rad)]])
         pts_shifted = pts - np.array([center_x, center_y])
-        rotated_pts = np.dot(pts_shifted, rotation_matrix.T) + np.array([center_x, center_y])
+        rotated_pts = np.dot(pts_shifted, rotation_matrix.T) + \
+            np.array([center_x, center_y])
         return rotated_pts
 
     def rotate_point(self, pt, center, angle):
@@ -188,6 +208,7 @@ class FindInserterNode:
         pt_shifted = pt - center
         rotated_pt = np.dot(pt_shifted, rotation_matrix.T) + center
         return rotated_pt
+
 
 def main():
     # Initialize the ROS node
