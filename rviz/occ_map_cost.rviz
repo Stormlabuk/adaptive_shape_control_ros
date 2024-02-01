@@ -164,12 +164,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: OccupancyGrid CostMap
       Topic: /costmap
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.699999988079071
       Class: rviz/Map
       Color Scheme: map
@@ -185,7 +185,7 @@ Visualization Manager:
       Marker Topic: /viz_angles
       Name: Marker
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -216,7 +216,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 543.25390625
+      Distance: 1185.8345947265625
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -224,17 +224,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 250.23202514648438
-        Y: 72.31482696533203
-        Z: 3.4444961784174666e-05
+        X: 255.57061767578125
+        Y: 385.961669921875
+        Z: 2.6720694222603925e-05
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9597964882850647
+      Pitch: -1.5497963428497314
       Target Frame: <Fixed Frame>
-      Yaw: 4.6907958984375
+      Yaw: 4.707617282867432
     Saved: ~
 Window Geometry:
   Displays:
@@ -252,5 +252,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 893
-  Y: 489
+  X: 829
+  Y: 425

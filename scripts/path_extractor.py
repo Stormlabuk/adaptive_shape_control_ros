@@ -22,7 +22,7 @@ class PathExtractor:
 
 
     def PathCB_(self, msg):
-        rospy.loginfo("PathCB_")
+        # rospy.loginfo("PathCB_")
         # extract the x and y coordinates from the path
         x = []
         y = []
@@ -55,13 +55,7 @@ class PathExtractor:
         for i in range(1, len(angles_np)):
             rl_points[i] = rl_points[i-1] + [dx[i-1], dy[i-1] ]
 
-        # with open('src/adaptive_ctrl/csv/path.csv', 'w') as f:
-        #     writer = csv.writer(f)
-        #     writer.writerow(['x', 'y'])
-        #     writer.writerows(zip(x, y))
-        # print(rl_points.shape)
-        # print(rl_points)
-        # print(angles_np)
+
         # # Publish the points as a marker
         marker = self.create_marker(rl_points)
         self.vizAnglePub_.publish(marker)

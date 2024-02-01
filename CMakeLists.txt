@@ -190,7 +190,7 @@ target_link_libraries(occupancy_grid
 catkin_install_python(PROGRAMS
   scripts/discretising_node.py
   scripts/sample_trigger.py
-  scripts/sample_trigger_bridge.py
+  scripts/trigger_path.py
   scripts/occ_grid.py
   scripts/path_extractor.py
   scripts/setup.py

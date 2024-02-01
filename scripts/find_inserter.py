@@ -27,7 +27,7 @@ class FindInserterNode:
 
     def __init__(self):
         rospy.init_node('find_inserter_node', anonymous=False)
-        default_path = '/home/vittorio/ros_ws/src/adaptive_ctrl/img/disp_cnt_inserter_pos1.png'
+        default_path = '/home/vittorio/ros_ws/src/adaptive_ctrl/inserter/4.inserter_p0.png'
         self.img_path = rospy.get_param('~img_path', default_path)
         self.bridge = CvBridge()
         self.img = cv2.imread(self.img_path, cv2.IMREAD_GRAYSCALE)
@@ -152,18 +152,24 @@ class FindInserterNode:
         """
         bounding_rect = cv2.minAreaRect(poly)
         orientation = bounding_rect[2]
+        (width, height), angle = bounding_rect[1], bounding_rect[2]
+
+        if width >= height:
+            angle = -angle
+        else:
+            angle = 90 + angle
+
         rospy.loginfo("Orientation: %f", orientation)
+        rospy.loginfo("Angle: %f", orientation)
         if orientation == 90:
-            print("Orientation is 90, no rotation needed")
             rotated_poly = poly
         else:
-            print("Orientation is not 90, rotating polygon")
             rotated_poly = self.rotatePolygon(poly, orientation)
 
         insertion_point = self.constructPoint(rotated_poly)
 
         if orientation != 90:
-            print("Orientation is not 90, rotating insertion point")
+            # print("Orientation is not 90, rotating insertion point")
             center = np.mean(poly, axis=0)
             insertion_point = self.rotate_point(
                 insertion_point, center, -orientation)
@@ -180,12 +186,12 @@ class FindInserterNode:
         Returns:
         - point: The constructed point as a numpy array.
         """
-        print("X: ", poly[:, 0])
-        print("y: ", poly[:, 1])
+        # print("X: ", poly[:, 0])
+        # print("y: ", poly[:, 1])
         max_y = np.max(poly[:, 1])
         avg_x = np.mean(poly[:, 0])
-        print("Max y: ", max_y)
-        print("Avg x: ", avg_x)
+        # print("Max y: ", max_y)
+        # print("Avg x: ", avg_x)
         return np.array([avg_x, max_y])
 
     def rotatePolygon(self, pts, angle):
