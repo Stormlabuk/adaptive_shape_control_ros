@@ -12,19 +12,28 @@ import sys
 
 class FindInserterNode:
     """
-    Class representing a ROS node for finding the inserter in an image.
+    Class representing a ROS node for finding an inserter in an image.
 
     Attributes:
-    - img_path (str): The path to the image file.
-    - bridge (CvBridge): The OpenCV bridge for converting images between ROS and OpenCV formats.
-    - img (numpy.ndarray): The grayscale image.
-    - inserter_srv (rospy.Service): The ROS service for finding the inserter.
-    - insertionPub (rospy.Publisher): The ROS publisher for publishing the insertion point.
-    - phantomPub (rospy.Publisher): The ROS publisher for publishing the phantom image.
-    - img_pub (rospy.Publisher): The ROS publisher for publishing the image.
-    - img_to_pub (sensor_msgs.msg.Image): The image message to be published.
-    """
+        img_path (str): The path to the image file.
+        bridge (CvBridge): The bridge object for converting between ROS Image messages and OpenCV images.
+        img (numpy.ndarray): The grayscale image.
+        pathSub_ (rospy.Subscriber): The subscriber for receiving the image file path.
+        inserter_srv (rospy.Service): The service for finding the inserter.
+        insertionPub (rospy.Publisher): The publisher for publishing the insertion point.
+        phantomPub (rospy.Publisher): The publisher for publishing the image with the inserter removed.
+        img_pub (rospy.Publisher): The publisher for publishing the original image.
 
+    Methods:
+        img_path_callback(self, msg): Callback function for the image file path subscriber.
+        find_inserter(self, req): Method for finding the inserter and publishing the insertion point.
+        pub_imgs(self, polygon): Method for publishing the images.
+        deleteInserter(self, poly): Method for removing the inserter from the image.
+        getPoly(self, img): Method for getting the polygon of the inserter.
+        getInsertionPoint(self, poly): Method for calculating the insertion point of the inserter.
+        constructPoint(self, poly): Method for constructing the insertion point coordinates.
+        rotatePolygon(self, poly, angle, centroid): Method for rotating the polygon.
+    """
     def __init__(self):
         rospy.init_node('find_inserter_node', anonymous=False)
         default_path = '/home/vittorio/ros_ws/src/adaptive_ctrl/inserter/4.inserter_p0.png'
@@ -32,7 +41,6 @@ class FindInserterNode:
         self.bridge = CvBridge()
         self.img = cv2.imread(self.img_path, cv2.IMREAD_GRAYSCALE)
         if (self.img is None):
-            print("Image not found")
             sys.exit()
         _, self.img = cv2.threshold(self.img, 127, 255, cv2.THRESH_BINARY)
         self.pathSub_ = rospy.Subscriber(
@@ -43,36 +51,29 @@ class FindInserterNode:
             '/insertion_point', Point, queue_size=1)
         self.phantomPub = rospy.Publisher('/phantom_img', Image, queue_size=1)
         self.img_pub = rospy.Publisher('/img', Image, queue_size=1)
-        # self.img_to_pub = self.bridge.cv2_to_imgmsg(self.img, encoding="passthrough")
-        # self.img_pub.publish(self.img_to_pub)
 
     def img_path_callback(self, msg): 
         """
-        Callback function for processing image path messages.
+        Callback function for the image file path subscriber.
 
         Args:
-            msg (str): The file path of the image.
-
-        Returns:
-            None
+            msg (std_msgs.msg.String): The message containing the file path.
         """
         file_path = msg.data
         self.img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
         if self.img is None:
-            print("Image not found")
             sys.exit()
         _, self.img = cv2.threshold(self.img, 127, 255, cv2.THRESH_BINARY)
 
     def find_inserter(self, req):
         """
-        Callback function for the find_inserter service.
+        Method for finding the inserter and publishing the insertion point.
 
-        Parameters:
-        - req: The service request.
+        Args:
+            req (adaptive_ctrl.srv.GetInsertionRequest): The request message.
 
         Returns:
-        - success: A boolean indicating whether the insertion point was found.
-        - message: A string message indicating the result of the service call.
+            adaptive_ctrl.srv.GetInsertionResponse: The response message containing the insertion point.
         """
         img = np.array(self.img)
         img = self.img.copy()
@@ -88,13 +89,10 @@ class FindInserterNode:
 
     def pub_imgs(self, polygon):
         """
-        Publishes the image and deletes the inserter.
+        Method for publishing the images.
 
         Args:
-            polygon: The polygon representing the inserter.
-
-        Returns:
-            None
+            polygon (numpy.ndarray): The polygon of the inserter.
         """
         self.img_pub.publish(self.bridge.cv2_to_imgmsg(
             self.img, encoding="passthrough"))
@@ -103,13 +101,10 @@ class FindInserterNode:
 
     def deleteInserter(self, poly):
         """
-        Deletes the inserter from the image.
+        Method for removing the inserter from the image.
 
-        Parameters:
-        - poly: The polygon representing the inserter.
-
-        Returns:
-        None
+        Args:
+            poly (numpy.ndarray): The polygon of the inserter.
         """
         mask = np.zeros(self.img.shape, dtype=np.uint8)
         cv2.fillPoly(mask, [poly], 255, cv2.LINE_8)
@@ -122,14 +117,13 @@ class FindInserterNode:
 
     def getPoly(self, img):
         """
-        Finds and approximates the polygon shape of the smallest contour 
-        in the given contour img.
+        Method for getting the polygon of the inserter.
 
-        Parameters:
-        - img: The input image. Must be a binary image of contours.
+        Args:
+            img (numpy.ndarray): The grayscale image.
 
         Returns:
-        - approx: The approximated polygon shape of the image.
+            numpy.ndarray: The polygon of the inserter.
         """
         contours, _ = cv2.findContours(
             img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -142,104 +136,64 @@ class FindInserterNode:
 
     def getInsertionPoint(self, poly):
         """
-        Calculates the insertion point of a polygon.
+        Method for calculating the insertion point of the inserter.
 
-        Parameters:
-        - poly: The polygon represented as a list of points.
+        Args:
+            poly (numpy.ndarray): The polygon of the inserter.
 
         Returns:
-        - insertion_point: The coordinates of the insertion point as a tuple.
+            numpy.ndarray: The insertion point coordinates.
         """
         bounding_rect = cv2.minAreaRect(poly)
+        centroid = bounding_rect[0]
         orientation = bounding_rect[2]
-        (width, height), angle = bounding_rect[1], bounding_rect[2]
-
-        if width >= height:
-            angle = -angle
-        else:
-            angle = 90 + angle
-
-        rospy.loginfo("Orientation: %f", orientation)
-        rospy.loginfo("Angle: %f", orientation)
-        if orientation == 90:
-            rotated_poly = poly
-        else:
-            rotated_poly = self.rotatePolygon(poly, orientation)
-
-        insertion_point = self.constructPoint(rotated_poly)
-
-        if orientation != 90:
-            # print("Orientation is not 90, rotating insertion point")
-            center = np.mean(poly, axis=0)
-            insertion_point = self.rotate_point(
-                insertion_point, center, -orientation)
+        rectPoints = np.intp(cv2.boxPoints(bounding_rect))
+        p1, p2, p4 = rectPoints[0], rectPoints[1], rectPoints[3]
+        a = np.linalg.norm(p1 - p2)
+        b = np.linalg.norm(p1 - p4)
+        left_hand_flag = a > b
+        orientation = 90 - orientation if not left_hand_flag else -orientation
+        rotatedPoly = self.rotatePolygon(poly, orientation, centroid)
+        insertion_point = self.constructPoint(rotatedPoly)
+        insertion_point = self.rotatePolygon(insertion_point, -orientation, centroid)
         return insertion_point
 
     def constructPoint(self, poly):
         """
-        Constructs a point based on the given polygon. 
-        The point will have the maximum possible y value that is convex to the set and the average x value available.
+        Method for constructing the insertion point coordinates.
 
-        Parameters:
-        - poly: The polygon represented as a numpy array.
+        Args:
+            poly (numpy.ndarray): The polygon of the inserter.
 
         Returns:
-        - point: The constructed point as a numpy array.
+            numpy.ndarray: The insertion point coordinates.
         """
-        # print("X: ", poly[:, 0])
-        # print("y: ", poly[:, 1])
         max_y = np.max(poly[:, 1])
         avg_x = np.mean(poly[:, 0])
-        # print("Max y: ", max_y)
-        # print("Avg x: ", avg_x)
         return np.array([avg_x, max_y])
 
-    def rotatePolygon(self, pts, angle):
+    def rotatePolygon(self, poly, angle, centroid):
         """
-        Rotate the polygon described by the list of points `pts` by angle `angle`.
+        Method for rotating the polygon.
 
-        Parameters:
-        - pts: The points of the polygon as a numpy array.
-        - angle: The angle by which to rotate the polygon, assumed in degrees.
+        Args:
+            poly (numpy.ndarray): The polygon of the inserter.
+            angle (float): The rotation angle in degrees.
+            centroid (numpy.ndarray): The centroid of the polygon.
 
         Returns:
-        - rotated_pts: The rotated polygon as a numpy array.
+            numpy.ndarray: The rotated polygon.
         """
-        center_x = np.mean(pts[:, 0])
-        center_y = np.mean(pts[:, 1])
-        angle_rad = -angle / 180.0 * np.pi
-        rotation_matrix = np.array([[np.cos(angle_rad), -np.sin(angle_rad)],
-                                    [np.sin(angle_rad), np.cos(angle_rad)]])
-        pts_shifted = pts - np.array([center_x, center_y])
-        rotated_pts = np.dot(pts_shifted, rotation_matrix.T) + \
-            np.array([center_x, center_y])
-        return rotated_pts
-
-    def rotate_point(self, pt, center, angle):
-        """
-        Rotate the point `pt` around `center` by `angle` degrees.
-
-        Parameters:
-        - pt: The point to rotate as a numpy array.
-        - center: The center of rotation as a numpy array.
-        - angle: The angle by which to rotate the point.
-
-        Returns:
-        - rotated_pt: The rotated point as a numpy array.
-        """
-        angle_rad = -angle / 180.0 * np.pi
-        rotation_matrix = np.array([[np.cos(angle_rad), -np.sin(angle_rad)],
-                                    [np.sin(angle_rad), np.cos(angle_rad)]])
-        pt_shifted = pt - center
-        rotated_pt = np.dot(pt_shifted, rotation_matrix.T) + center
-        return rotated_pt
+        angle_rad = np.deg2rad(angle)
+        rotmatMan = np.array([[np.cos(angle_rad), -np.sin(angle_rad)],
+                    [np.sin(angle_rad), np.cos(angle_rad)]])
+        rotatedPoly = np.dot(rotmatMan, (poly - centroid).T).T + centroid
+        return rotatedPoly
 
 
 def main():
-    # Initialize the ROS node
     rospy.init_node('find_inserter_node')
     FindInserterNode()
-    # Spin the node
     rospy.spin()
 
 
