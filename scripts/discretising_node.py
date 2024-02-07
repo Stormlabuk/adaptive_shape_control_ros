@@ -24,18 +24,10 @@ class DiscretisingNode:
         num_points = req.tentacle.num_points
         x = np.array(req.tentacle.px)
         y = np.array(req.tentacle.py)
-        x = np.flip(x)
-        y = np.flip(y)
-        # print(req)
+        print(req)
         if(num_points > 0):
-            dx, dy = x[+1:]-x[:-1],  y[+1:]-y[:-1]
-            ds = np.array((0, *np.sqrt(dx*dx+dy*dy)))
-
-            s = np.cumsum(ds)
-            xinter = np.interp(np.linspace(0, s[-1], num_points), s, x)
-            yinter = np.interp(np.linspace(0, s[-1], num_points), s, y)
-
-            dx, dy = xinter[1:] - xinter[:-1], yinter[1:] - yinter[:-1]
+            dx = np.diff(x)
+            dy = np.diff(y)
             angles = np.arctan2(dy, dx) * 180 / np.pi
             
             res = DiscretiseCurveResponse(angles)

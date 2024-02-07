@@ -31,34 +31,38 @@ class PathExtractor:
             y.append(pose.pose.position.y)
         x = np.array(x)
         y = np.array(y)
+        path_points = np.column_stack((x, y))
+        path_points = np.flip(path_points, axis=0)
+        interpolated_path = self.interpolate_points(path_points)
 
-        points = self.evenly_spaced_points(x, y, 300)
-        tent_cont_msg = tent_cont()
-        tent_cont_msg.num_points = 7
-        # print(points.shape)
-        tent_cont_msg.px = points[:, 0].astype(int).tolist()
-        tent_cont_msg.py = points[:, 1].astype(int).tolist()
-        # self.PathPub_.publish(tent_cont_msg)
-
-        rospy.wait_for_service('discretise_curve')
-        disc_curve = rospy.ServiceProxy('discretise_curve', DiscretiseCurve)
+        n = 6 # number of points to discretise the path
+        indices = np.linspace(0, len(interpolated_path)-1, n, dtype=int)
+        disc_points = interpolated_path[indices]
+        dx, dy = np.diff(disc_points, axis=0).T
+        distances = np.sqrt(dx**2 + dy**2)
         req = DiscretiseCurveRequest()
-        req.tentacle = tent_cont_msg
-        angles = disc_curve(req)
-        angles_np = np.array(angles.angles)
-        # angles_np = np.flip(angles_np)
-        l = 50
-        dx = np.cos(angles_np*np.pi/180)*l
-        dy = np.sin(angles_np*np.pi/180)*l
-        rl_points = np.zeros((len(angles_np), 2))
-        rl_points[0] = points[-1]
-        for i in range(1, len(angles_np)):
-            rl_points[i] = rl_points[i-1] + [dx[i-1], dy[i-1] ]
+        req.tentacle.px = disc_points[:, 0].tolist()
+        req.tentacle.py = disc_points[:, 1].tolist()
+        req.tentacle.num_points = n
+        discProxy = rospy.ServiceProxy('discretise_curve', DiscretiseCurve)
+        res = discProxy(req)
+        angles = res.angles
+        rospy.loginfo(f"Discretised angles: {angles}")
 
-
-        # # Publish the points as a marker
-        marker = self.create_marker(rl_points)
+        # viz markers here
+        start = interpolated_path[0]
+        verification_points = []
+        verification_points.append(start)
+        for i in range(1, len(angles)):
+            angle = angles[i-1]
+            distance = distances[i-1]
+            dx = distance * np.cos(np.radians(angle))
+            dy = distance * np.sin(np.radians(angle))
+            point = verification_points[i-1] + [dx, dy]
+            verification_points.append(point)
+        marker = self.create_marker(verification_points)
         self.vizAnglePub_.publish(marker)
+        
 
 
 
@@ -99,31 +103,30 @@ class PathExtractor:
         return marker
 
 
-    def evenly_spaced_points(self, x, y, n):
-        """
-        Generates evenly spaced points along a curve.
-
-        Args:
-            x (array-like): The x-coordinates of the original points.
-            y (array-like): The y-coordinates of the original points.
-            n (int): The number of evenly spaced points to generate.
-
-        Returns:
-            array-like: An array of x-y coordinate pairs representing the evenly spaced points.
-        """
-        # Create a function which represents the old relation of y with respect to x
-        f = interpolate.interp1d(x, y)
-
-        # Create new evenly spaced x values
-        new_x = np.linspace(min(x), max(x), n)
-
-        # Use the function to find the new y values
-        new_y = f(new_x)
-
-        # Merge the new x, y values and transpose it to get x-y coordinate pairs
-        new_points = np.column_stack((new_x,new_y))
-
-        return new_points
+    def interpolate_points(self, points):
+        x = points[:, 0]
+        y = points[:, 1]
+        
+        # Calculate the distances between consecutive points
+        distances = np.sqrt(np.diff(x)**2 + np.diff(y)**2)
+        
+        # Calculate the cumulative distances
+        cumulative_distances = np.insert(np.cumsum(distances), 0, 0)
+        
+        # Calculate the total distance
+        total_distance = cumulative_distances[-1]
+        
+        # Calculate the number of interpolated points
+        num_interpolated_points = int(total_distance) + 1
+        
+        # Interpolate the x and y coordinates
+        interpolated_x = np.interp(np.linspace(0, total_distance, num_interpolated_points), cumulative_distances, x)
+        interpolated_y = np.interp(np.linspace(0, total_distance, num_interpolated_points), cumulative_distances, y)
+        
+        # Combine the interpolated x and y coordinates into a list of points
+        interpolated_points = np.column_stack((interpolated_x, interpolated_y))
+        
+        return interpolated_points
 
 
 def main():
