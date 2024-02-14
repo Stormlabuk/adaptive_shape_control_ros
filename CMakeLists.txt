@@ -193,7 +193,6 @@ catkin_install_python(PROGRAMS
   scripts/trigger_path.py
   scripts/occ_grid.py
   scripts/path_extractor.py
-  scripts/setup.py
   scripts/find_inserter.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

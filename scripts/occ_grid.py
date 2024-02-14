@@ -3,7 +3,7 @@ import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from nav_msgs.msg import OccupancyGrid
-from std_srvs.srv import Trigger
+from shapeforming_msgs.srv import GetInsertion
 import cv2
 import sys, os
 import numpy as np
@@ -51,6 +51,7 @@ class OccGrid:
         costmap.info.origin.orientation.z = 0
         costmap.info.origin.orientation.w = 1
         costmap.data = img.data
+        rospy.loginfo("Publishing costmap")
         self.costmap_pub.publish(costmap)
         return
     
@@ -81,6 +82,7 @@ class OccGrid:
         occ_grid.info.origin.orientation.z = 0
         occ_grid.info.origin.orientation.w = 1
         occ_grid.data = img.data
+        rospy.loginfo("Publishing occupancy grid")
         self.grid_pub.publish(occ_grid)
         return
 

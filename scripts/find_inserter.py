@@ -2,9 +2,10 @@
 import rospy
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
-from shapeforming_msgs.srv import GetInsertion
+from shapeforming_msgs.srv import GetInsertion, GetInsertionRequest
 from geometry_msgs.msg import Point
 from std_msgs.msg import String
+from visualization_msgs.msg import Marker
 import cv2
 import numpy as np
 import sys
@@ -34,6 +35,7 @@ class FindInserterNode:
         constructPoint(self, poly): Method for constructing the insertion point coordinates.
         rotatePolygon(self, poly, angle, centroid): Method for rotating the polygon.
     """
+
     def __init__(self):
         rospy.init_node('find_inserter_node', anonymous=False)
         default_path = '/home/vittorio/ros_ws/src/adaptive_ctrl/inserter/4.inserter_p0.png'
@@ -51,8 +53,10 @@ class FindInserterNode:
             '/insertion_point', Point, queue_size=1)
         self.phantomPub = rospy.Publisher('/phantom_img', Image, queue_size=1)
         self.img_pub = rospy.Publisher('/img', Image, queue_size=1)
+        self.inserter_marker_pub = rospy.Publisher('/ins_pos', Marker, queue_size=1)
+        self.inserter_point_pub = rospy.Publisher('/inserter_point', Point, queue_size=1)
 
-    def img_path_callback(self, msg): 
+    def img_path_callback(self, msg):
         """
         Callback function for the image file path subscriber.
 
@@ -64,6 +68,48 @@ class FindInserterNode:
         if self.img is None:
             sys.exit()
         _, self.img = cv2.threshold(self.img, 127, 255, cv2.THRESH_BINARY)
+        req = GetInsertionRequest()
+        rospy.wait_for_service('/find_inserter')
+        inserter_pos = rospy.ServiceProxy('/find_inserter', GetInsertion)
+        inserter_res = inserter_pos(req)
+        inserter_point = np.array(
+            [inserter_res.point.x, inserter_res.point.y, inserter_res.point.z])
+        self.inserter_marker_pub.publish(self.populate_marker(inserter_point))
+        self.inserter_point_pub.publish(inserter_res.point)
+
+    def populate_marker(self, point):
+        """
+        Creates a marker object with the given point.
+
+        Args:
+            points (list): List of points in the form [x, y, z].
+
+        Returns:
+            Marker: The created marker object.
+        """
+        marker = Marker()
+        marker.header.frame_id = "map"
+        marker.header.stamp = rospy.Time.now()
+        marker.type = Marker.POINTS
+        marker.action = Marker.ADD
+        marker.pose.orientation.x = 0
+        marker.pose.orientation.y = 0
+        marker.pose.orientation.z = 0
+        marker.pose.orientation.w = 0
+        marker.scale.x = 10
+        marker.scale.y = 10
+        marker.color.a = 1.0
+        marker.color.r = 0.0
+        marker.color.g = 0.0
+        marker.color.b = 1.0
+
+        marker_point = Point()
+        marker_point.x = point[0]
+        marker_point.y = point[1]
+        marker_point.z = point[2] if len(point) > 2 else 0.0
+        marker.points.append(marker_point)
+
+        return marker
 
     def find_inserter(self, req):
         """
@@ -114,6 +160,7 @@ class FindInserterNode:
         phantom_less_img[mask == 255] = 0
         self.phantomPub.publish(self.bridge.cv2_to_imgmsg(
             phantom_less_img, encoding="passthrough"))
+        rospy.loginfo('Published images')
 
     def getPoly(self, img):
         """
@@ -155,7 +202,8 @@ class FindInserterNode:
         orientation = 90 - orientation if not left_hand_flag else -orientation
         rotatedPoly = self.rotatePolygon(poly, orientation, centroid)
         insertion_point = self.constructPoint(rotatedPoly)
-        insertion_point = self.rotatePolygon(insertion_point, -orientation, centroid)
+        insertion_point = self.rotatePolygon(
+            insertion_point, -orientation, centroid)
         return insertion_point
 
     def constructPoint(self, poly):
@@ -186,7 +234,7 @@ class FindInserterNode:
         """
         angle_rad = np.deg2rad(angle)
         rotmatMan = np.array([[np.cos(angle_rad), -np.sin(angle_rad)],
-                    [np.sin(angle_rad), np.cos(angle_rad)]])
+                              [np.sin(angle_rad), np.cos(angle_rad)]])
         rotatedPoly = np.dot(rotmatMan, (poly - centroid).T).T + centroid
         return rotatedPoly
 
