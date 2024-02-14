@@ -1,43 +1,27 @@
 #!/usr/bin/env python
 import rospy
-import csv
 import numpy as np
-import os.path
-from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveResponse, DiscretiseCurveRequest
+from std_msgs.msg import String
+import os, sys
 
 
-def read_csv():
-    filename = os.path.dirname(__file__) + '/../csv/extractedPoints.csv'
-    with open(filename, newline='') as csvfile:
-        data = list(csv.reader(csvfile))
-        skipped_data = data[2:]  # Skip the first two lines
-        N = 348  # Specify the number of rows to read
-        selected_data = skipped_data[:N]  # Read the next N rows
-    data = np.array(selected_data)
-    x = data[:, 0].astype(float)
-    y = data[:, 1].astype(float)
-    if (len(x) != len(y)):
-        print("Error: x and y are not the same length")
-    else:
-        return x, y
+def main():
+    img_paths = []
+    base_paths = '/home/vittorio/ros_ws/src/adaptive_ctrl/inserter'
+    img_paths = os.listdir(base_paths) 
+    # sort img_paths alphabetically
+    img_paths.sort()
+    img_paths = [os.path.join(base_paths, img_path) for img_path in img_paths]
+    print(img_paths)
 
-
-def sample_trigger():
-    print("Waiting for service")
-    num_points = 6  # desired number of joints.
-    # angles will be calculated for num_points-1
-    # this should be a ros_param soon
-    px, py = read_csv()
-
-    rospy.wait_for_service('discretise_curve')
-    try:
-        print("Service found")
-        discretise_curve = rospy.ServiceProxy(
-            'discretise_curve', DiscretiseCurve)
-        resp1 = discretise_curve(num_points, px, py)
-    except rospy.ServiceException as e:
-        print("Service call failed: %s" % e)
+    rospy.init_node('img_path_finder')
+    path_pub = rospy.Publisher('/img_path', String, queue_size=10)
+    while(rospy.is_shutdown() == False):
+        for img_path in img_paths:
+            path_pub.publish(img_path)
+            rospy.sleep(1)
+    return
 
 
 if __name__ == "__main__":
-    angles = sample_trigger()
+    main()

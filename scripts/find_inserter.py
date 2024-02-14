@@ -53,8 +53,12 @@ class FindInserterNode:
             '/insertion_point', Point, queue_size=1)
         self.phantomPub = rospy.Publisher('/phantom_img', Image, queue_size=1)
         self.img_pub = rospy.Publisher('/img', Image, queue_size=1)
-        self.inserter_marker_pub = rospy.Publisher('/ins_pos', Marker, queue_size=1)
-        self.inserter_point_pub = rospy.Publisher('/inserter_point', Point, queue_size=1)
+        self.inserter_marker_pub = rospy.Publisher(
+            '/ins_pos', Marker, queue_size=1)
+        self.inserter_point_pub = rospy.Publisher(
+            '/inserter_point', Point, queue_size=1)
+        self.leftOcc = np.empty((1, 2))
+        self.rightOcc = np.empty((1, 2))
 
     def img_path_callback(self, msg):
         """
@@ -158,6 +162,10 @@ class FindInserterNode:
         mask = cv2.dilate(mask, element)
         phantom_less_img = self.img.copy()
         phantom_less_img[mask == 255] = 0
+        cv2.fillPoly(phantom_less_img, np.int32(
+            [self.leftOcc]), 255, cv2.LINE_8)
+        cv2.fillPoly(phantom_less_img, np.int32(
+            [self.rightOcc]), 255, cv2.LINE_8)
         self.phantomPub.publish(self.bridge.cv2_to_imgmsg(
             phantom_less_img, encoding="passthrough"))
         rospy.loginfo('Published images')
@@ -204,6 +212,9 @@ class FindInserterNode:
         insertion_point = self.constructPoint(rotatedPoly)
         insertion_point = self.rotatePolygon(
             insertion_point, -orientation, centroid)
+        # self.leftOcc = self.rotatePolygon(self.leftOcc, -orientation, centroid)
+        # self.rightOcc = self.rotatePolygon(
+        #     self.rightOcc, -orientation, centroid)
         return insertion_point
 
     def constructPoint(self, poly):
@@ -237,6 +248,20 @@ class FindInserterNode:
                               [np.sin(angle_rad), np.cos(angle_rad)]])
         rotatedPoly = np.dot(rotmatMan, (poly - centroid).T).T + centroid
         return rotatedPoly
+
+    def buildOcclusionTriangles(self, insertion_p, offset):
+        width = 20
+        height = 50
+        px = insertion_p[0]
+        py = insertion_p[1]
+        xoff = offset[0]
+        yoff = offset[1]
+        leftTri = np.array(
+            [[px-offset, py-offset], [px - width-offset, py-offset], [px-width-offset, py+height]])
+        rightTri = np.array(
+            [[px+offset, py-offset], [px + width+offset, py-offset], [px+width+offset, py+height]])
+
+        return leftTri, rightTri
 
 
 def main():
