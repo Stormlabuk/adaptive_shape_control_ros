@@ -56,4 +56,5 @@
         <param name="angle_pub_type" value="des_"/>
     </node>
     <node pkg="adaptive_ctrl" type="find_inserter.py" name="find_inserter" output="$(arg output)"/>
+    <node pkg="adaptive_ctrl" type="trigger_path.py" name="trigger_path" output="$(arg output)"/>
 </launch>
