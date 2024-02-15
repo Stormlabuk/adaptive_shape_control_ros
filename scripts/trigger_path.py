@@ -9,43 +9,44 @@ import os
 def main():
     rospy.init_node('service_trigger')
 
-    # img_paths = os.listdir('/home/vittorio/ros_ws/src/adaptive_ctrl/inserter')
-    # img_paths = [os.path.join('/home/vittorio/ros_ws/src/adaptive_ctrl/inserter', img_path) for img_path in img_paths]
-    # # sort alphabetically
-    # img_paths.sort()
-    # print(img_paths)
-    # img_paths = [
-    #     '/home/vittorio/ros_ws/src/adaptive_ctrl/inserter/6.inserter_p30.png']
+    img_paths = os.listdir('/home/vittorio/ros_ws/src/adaptive_ctrl/inserter')
+    img_paths = [os.path.join('/home/vittorio/ros_ws/src/adaptive_ctrl/inserter', img_path) for img_path in img_paths]
+    # sort alphabetically
+    img_paths.sort()
 
-    # # img_paths = [os.path.join('/home/vittorio/ros_ws/src/adaptive_ctrl/inster', img_path) for img_path in img_paths]
-    # img_path_pub = rospy.Publisher('/img_path', String, queue_size=1)
-    # for img_path in img_paths:
-    #     rospy.loginfo(f'Publishing image path: {img_path}')
-    #     img_path_pub.publish(img_path)
-    #     rospy.spin()
 
-    rospy.wait_for_service('/find_inserter')
-    inserter_pos = rospy.ServiceProxy('/find_inserter', GetInsertion)
-    inserter_res = inserter_pos()
-    start = inserter_res.point
+    # img_paths = [os.path.join('/home/vittorio/ros_ws/src/adaptive_ctrl/inster', img_path) for img_path in img_paths]
+    img_path_pub = rospy.Publisher('/img_path', String, queue_size=1)
+    i = 0
+    while(not rospy.is_shutdown()):
+        img_path_pub.publish(img_paths[i])
+        i += 1
+        if i == len(img_paths):
+            i = 0
+        rospy.sleep(1)
 
-    # Trigger /planner_ros_node/request_path service
-    rospy.wait_for_service('/planner_ros_node/request_path')
-    path_service = rospy.ServiceProxy(
-        '/planner_ros_node/request_path', GetPath)
-    req = GetPathRequest()
-    # req.start.x = 433
-    # req.start.y = 87
-    # req.start.z = 0.0
-    req.start = start
+        rospy.wait_for_service('/find_inserter')
+        inserter_pos = rospy.ServiceProxy('/find_inserter', GetInsertion)
+        inserter_res = inserter_pos()
+        start = inserter_res.point
 
-    req.goal.x = 308
-    req.goal.y = 395
-    req.goal.z = 0.0
+        # Trigger /planner_ros_node/request_path service
+        rospy.wait_for_service('/planner_ros_node/request_path')
+        path_service = rospy.ServiceProxy(
+            '/planner_ros_node/request_path', GetPath)
+        req = GetPathRequest()
+        # req.start.x = 433
+        # req.start.y = 87
+        # req.start.z = 0.0
+        req.start = start
 
-    # req.algorithm.data = "thetastar"
-    path_service(req)
-    rospy.sleep(2)
+        req.goal.x = 308
+        req.goal.y = 395
+        req.goal.z = 0.0
+
+        # req.algorithm.data = "thetastar"
+        path_service(req)
+        rospy.sleep(2)
 
     # rospy.spin()
 
