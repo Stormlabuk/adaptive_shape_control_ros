@@ -45,8 +45,6 @@ class FindInserterNode:
         if (self.img is None):
             sys.exit()
         _, self.img = cv2.threshold(self.img, 127, 255, cv2.THRESH_BINARY)
-        self.left_occ = np.empty([3,2])
-        self.right_occ = np.empty([3,2])
         self.pathSub_ = rospy.Subscriber(
             '/img_path', String, self.img_path_callback)
         self.inserter_srv = rospy.Service(
@@ -59,8 +57,8 @@ class FindInserterNode:
             '/ins_pos', Marker, queue_size=1)
         self.inserter_point_pub = rospy.Publisher(
             '/inserter_point', Point, queue_size=1)
-        self.leftOcc = np.empty((1, 2))
-        self.rightOcc = np.empty((1, 2))
+        self.leftCircle = np.zeros((2, 1))
+        self.rightCircle = np.zeros((2, 1))
 
     def img_path_callback(self, msg):
         """
@@ -164,8 +162,8 @@ class FindInserterNode:
         mask = cv2.dilate(mask, element)
         inserter_less_img = self.img.copy()
         inserter_less_img[mask == 255] = 0
-        cv2.fillPoly(inserter_less_img, np.int32([self.left_occ]), 255, cv2.LINE_4)
-        cv2.fillPoly(inserter_less_img, np.int32([self.right_occ]), 255, cv2.LINE_4)
+        # cv2.circle(inserter_less_img, np.int32(self.leftCircle), 15, 255, -1)
+        # cv2.circle(inserter_less_img, np.int32(self.rightCircle), 15, 255, -1)
         self.phantomPub.publish(self.bridge.cv2_to_imgmsg(
             inserter_less_img, encoding="passthrough"))
         rospy.loginfo('Published images')
@@ -210,19 +208,16 @@ class FindInserterNode:
         orientation = 90 - orientation if not left_hand_flag else -orientation
         rotatedPoly = self.rotatePolygon(poly, orientation, centroid)
         insertion_point = self.constructPoint(rotatedPoly)
-        left = np.min(rotatedPoly[:, 0])
-        right = np.max(rotatedPoly[:, 0])
-        left_pt = [left, insertion_point[1]-60]
-        left_pt2 = [left, insertion_point[1]+40]
-        left_pt3 = [left-20, insertion_point[1]]
-        right_pt = [right, insertion_point[1] -60]
-        right_pt2 = [right, insertion_point[1]+40]
-        right_pt3 = [right+20, insertion_point[1]]
-        left_pt = np.array([left_pt, left_pt2, left_pt3])
-        right_pt = np.array([right_pt, right_pt2, right_pt3])
-        self.left_occ = self.rotatePolygon(left_pt, -orientation, centroid)
-        self.right_occ = self.rotatePolygon(right_pt, -orientation, centroid)
-        insertion_point = self.rotatePolygon(insertion_point, -orientation, centroid)
+
+        insertion_point = self.rotatePolygon(
+            insertion_point, -orientation, centroid)
+        insert_y = insertion_point[1]
+        insert_x = insertion_point[0]
+        width = 30
+        self.leftCircle = np.array([insert_x - width, insert_y-5])
+        self.rightCircle = np.array([insert_x + width, insert_y-5])
+        self.rotatePolygon(self.leftCircle, -orientation, centroid)
+        self.rotatePolygon(self.rightCircle, -orientation, centroid)
         return insertion_point
 
     def constructPoint(self, poly):
@@ -256,20 +251,6 @@ class FindInserterNode:
                               [np.sin(angle_rad), np.cos(angle_rad)]])
         rotatedPoly = np.dot(rotmatMan, (poly - centroid).T).T + centroid
         return rotatedPoly
-
-    def buildOcclusionTriangles(self, insertion_p, offset):
-        width = 20
-        height = 50
-        px = insertion_p[0]
-        py = insertion_p[1]
-        xoff = offset[0]
-        yoff = offset[1]
-        leftTri = np.array(
-            [[px-offset, py-offset], [px - width-offset, py-offset], [px-width-offset, py+height]])
-        rightTri = np.array(
-            [[px+offset, py-offset], [px + width+offset, py-offset], [px+width+offset, py+height]])
-
-        return leftTri, rightTri
 
 
 def main():

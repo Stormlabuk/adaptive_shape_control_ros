@@ -24,7 +24,6 @@ class DiscretisingNode:
         num_points = req.tentacle.num_points
         x = np.array(req.tentacle.px)
         y = np.array(req.tentacle.py)
-        print(req)
         if(num_points > 0):
             dx = np.diff(x)
             dy = np.diff(y)

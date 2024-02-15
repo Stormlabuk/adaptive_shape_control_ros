@@ -36,6 +36,7 @@ class OccGrid:
         vals = vals / 255 * 100
         vals = vals.astype(np.uint8)
         img = self.bridge.cv2_to_imgmsg(vals, encoding="passthrough")
+        empty = np.zeros((width*height, 1), dtype=np.uint8).flatten().tolist()
 
         costmap = OccupancyGrid()
         costmap.header.stamp = rospy.Time.now()
@@ -50,6 +51,8 @@ class OccGrid:
         costmap.info.origin.orientation.y = 0
         costmap.info.origin.orientation.z = 0
         costmap.info.origin.orientation.w = 1
+        costmap.data = empty
+        self.costmap_pub.publish(costmap)
         costmap.data = img.data
         rospy.loginfo("Publishing costmap")
         self.costmap_pub.publish(costmap)
@@ -87,7 +90,7 @@ class OccGrid:
         return
 
 def main(args):
-    rospy.init_node('occ_map_node')
+    rospy.init_node('occ_map_node', anonymous=False)
     occ_grid = OccGrid()
     rospy.spin()
     return 0

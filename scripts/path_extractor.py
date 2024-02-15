@@ -47,7 +47,7 @@ class PathExtractor:
         discProxy = rospy.ServiceProxy('discretise_curve', DiscretiseCurve)
         res = discProxy(req)
         angles = res.angles
-        rospy.loginfo(f"Discretised angles: {angles}")
+        # rospy.loginfo(f"Discretised angles: {angles}")
 
         # viz markers here
         start = interpolated_path[0]
