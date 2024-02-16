@@ -1,0 +1,6 @@
+<launch>
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_cost.rviz"/>
+
+  <node name="compute_path" pkg="adaptive_ctrl" type="compute_path" output="screen"/>
+
+</launch>

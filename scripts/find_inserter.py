@@ -59,6 +59,7 @@ class FindInserterNode:
             '/inserter_point', Point, queue_size=1)
         self.leftCircle = np.zeros((2, 1))
         self.rightCircle = np.zeros((2, 1))
+        self.insertion_point = np.zeros((2, 1))
 
     def img_path_callback(self, msg):
         """
@@ -78,7 +79,7 @@ class FindInserterNode:
         inserter_res = inserter_pos(req)
         inserter_point = np.array(
             [inserter_res.point.x, inserter_res.point.y, inserter_res.point.z])
-        self.inserter_marker_pub.publish(self.populate_marker(inserter_point))
+        self.insertion_point = inserter_point
         self.inserter_point_pub.publish(inserter_res.point)
 
     def populate_marker(self, point):
@@ -162,11 +163,11 @@ class FindInserterNode:
         mask = cv2.dilate(mask, element)
         inserter_less_img = self.img.copy()
         inserter_less_img[mask == 255] = 0
-        # cv2.circle(inserter_less_img, np.int32(self.leftCircle), 15, 255, -1)
-        # cv2.circle(inserter_less_img, np.int32(self.rightCircle), 15, 255, -1)
+        cv2.circle(inserter_less_img, np.int32(self.leftCircle), 15, 255, -1)
+        cv2.circle(inserter_less_img, np.int32(self.rightCircle), 15, 255, -1)
         self.phantomPub.publish(self.bridge.cv2_to_imgmsg(
             inserter_less_img, encoding="passthrough"))
-        rospy.loginfo('Published images')
+        self.inserter_marker_pub.publish(self.populate_marker(self.insertion_point))
 
     def getPoly(self, img):
         """
@@ -216,9 +217,9 @@ class FindInserterNode:
         width = 30
         self.leftCircle = np.array([insert_x - width, insert_y-5])
         self.rightCircle = np.array([insert_x + width, insert_y-5])
-        self.rotatePolygon(self.leftCircle, -orientation, centroid)
-        self.rotatePolygon(self.rightCircle, -orientation, centroid)
-        return insertion_point
+        # self.rotatePolygon(self.leftCircle, -orientation, centroid)
+        # self.rotatePolygon(self.rightCircle, -orientation, centroid)
+        return insertion_point + np.array([0,20])
 
     def constructPoint(self, poly):
         """

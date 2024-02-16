@@ -16,10 +16,6 @@ class OccGrid:
         self.grid_pub = rospy.Publisher('/map', OccupancyGrid, queue_size=1)
         self.costmap_pub = rospy.Publisher('/costmap', OccupancyGrid, queue_size=1)
 
-        # Service Servers
-        # self.grid_srv = rospy.Service('/srv_grid', Trigger, self.trig_grid)
-        # self.map_srv = rospy.Service('/srv_map', Trigger, self.trig_map)
-    
         # Subscribers
         self.phantomSub = rospy.Subscriber('/phantom_img', Image, self.phantom_callback)
         self.imgSub = rospy.Subscriber('/img', Image, self.img_callback)
@@ -54,7 +50,7 @@ class OccGrid:
         costmap.data = empty
         self.costmap_pub.publish(costmap)
         costmap.data = img.data
-        rospy.loginfo("Publishing costmap")
+        # rospy.loginfo("Publishing costmap")
         self.costmap_pub.publish(costmap)
         return
     
@@ -85,8 +81,8 @@ class OccGrid:
         occ_grid.info.origin.orientation.z = 0
         occ_grid.info.origin.orientation.w = 1
         occ_grid.data = img.data
-        rospy.loginfo("Publishing occupancy grid")
-        self.grid_pub.publish(occ_grid)
+        # rospy.loginfo("Publishing occupancy grid")
+        # self.grid_pub.publish(occ_grid)
         return
 
 def main(args):
