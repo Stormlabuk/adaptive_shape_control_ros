@@ -17,6 +17,7 @@ class ComputePath {
     cv::Mat img_, img_proc_;
     ros::Subscriber img_path_sub_;
     ros::Publisher inserter_pos_, costmap_pub_, grid_pub_;
+    ros::Publisher insertion_marker;
     std::vector<cv::Point> poly_approx_;
     cv::Point2i insertion_point;
 
@@ -27,7 +28,9 @@ class ComputePath {
             nh.subscribe("/image_path", 1, &ComputePath::imgPathCallback, this);
         inserter_pos_ = nh.advertise<geometry_msgs::Point>("/inserter_pos", 1);
         costmap_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("/costmap", 1);
-        grid_pub_ = nh.advertise<nav_msgs::Path>("/grid", 1);
+        grid_pub_ = nh.advertise<nav_msgs::OccupancyGrid>("/map", 1);
+        insertion_marker = nh.advertise<visualization_msgs::Marker>(
+            "/ins_pos", 1);
     }
 
     void imgPathCallback(const std_msgs::String& msg) {
@@ -43,8 +46,17 @@ class ComputePath {
         this->poly_approx_ = getPoly(img_proc_);
         // get size of poly_approx_
         int n = poly_approx_.size();
-        ROS_INFO("Number of points in polygon: %d", n);
+        // ROS_INFO("Number of points in polygon: %d", n);
         imgToCostmap(img_proc_);
+        cv::Point insertion_point = getInsertionPoint();
+
+        geometry_msgs::Point ins_point;
+        ins_point.x = insertion_point.x;
+        ins_point.y = insertion_point.y;
+        ins_point.z = 0;
+        inserter_pos_.publish(ins_point);
+        visualization_msgs::Marker marker = populateMarker(std::vector<cv::Point>{insertion_point});
+        insertion_marker.publish(marker);
     }
 
     cv::Point getInsertionPoint() {
@@ -61,31 +73,63 @@ class ComputePath {
         //     }
         // }
         // return insertion_point;
-        cv::RotatedRect bounding_rect = cv::minAreaRect(poly_approx_);
+        cv::RotatedRect bounding_rect = cv::minAreaRect(this->poly_approx_);
         cv::Point centroid = bounding_rect.center;
         double orientation = bounding_rect.angle;
         cv::Point2f vertices[4];
         bounding_rect.points(vertices);
         double a, b;
         a = cv::norm(vertices[0] - vertices[1]);
-        b = cv::norm(vertices[1] - vertices[3]);
+        b = cv::norm(vertices[0] - vertices[3]);
+        ROS_INFO("a: %f", a);
+        ROS_INFO("b: %f", b);
         bool is_horizontal = a > b;
-        orientation = is_horizontal ? -orientation : 90 - orientation;
+        orientation = !is_horizontal ? 90 - orientation : -orientation ;
+        ROS_INFO("Orientation: %f", orientation);
+        ROS_INFO("is_horizontal: %d", is_horizontal);
+        std::vector<cv::Point> rotated_poly =
+            rotatePolygon(poly_approx_, orientation, centroid);
+        cv::Point insertion_point = constructPoint(rotated_poly);
+        insertion_point = rotatePolygon(std::vector<cv::Point>{insertion_point},
+                                        -orientation, centroid)[0];
+        return insertion_point;
     }
 
     cv::Point constructPoint(std::vector<cv::Point> poly) {
-        int x_coor, y_coor;
+        int x_coor = 0, y_coor = 0;
         // x_coor should be the average x-coordinate of the polygon
-        for (int i = 0; i < poly.size(); i++){
+        for (int i = 0; i < poly.size(); i++) {
             x_coor += poly[i].x;
         }
         x_coor = x_coor / poly.size();
         // y_coor should be the max y-coordinate of the polygon
-        for (int i = 0; i < poly.size(); i++){
+        for (int i = 0; i < poly.size(); i++) {
             y_coor = std::max(y_coor, poly[i].y);
         }
         return cv::Point(x_coor, y_coor);
-        
+    }
+
+    std::vector<cv::Point> rotatePolygon(std::vector<cv::Point> poly,
+                                           float angle,
+                                           const cv::Point& centroid) {
+        // Convert angle from degrees to radians
+        double angle_rad = angle * CV_PI / 180.0;
+
+        // Create rotation matrix
+        cv::Mat rotmatMan = (cv::Mat_<double>(2, 2) << cos(angle_rad),
+                             -sin(angle_rad), sin(angle_rad), cos(angle_rad));
+
+        std::vector<cv::Point> rotatedPoly;
+        for (const auto& point : poly) {
+            cv::Mat pointMat = (cv::Mat_<double>(2, 1) << point.x - centroid.x,
+                                point.y - centroid.y);
+            cv::Mat rotatedPointMat = rotmatMan * pointMat;
+            rotatedPoly.push_back(
+                cv::Point(rotatedPointMat.at<double>(0, 0) + centroid.x,
+                            rotatedPointMat.at<double>(1, 0) + centroid.y));
+        }
+
+        return rotatedPoly;
     }
 
     std::vector<cv::Point> getPoly(cv::Mat img) {
@@ -131,7 +175,38 @@ class ComputePath {
             }
         }
         costmap_pub_.publish(costmap);
+        grid_pub_.publish(costmap);
         ROS_INFO("Costmap published");
+    }
+    visualization_msgs::Marker populateMarker(std::vector<cv::Point> points){
+        visualization_msgs::Marker marker;
+        marker.header.frame_id = "map";
+        marker.header.stamp = ros::Time::now();
+        marker.ns = "ins_pos";
+        marker.type = visualization_msgs::Marker::POINTS;
+        marker.action = visualization_msgs::Marker::ADD;
+        marker.pose.orientation.w = 1.0;
+        marker.pose.orientation.x = 0;
+        marker.pose.orientation.y = 0;
+        marker.pose.orientation.z = 0;
+        marker.pose.position.x = 0;
+        marker.pose.position.y = 0;
+        marker.pose.position.z = 0;
+        marker.scale.x = 10;
+        marker.scale.y = 10;
+        marker.color.r = 0.0;
+        marker.color.g = 0.0;
+        marker.color.b = 1.0;
+        marker.color.a = 1.0;
+        marker.color.a = 1.0;
+        for (int i = 0; i < points.size(); i++) {
+            geometry_msgs::Point p;
+            p.x = points[i].x;
+            p.y = points[i].y;
+            p.z = 0;
+            marker.points.push_back(p);
+        }
+        return marker;
     }
 };
 int main(int argc, char* argv[]) {
