@@ -27,7 +27,7 @@ def inserter_cb(msg):
 
 def main():
     rospy.init_node('service_trigger')
-    inserter_sub = rospy.Subscriber('/inserter_point', Point, inserter_cb)
+    inserter_sub = rospy.Subscriber('/inserter_pos', Point, inserter_cb)
     rospy.spin()    
 
 

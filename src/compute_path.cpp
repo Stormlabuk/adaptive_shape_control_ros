@@ -14,7 +14,7 @@
 class ComputePath {
    private:
     std::string img_path_;
-    cv::Mat img_, img_proc_;
+    cv::Mat img_, img_proc_, img_phantom_only;
     ros::Subscriber img_path_sub_;
     ros::Publisher inserter_pos_, costmap_pub_, grid_pub_;
     ros::Publisher insertion_marker;
@@ -47,32 +47,20 @@ class ComputePath {
         // get size of poly_approx_
         int n = poly_approx_.size();
         // ROS_INFO("Number of points in polygon: %d", n);
-        imgToCostmap(img_proc_);
-        cv::Point insertion_point = getInsertionPoint();
 
+        insertion_point = getInsertionPoint();
         geometry_msgs::Point ins_point;
         ins_point.x = insertion_point.x;
         ins_point.y = insertion_point.y;
         ins_point.z = 0;
+        imgToCostmap(this->img_phantom_only);
+        imgToGrid(this->img_proc_);
         inserter_pos_.publish(ins_point);
         visualization_msgs::Marker marker = populateMarker(std::vector<cv::Point>{insertion_point});
         insertion_marker.publish(marker);
     }
 
     cv::Point getInsertionPoint() {
-        // // get the centroid of the polygon
-        // cv::Moments M = cv::moments(poly_approx_);
-        // cv::Point centroid = cv::Point(M.m10 / M.m00, M.m01 / M.m00);
-        // // get the point closest to the centroid
-        // int min_dist = INT_MAX;
-        // for (int i = 0; i < poly_approx_.size(); i++) {
-        //     int dist = cv::norm(poly_approx_[i] - centroid);
-        //     if (dist < min_dist) {
-        //         min_dist = dist;
-        //         insertion_point = poly_approx_[i];
-        //     }
-        // }
-        // return insertion_point;
         cv::RotatedRect bounding_rect = cv::minAreaRect(this->poly_approx_);
         cv::Point centroid = bounding_rect.center;
         double orientation = bounding_rect.angle;
@@ -81,17 +69,17 @@ class ComputePath {
         double a, b;
         a = cv::norm(vertices[0] - vertices[1]);
         b = cv::norm(vertices[0] - vertices[3]);
-        ROS_INFO("a: %f", a);
-        ROS_INFO("b: %f", b);
         bool is_horizontal = a > b;
-        orientation = !is_horizontal ? 90 - orientation : -orientation ;
-        ROS_INFO("Orientation: %f", orientation);
-        ROS_INFO("is_horizontal: %d", is_horizontal);
+        orientation = is_horizontal ? -orientation :-orientation - 90;
         std::vector<cv::Point> rotated_poly =
             rotatePolygon(poly_approx_, orientation, centroid);
         cv::Point insertion_point = constructPoint(rotated_poly);
         insertion_point = rotatePolygon(std::vector<cv::Point>{insertion_point},
                                         -orientation, centroid)[0];
+        // check that this->img_proc_ is a 3-channel image
+        this->img_phantom_only = this->img_proc_.clone();
+        fillPoly(this->img_phantom_only, std::vector<std::vector<cv::Point>>{this->poly_approx_}, cv::Scalar(255));
+        
         return insertion_point;
     }
 
@@ -150,7 +138,7 @@ class ComputePath {
         return poly;
     }
 
-    void imgToCostmap(cv::Mat img) {
+    void imgToCostmap(const cv::Mat &img) {
         nav_msgs::OccupancyGrid costmap;
         costmap.header.stamp = ros::Time::now();
         costmap.header.frame_id = "map";
@@ -165,18 +153,70 @@ class ComputePath {
         costmap.info.origin.orientation.z = 0;
         costmap.info.origin.orientation.w = 1;
         // convert image to costmap
-        for (int i = 0; i < img.rows; i++) {
-            for (int j = 0; j < img.cols; j++) {
-                if (img.at<uchar>(i, j) == 255) {
+
+        cv::Mat kernel = cv::Mat::ones(3, 3, CV_32F);
+        cv::Mat diffused_img;
+        cv::Mat structuringElement = cv::getStructuringElement(
+            cv::MORPH_RECT, cv::Size(11, 11), cv::Point(-1, -1));
+        cv::erode(img, img, structuringElement);
+        cv::filter2D(img, diffused_img, -1, kernel, cv::Point(-1, -1), 0,
+                     cv::BORDER_DEFAULT);
+
+        this->addOcclusion(diffused_img, 15, 20, 10);
+
+        for (int i = 0; i < diffused_img.rows; i++) {
+            for (int j = 0; j < diffused_img.cols; j++) {
+                if (diffused_img.at<uchar>(i, j) == 255) {
                     costmap.data.push_back(0);
                 } else {
                     costmap.data.push_back(100);
                 }
             }
         }
+        // cv::normalize(diffused_img, diffused_img, 0, 100, cv::NORM_MINMAX);
+        // for (int i = 0; i < diffused_img.rows; i++) {
+        //     for (int j = 0; j < diffused_img.cols; j++) {
+        //         costmap.data.push_back(100 - diffused_img.at<uchar>(i, j));
+        //     }
+        // }
+
         costmap_pub_.publish(costmap);
-        grid_pub_.publish(costmap);
         ROS_INFO("Costmap published");
+    }
+
+    void addOcclusion(cv::Mat img, int radius, int xoffset, int yoffset){
+        cv::Point centreLeft = this->insertion_point + cv::Point(-xoffset, yoffset);
+        cv::Point centreRight = this->insertion_point + cv::Point(xoffset, yoffset);
+        cv::circle(img, centreLeft, radius, cv::Scalar(0), -1);
+        cv::circle(img, centreRight, radius, cv::Scalar(0), -1);
+    }
+
+    void imgToGrid(const cv::Mat &img) {
+        nav_msgs::OccupancyGrid grid;
+        grid.header.stamp = ros::Time::now();
+        grid.header.frame_id = "map";
+        grid.info.resolution = 1;
+        grid.info.width = img.cols;
+        grid.info.height = img.rows;
+        grid.info.origin.position.x = 0;
+        grid.info.origin.position.y = 0;
+        grid.info.origin.position.z = 0;
+        grid.info.origin.orientation.x = 0;
+        grid.info.origin.orientation.y = 0;
+        grid.info.origin.orientation.z = 0;
+        grid.info.origin.orientation.w = 1;
+        // convert image to costmap
+        for (int i = 0; i < img.rows; i++) {
+            for (int j = 0; j < img.cols; j++) {
+                if (img.at<uchar>(i, j) == 255) {
+                    grid.data.push_back(0);
+                } else {
+                    grid.data.push_back(100);
+                }
+            }
+        }
+        grid_pub_.publish(grid);
+        ROS_INFO("Grid published");
     }
     visualization_msgs::Marker populateMarker(std::vector<cv::Point> points){
         visualization_msgs::Marker marker;
