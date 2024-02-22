@@ -195,11 +195,12 @@ target_link_libraries(compute_path
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
   scripts/discretising_node.py
-  scripts/sample_trigger.py
+  scripts/image_fetcher.py
   scripts/trigger_path.py
   scripts/occ_grid.py
   scripts/path_extractor.py
   scripts/find_inserter.py
+  scripts/image_processor.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

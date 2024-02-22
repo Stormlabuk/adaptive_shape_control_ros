@@ -1,0 +1,8 @@
+<launch>
+
+    <arg name="output" default="screen"/>
+
+    <node name="image_fetcher" pkg="adaptive_ctrl" type="image_fetcher.py" output="$(arg output)"/>
+    <node name="image_processsor" pkg="adaptive_ctrl" type="image_processor.py" output="$(arg output)"/>
+
+</launch>
