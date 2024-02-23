@@ -162,7 +162,7 @@ class ComputePath {
         cv::filter2D(img, diffused_img, -1, kernel, cv::Point(-1, -1), 0,
                      cv::BORDER_DEFAULT);
 
-        this->addOcclusion(diffused_img, 15, 20, 10);
+        this->addOcclusion(diffused_img, 10, 25, 5);
 
         for (int i = 0; i < diffused_img.rows; i++) {
             for (int j = 0; j < diffused_img.cols; j++) {
@@ -173,18 +173,12 @@ class ComputePath {
                 }
             }
         }
-        // cv::normalize(diffused_img, diffused_img, 0, 100, cv::NORM_MINMAX);
-        // for (int i = 0; i < diffused_img.rows; i++) {
-        //     for (int j = 0; j < diffused_img.cols; j++) {
-        //         costmap.data.push_back(100 - diffused_img.at<uchar>(i, j));
-        //     }
-        // }
 
         costmap_pub_.publish(costmap);
         ROS_INFO("Costmap published");
     }
 
-    void addOcclusion(cv::Mat img, int radius, int xoffset, int yoffset){
+    void addOcclusion(cv::Mat &img, int radius, int xoffset, int yoffset){
         cv::Point centreLeft = this->insertion_point + cv::Point(-xoffset, yoffset);
         cv::Point centreRight = this->insertion_point + cv::Point(xoffset, yoffset);
         cv::circle(img, centreLeft, radius, cv::Scalar(0), -1);

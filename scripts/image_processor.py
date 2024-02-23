@@ -10,13 +10,7 @@ from std_msgs.msg import String
 
 class ImageProcessor():
     def __init__(self) -> None:
-        self.inserterLowVals = rospy.get_param(
-            '~inserter_low_vals', [45, 0, 0])
-        self.inserterHighVals = rospy.get_param(
-            '~inserter_high_vals', [150, 255, 255])
-        self.phantomLowVals = rospy.get_param('~phantom_low_vals', [0, 0, 95])
-        self.phantomHighVals = rospy.get_param(
-            '~phantom_high_vals', [180, 86, 206])
+
         self.img_path_sub = rospy.Subscriber(
             "img_path", String, self.image_callback)
         self.inserter_pub = rospy.Publisher(
@@ -30,45 +24,46 @@ class ImageProcessor():
     def image_callback(self, data):
         img = cv2.imread(data.data, cv2.IMREAD_COLOR)
 
-        self.inserter = np.zeros_like(img)
-        self.phantom = np.zeros_like(img)
-        hsv_img = cv2.GaussianBlur(img, (5, 5), 0)
-        structuring_elem = cv2.getStructuringElement(cv2.MORPH_RECT, (11, 11))
-        hsv_img = cv2.erode(hsv_img, structuring_elem, iterations=1)
-        hsv_img = cv2.cvtColor(hsv_img, cv2.COLOR_BGR2HSV)
-        inserter = cv2.inRange(hsv_img, np.array(
-            self.inserterLowVals), np.array(self.inserterHighVals))
-        phantom = cv2.inRange(hsv_img, np.array(
-            self.phantomLowVals), np.array(self.phantomHighVals))
-        phantom[inserter > 0] = 0
-        # Find contours of phantom
-        phantom_contours, _ = cv2.findContours(phantom, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # Find contours of inserter
-        inserter_contours, _ = cv2.findContours(inserter, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # # Create blank image for drawing contours
-        # contour_img = np.zeros_like(img)
-        # # Draw contours of phantom in blue
-        # cv2.drawContours(contour_img, phantom_contours, -1, (255, 0, 0), 2)
-        # # Draw contours of inserter in red
-        # cv2.drawContours(contour_img, inserter_contours, -1, (0, 0, 255), 2)
-
-
-        phantom_contours = sorted(phantom_contours, key=cv2.contourArea, reverse=True)
-        inserter_contours = sorted(inserter_contours, key=cv2.contourArea, reverse=True)
-        # top_cnt_disp = np.zeros_like(img)
-        # cv2.drawContours(top_cnt_disp, phantom_contours[:5], -1, (255, 0, 0), -1)
-        # cv2.drawContours(top_cnt_disp, inserter_contours[:1], -1, (0, 0, 255), -1)
-        # cv2.imshow("Top contours", top_cnt_disp)
-        # cv2.waitKey(0)
-
+        # 1. Convert to grayscale
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        # 2. Gaussian blur
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        # 3. Binary thresholding
+        _, thresh = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
+        # 4. find contours
+        contours, _ = cv2.findContours(
+            thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # 5. sort contours by surface area
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+        # 6. Draw the top 2 contours. That is the phantom image
+        self.phantom = np.zeros_like(gray)
+        # self.phantom = cv2.cvtColor(self.phantom, cv2.COLOR_BGR2GRAY)
         self.phantom = cv2.drawContours(
-            self.phantom, phantom_contours[:2], -1, 255, 3)
+            self.phantom, contours[:2], -1, 255, -1)
+        # 7. Draw the bounding rect of the phantom, use as a mask for the inserter
+        merged_contour = cv2.findNonZero(self.phantom)
+        box = cv2.boundingRect(merged_contour)
+        self.inserter = gray.copy()
+        cv2.rectangle(self.inserter, box, (0), cv2.FILLED)
+        # 8. Canny edge the inserter
+        inserter_th = cv2.Canny(self.inserter, 180, 255)
+        # 9. Dilate the edges
+        inserter_dilated = cv2.dilate(inserter_th, None, iterations=1)
+        # 10. Find contours on inserter
+        contours, _ = cv2.findContours(
+            inserter_dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # 11. Sort by surface area
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+        # 12. Draw the convex Hull of the top contour
+
+        hull = cv2.convexHull(contours[0])
+        self.inserter = np.zeros_like(self.inserter)
         self.inserter = cv2.drawContours(
-            self.inserter, inserter_contours[:1], -1, 255, 3)
+            self.inserter, [hull], -1, 255, cv2.FILLED)
+
         bridge = CvBridge()
         try:
+            rospy.loginfo("Publishing images")
             self.inserter_pub.publish(bridge.cv2_to_imgmsg(
                 self.inserter, "passthrough"))
             self.phantom_pub.publish(bridge.cv2_to_imgmsg(
