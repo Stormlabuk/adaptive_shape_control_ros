@@ -57,14 +57,15 @@ class FindInsertionPoint:
         polyRotated = self.rotatePolygon(
             approx, orientation, centroid)
         tipRotated = np.array([np.mean(polyRotated[:, 0]), np.max(polyRotated[:, 1])])
-        scope_adj = np.array([0.5 * self.mm_2_pixel, 2 * self.mm_2_pixel])
+        scope_adj = np.array([0.5 * self.mm_2_pixel, -1 * self.mm_2_pixel])
         tipRotated = tipRotated + scope_adj
         ins_point = self.rotatePolygon(
             tipRotated, -orientation, centroid)
         insertion_point.x = ins_point[0]
         insertion_point.y = ins_point[1]
         self.insertion_point_pub.publish(insertion_point)
-
+        marker = self.PopulateMarker([insertion_point.x, insertion_point.y, 0])
+        self.insertion_point_marker.publish(marker)
         return
 
     def PopulateMarker(self, point):

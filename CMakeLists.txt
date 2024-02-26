@@ -197,9 +197,8 @@ catkin_install_python(PROGRAMS
   scripts/discretising_node.py
   scripts/image_fetcher.py
   scripts/trigger_path.py
-  scripts/occ_grid.py
+  scripts/process_costmap.py
   scripts/path_extractor.py
-  scripts/find_inserter.py
   scripts/image_processor.py
   scripts/find_insertion_point.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

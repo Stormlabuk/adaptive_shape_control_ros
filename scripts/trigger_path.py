@@ -2,10 +2,8 @@
 import rospy
 from heuristic_planners.srv import GetPath, GetPathRequest, GetPathResponse
 from shapeforming_msgs.srv import GetInsertion, GetInsertionResponse
-from std_msgs.msg import String
 from geometry_msgs.msg import Point
-from nav_msgs.msg import Path
-import os
+from nav_msgs.msg import OccupancyGrid
 
 
 
@@ -21,13 +19,14 @@ def inserter_cb(msg):
     goal.y = 395
     goal.z = 0
     req.goal = goal
+    # rospy.wait_for_message('/costmap', OccupancyGrid)
     res = path_trigger(req) 
-    
+
     return
 
 def main():
     rospy.init_node('service_trigger')
-    inserter_sub = rospy.Subscriber('/inserter_pos', Point, inserter_cb)
+    inserter_sub = rospy.Subscriber('/insertion_point', Point, inserter_cb)
     rospy.spin()    
 
 

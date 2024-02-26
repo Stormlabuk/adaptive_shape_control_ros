@@ -16,6 +16,7 @@ class ImageProcessor():
         self.inserter_pub = rospy.Publisher(
             "inserter_img", Image, queue_size=10)
         self.phantom_pub = rospy.Publisher("phantom_img", Image, queue_size=10)
+        self.image_pub = rospy.Publisher("image", Image, queue_size=10)
         self.inserter = np.empty((0, 0), dtype=np.uint8)
         self.phantom = np.empty((0, 0), dtype=np.uint8)
         rospy.init_node('image_processor', anonymous=False)
@@ -63,7 +64,8 @@ class ImageProcessor():
 
         bridge = CvBridge()
         try:
-            rospy.loginfo("Publishing images")
+            # rospy.loginfo("Publishing images")
+            self.image_pub.publish(bridge.cv2_to_imgmsg(img, "bgr8"))
             self.inserter_pub.publish(bridge.cv2_to_imgmsg(
                 self.inserter, "passthrough"))
             self.phantom_pub.publish(bridge.cv2_to_imgmsg(
