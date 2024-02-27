@@ -21,7 +21,8 @@ class FindInsertionPoint:
         self.insertion_point_marker = rospy.Publisher(
             "insertion_point_marker", Marker, queue_size=10)
 
-        self.mm_2_pixel = 50
+        self.mm_pixel = rospy.get_param("~mm_pixel", 5) # 1mm = 5 pixel
+        self.pixel_mm = 1 / self.mm_pixel
 
     def inserter_callback(self, msg):
         bridge = CvBridge()
@@ -57,7 +58,7 @@ class FindInsertionPoint:
         polyRotated = self.rotatePolygon(
             approx, orientation, centroid)
         tipRotated = np.array([np.mean(polyRotated[:, 0]), np.max(polyRotated[:, 1])])
-        scope_adj = np.array([0.5 * self.mm_2_pixel, -1 * self.mm_2_pixel])
+        scope_adj = np.array([1.2 * self.pixel_mm, -23.8 * self.pixel_mm])
         tipRotated = tipRotated + scope_adj
         ins_point = self.rotatePolygon(
             tipRotated, -orientation, centroid)

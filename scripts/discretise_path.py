@@ -15,7 +15,8 @@ class DiscretisePath:
         base_planner = "/planner_ros_node/"
 
         self.rl_num = rospy.get_param('~rl_num', 6)
-        self.mm_2_pixel = rospy.get_param("~mm_2_pixel", 50) # 1mm = 50 pixel
+        self.mm_pixel = rospy.get_param("~mm_pixel", 5) # 1mm = 5 pixel
+        self.pixel_mm = 1 / self.mm_pixel
         rospy.Subscriber(base_planner + "path", Path, self.PathCB_)
         self.marker_pub = rospy.Publisher("viz_angles", Marker, queue_size=10)
         rospy.spin()
@@ -33,9 +34,10 @@ class DiscretisePath:
         interpolated_path = self.interpolate_points(path_points)
         # 3. find and slice the first 50mm worth of points
         slice, link_no = self.getSlice(interpolated_path, 50)
+        rospy.loginfo("interpolated path length: %d, slice length: %d, link_no: %d" % (len(interpolated_path), len(slice), link_no))
         # 4. feed that to the discretise_curve service
         indices = np.linspace(0, len(slice) -
-                              1, self.rl_num, dtype=int)  # indices of rl_num evenly spaced points
+                              1, link_no, dtype=int)  # indices of rl_num evenly spaced points
         disc_points = slice[indices]
         req = DiscretiseCurveRequest()
         req.tentacle.px = disc_points[:, 0].tolist()
@@ -63,34 +65,50 @@ class DiscretisePath:
         self.marker_pub.publish(marker)
 
 
-    def getSlice(self, interpolated_path, K_mm):
-        # Convert K from mm to pixels
-        K_pixels = K_mm * (self.mm_2_pixel)
+    def getSlice(self, interpolated_path, link_l):
+        # # Convert K from mm to pixels
+        # K_pixels = K_mm * (self.mm_2_pixel)
 
-        # Calculate the distances between consecutive points
-        distances = np.sqrt(
-            np.sum(np.diff(interpolated_path, axis=0)**2, axis=1))
+        # # Calculate the distances between consecutive points
+        # distances = np.sqrt(
+        #     np.sum(np.diff(interpolated_path, axis=0)**2, axis=1))
 
-        # Calculate the cumulative distances along the path
-        cumulative_distances = np.insert(np.cumsum(distances), 0, 0)
+        # # Calculate the cumulative distances along the path
+        # cumulative_distances = np.insert(np.cumsum(distances), 0, 0)
 
-        # Find the index where the cumulative distance exceeds K_pixels
-        idx = np.searchsorted(cumulative_distances, K_pixels)
-        fitted_links = 5
-        if idx >= len(interpolated_path):
-            idx = len(interpolated_path) - 1
+        # # Find the index where the cumulative distance exceeds K_pixels
+        # idx = np.searchsorted(cumulative_distances, K_pixels)
+        # fitted_links = 5
+        # if idx >= len(interpolated_path):
+        #     idx = len(interpolated_path) - 1
+        # else:
+        #     fitted_links = int(np.floor(idx / self.mm_2_pixel))
+        #     idx = fitted_links * self.mm_2_pixel
+        # # If the cumulative distance at idx is exactly K_pixels, use all points up to idx
+        # if cumulative_distances[idx] == K_pixels:
+        #     return interpolated_path[:idx+1]
+
+        # # Otherwise, interpolate the last point
+        # last_point = interpolated_path[idx-1] + (K_pixels - cumulative_distances[idx-1]) / \
+        #     distances[idx-1] * (interpolated_path[idx] -
+        #                         interpolated_path[idx-1])
+        # return np.vstack((interpolated_path[:idx], last_point)), fitted_links
+        fitted_links = 0
+        sliced_points = []
+        num_points = len(interpolated_path)
+        fitted_links = int( np.floor(num_points / link_l))
+        if fitted_links > 5:
+            fitted_links = 5
+            sliced_points = interpolated_path[:5]
+
+        indices_spanned = fitted_links * link_l
+        if indices_spanned < num_points:
+            sliced_points = interpolated_path[:indices_spanned]
+        
+
         else:
-            fitted_links = int(np.floor(idx / self.mm_2_pixel))
-            idx = fitted_links * self.mm_2_pixel
-        # If the cumulative distance at idx is exactly K_pixels, use all points up to idx
-        if cumulative_distances[idx] == K_pixels:
-            return interpolated_path[:idx+1]
-
-        # Otherwise, interpolate the last point
-        last_point = interpolated_path[idx-1] + (K_pixels - cumulative_distances[idx-1]) / \
-            distances[idx-1] * (interpolated_path[idx] -
-                                interpolated_path[idx-1])
-        return np.vstack((interpolated_path[:idx], last_point)), fitted_links
+            sliced_points = interpolated_path
+        return sliced_points, fitted_links
 
     def interpolate_points(self, points):
         x = points[:, 0]

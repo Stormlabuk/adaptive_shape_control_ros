@@ -15,8 +15,8 @@ def inserter_cb(msg):
     ins_point = msg
     req.start = ins_point
     goal = Point()
-    goal.x = 387
-    goal.y = 311
+    goal.x = 457
+    goal.y = 251
     goal.z = 0
     req.goal = goal
     # rospy.wait_for_message('/costmap', OccupancyGrid)
