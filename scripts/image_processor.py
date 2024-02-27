@@ -15,6 +15,7 @@ class ImageProcessor():
             "img_path", String, self.image_callback)
         self.inserter_pub = rospy.Publisher(
             "inserter_img", Image, queue_size=10)
+        self.base_pub = rospy.Publisher("base_img", Image, queue_size=10)
         self.phantom_pub = rospy.Publisher("phantom_img", Image, queue_size=10)
         self.image_pub = rospy.Publisher("image", Image, queue_size=10)
         self.inserter = np.empty((0, 0), dtype=np.uint8)
@@ -62,14 +63,17 @@ class ImageProcessor():
         self.inserter = cv2.drawContours(
             self.inserter, [hull], -1, 255, cv2.FILLED)
 
+        base_img = cv2.add(self.inserter, self.phantom)
+
         bridge = CvBridge()
         try:
-            # rospy.loginfo("Publishing images")
             self.image_pub.publish(bridge.cv2_to_imgmsg(img, "bgr8"))
             self.inserter_pub.publish(bridge.cv2_to_imgmsg(
                 self.inserter, "passthrough"))
             self.phantom_pub.publish(bridge.cv2_to_imgmsg(
                 self.phantom, "passthrough"))
+            self.base_pub.publish(bridge.cv2_to_imgmsg(
+                base_img, "passthrough"))
         except CvBridgeError as e:
             rospy.logerr(e)
 

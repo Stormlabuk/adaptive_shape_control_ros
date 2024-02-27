@@ -10,13 +10,13 @@ class GridProcessor:
     def __init__(self) -> None:
 
         self.phantom_sub = rospy.Subscriber('/phantom_img', Image, self.phantom_callback)
-        self.insert_sub = rospy.Subscriber('/inserter_img', Image, self.insert_callback)
+        self.base_sub = rospy.Subscriber('/base_img', Image, self.base_callback)
 
         self.costmap_pub = rospy.Publisher('/costmap', OccupancyGrid, queue_size=1)
         self.occ_grid_pub = rospy.Publisher('/grid', OccupancyGrid, queue_size=1)
         
         self.phantom = Image()
-        self.inserter_data = Image()
+        self.base = Image()
         self.bridge = CvBridge()
         rospy.init_node('grid_processor', anonymous=False)
         rospy.spin()
@@ -24,27 +24,23 @@ class GridProcessor:
     def phantom_callback(self, msg):
         # self.phantom = msg
         phantom_cv = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
-        element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7))
-        phantom_cv = cv2.dilate(phantom_cv, element, iterations=1)
+        element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
+        phantom_cv = cv2.dilate(phantom_cv, element, iterations=2)
         vals = np.array(phantom_cv.tolist())
-        # width = vals.shape[1]
-        # height = vals.shape[0]
         vals = vals / 255 * 100
         vals = vals.astype(np.uint8)
         self.phantom = self.bridge.cv2_to_imgmsg(vals, encoding="passthrough")
-
-
         self.process_costmap()
         return
 
-    def insert_callback(self, msg):
-        inserter_cv = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+    def base_callback(self, msg):
+        base_cv = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
         # element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7))
         # inserter_cv = cv2.dilate(inserter_cv, element, iterations=1)
-        vals = np.array(inserter_cv.tolist())
+        vals = np.array(base_cv.tolist())
         vals = vals / 255 * 100
         vals = vals.astype(np.uint8)
-        self.inserter = self.bridge.cv2_to_imgmsg(vals, encoding="passthrough")
+        self.base = self.bridge.cv2_to_imgmsg(vals, encoding="passthrough")
         self.process_occgrid()
         return
 
@@ -87,13 +83,13 @@ class GridProcessor:
         grid.info.origin.orientation.y = 0
         grid.info.origin.orientation.z = 0
         grid.info.origin.orientation.w = 1
-        grid.data = self.inserter.data
+        grid.data = self.base.data
         data = []
         # if(self.phantom is not None):
         for i in range(600*600):
-            data.append(self.inserter.data[i] | self.phantom.data[i])
+            data.append(self.base.data[i] | self.phantom.data[i])
         # else:
-            # data = self.inserter.data
+            # data = self.base.data
         grid.data = data
         self.occ_grid_pub.publish(grid)
         return
