@@ -52,5 +52,7 @@
     <node name="find_insertion_point" pkg="adaptive_ctrl" type="find_insertion_point.py" output="$(arg output)"/>
     <node name="process_costmap" pkg="adaptive_ctrl" type="process_costmap.py" output="$(arg output)"/>
     <node name="trigger_path" pkg="adaptive_ctrl" type="trigger_path.py" output="$(arg output)"/>
+    <node name="discretise_path" pkg="adaptive_ctrl" type="discretise_path.py" output="$(arg output)"/>
+    <node name="discretising_node" pkg="adaptive_ctrl" type="discretising_node.py" output="$(arg output)"/>
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_v2.rviz"/>
 </launch>

@@ -2,7 +2,7 @@
 #define SHAPE_SENSING_CPP
 
 #include <ros/ros.h>
-#include <shapeforming_msgs/tent_cont.h>
+#include <shapeforming_msgs/tent_continuous.h>
 #include <sensor_msgs/Image.h>
 #include <opencv2/opencv.hpp>
 
@@ -25,8 +25,8 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "shape_sensing_node");
     ros::NodeHandle nh;
 
-    // Create a publisher for the "tent_cont" message
-    ros::Publisher shape_pub = nh.advertise<shapeforming_msgs::tent_cont>("tent_cont_topic", 10);
+    // Create a publisher for the "tent_continuous" message
+    ros::Publisher shape_pub = nh.advertise<shapeforming_msgs::tent_continuous>("tent_cont_topic", 10);
 
     // Create a subscriber for the "camera_input" topic
     ros::Subscriber image_sub = nh.subscribe("camera_input", 10, imageCallback);
@@ -36,8 +36,8 @@ int main(int argc, char** argv)
 
     while (ros::ok())
     {
-        // Create a new "tent_cont" message
-        shapeforming_msgs::tent_cont msg;
+        // Create a new "tent_continuous" message
+        shapeforming_msgs::tent_continuous msg;
         msg.num_points = 0;
         msg.px = {};
         msg.py = {};

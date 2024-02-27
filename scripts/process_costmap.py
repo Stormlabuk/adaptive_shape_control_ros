@@ -89,11 +89,12 @@ class GridProcessor:
         grid.info.origin.orientation.w = 1
         grid.data = self.inserter.data
         data = []
-        if(self.phantom is not None):
-            for i in range(600*600):
-                data.append(self.inserter.data[i] | self.phantom.data[i])
-        else:
-            data = self.inserter.data
+        # if(self.phantom is not None):
+        for i in range(600*600):
+            data.append(self.inserter.data[i] | self.phantom.data[i])
+        # else:
+            # data = self.inserter.data
+        grid.data = data
         self.occ_grid_pub.publish(grid)
         return
 
