@@ -27,43 +27,32 @@ catkin build
 
 ### To-Do
 
-- [x] Annotate Discretisation Node
-- [x] Wire up all the nodes, implementation follows later.
-  - [x] Centre-line extractor
-- [ ] Implement precomputation node
-  - [ ] Ensure field precals are trigger-based
-- [ ] Implement error calculating node
-- [ ] Implement control loop node
-- [ ] Implement path extractor node
-- [ ] Implement an image processing node
-- [ ] Make it pass the centre-line to the discretisation node
-- [ ] Make number of joints in disc node a ros_param
+- [x] Rewrite Todo
+- [x] Document written nodes
+- [ ] Write out precomputation node
+- [ ] Write out controller node
+- [ ] Write out error calculation
+- [ ] Connect CV section to a live camera input
+- [ ] Use live camera input for shape sensing
 
 ### Nodes
 
-- [Control Loop](src/control_loop.cpp) takes in the shape info and figures out the error. It will publish either the updated field or the the error, TBD.
+#### CV Side
 
-- [Precomputation Node](src/precomputation_node.cpp) takes in desired shape and calculates the required field.
+|      Node Name       |                                                 Functionality                                                 |                                      Subscribers                                      |                                               Publishers                                                |              Services              | Done |
+| :------------------: | :-----------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------: | :--------------------------------: | :--: |
+|    image_fetcher     |                          Finds image paths and forwards them to the image_processor                           |                                         None                                          |                                    **std_msgs::String** img_path                                     |                None                |  ✅   |
+|   image_processor    | Applies contour based filtering to the fetched image path. Publishes forward the phantom and inserter images. |                           **std_msgs::String** img_path                            |                    **sensor_msgs::Image** phantom_img inserter_img base_img                    |                None                |  ✅   |
+| find_insertion_point |                            Processes inserter contour to find the insertion point                             |                        **sensor_msgs::Image** inserter_img                         | **geometry_msgs::Point** insertion_point **visualization_msgs::Marker** insertion_point_marker |                None                |  ✅   |
+|   process_costmap    |                              Processes inserter and phantom contour as costmaps                               |                   **sensor_msgs::Image** phantom_img base_img                   |                               **nav_msgs::OccupancyGrid** grid map                                |                None                |  ✅   |
+|     trigger_path     |  Takes in insertion point, checks that the costmap is up to date and requests a path with an arbitrary goal   | **geometry_msgs::Point** insertion_point **nav_msgs::OccupancyGrid** costmap |                                                  None                                                   |    Heuristic_Planners::GetPath     |  ✅   |
+|   discretise_path    |                                 Takes in path and discretises it to RL domain                                 |                              **nav_msgs::Path**  path                              |     **shapeforming_msgs::rl_angles** des_angles **visualization_msgs::Marker** viz_angles      | shapeforming_msgs::DiscretiseCurve |  ✅   |
 
-- [Shape Sensing](src/shape_sensing.cpp) takes in sensor input to calculate the observed shape and publish it out.
-
-- [Discretisation Node](scripts/discretising_node.py) Takes a centre-line using service [DiscreteCurve](srv/DiscretiseCurve.srv) and publishes its rigid-link joint representation through [rl_angles](msg/rl_angles.msg). The number of joints is currently hardcoded, but should be passed in [DiscreteCurve](srv/DiscretiseCurve.srv) call, this will likely be an integer advertised by the [Control Loop](src/control_loop.cpp).
-
-- [Path extractor node](src/path_extractor.cpp) Takes in an image of the phantom and calculates a centre-line, which is then translated to joint desired joint angles, which arefed to the [precomputation node](src/precomputation_node.cpp).
+#### Control side
 
 ### Node graph
 
-![Node Graph](img/dev_node_graph.png)
-
-### Topics
-
-- "/Tent_Shape", calculated and published by [Shape Sensing](src/shape_sensing.cpp).
-- "/Error", calculated and published by [Control Loop](src/control_loop.cpp).
-
-### Messages
-
-- [Shape](msg/rl_shape.msg) holds the shape sensed by [Shape Sensing](src/shape_sensing.cpp).
-- [Error](msg/error.msg) holds the error calculated by [Control Loop](src/control_loop.cpp)
+![Node Graph](img/cv_side_graph.png)
 
 ## Usage
 
