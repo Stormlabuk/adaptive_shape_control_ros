@@ -85,7 +85,7 @@ class DiscretisePath:
         #     fitted_links = int(np.floor(idx / self.mm_2_pixel))
         #     idx = fitted_links * self.mm_2_pixel
         # # If the cumulative distance at idx is exactly K_pixels, use all points up to idx
-        # if cumulative_distances[idx] == K_pixels:
+        # if cumulative_distances[idx] == K_pixels: 
         #     return interpolated_path[:idx+1]
 
         # # Otherwise, interpolate the last point
@@ -99,12 +99,12 @@ class DiscretisePath:
         fitted_links = int( np.floor(num_points / link_l))
         if fitted_links > 5:
             fitted_links = 5
-            sliced_points = interpolated_path[:5]
+        elif fitted_links < 1:
+            fitted_links = 1
 
         indices_spanned = fitted_links * link_l
         if indices_spanned < num_points:
             sliced_points = interpolated_path[:indices_spanned]
-        
 
         else:
             sliced_points = interpolated_path

@@ -20,10 +20,10 @@ class ImageFetcher():
     def fetch_image(self):
         while not rospy.is_shutdown():
             # Fetch the image
-            # for img_path in self.img_paths:
-            img_path = self.img_paths[0]
-            self.image_path_pub.publish(img_path)
-            self.rate.sleep()
+            for img_path in self.img_paths:
+            # img_path = self.img_paths[0]
+                self.image_path_pub.publish(img_path)
+                self.rate.sleep()
 
 
 if __name__ == '__main__':
