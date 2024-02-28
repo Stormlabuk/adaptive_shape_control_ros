@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Marker1
       Splitter Ratio: 0.4882352948188782
     Tree Height: 725
   - Class: rviz/Selection
@@ -195,6 +196,14 @@ Visualization Manager:
         "": true
       Queue Size: 100
       Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /goal_marker
+      Name: Marker
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -259,5 +268,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 380
-  Y: 496
+  X: 348
+  Y: 464

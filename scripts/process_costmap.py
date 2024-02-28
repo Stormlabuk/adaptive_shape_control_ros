@@ -84,13 +84,10 @@ class GridProcessor:
         grid.info.origin.orientation.z = 0
         grid.info.origin.orientation.w = 1
         grid.data = self.base.data
-        data = []
-        # if(self.phantom is not None):
-        for i in range(600*600):
-            data.append(self.base.data[i] | self.phantom.data[i])
-        # else:
-            # data = self.base.data
-        grid.data = data
+
+        
+
+        # grid.data = data
         self.occ_grid_pub.publish(grid)
         return
 
