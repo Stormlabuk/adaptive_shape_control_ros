@@ -1,5 +1,0 @@
-<launch>
-  <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map.rviz" /> -->
-  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_markers.rviz" />
-
-</launch>

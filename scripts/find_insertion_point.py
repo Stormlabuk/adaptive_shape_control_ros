@@ -2,7 +2,7 @@
 import rospy
 from sensor_msgs.msg import Image
 from shapeforming_msgs.srv import GetInsertion, GetInsertionRequest
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Vector3
 from visualization_msgs.msg import Marker
 from cv_bridge import CvBridge
 import cv2
@@ -20,7 +20,8 @@ class FindInsertionPoint:
             "insertion_point", Point, queue_size=10)
         self.insertion_point_marker = rospy.Publisher(
             "insertion_point_marker", Marker, queue_size=10)
-
+        self.orientation_pub = rospy.Publisher(
+            "insertion_ori", Vector3, queue_size=10)
         self.mm_pixel = rospy.get_param("~mm_pixel", 5) # 1mm = 5 pixel
         self.pixel_mm = 1 / self.mm_pixel
 
@@ -65,6 +66,7 @@ class FindInsertionPoint:
         insertion_point.x = ins_point[0]
         insertion_point.y = ins_point[1]
         self.insertion_point_pub.publish(insertion_point)
+        self.orientation_pub.publish(Vector3(0, 0, orientation))
         marker = self.PopulateMarker([insertion_point.x, insertion_point.y, 0])
         self.insertion_point_marker.publish(marker)
         return

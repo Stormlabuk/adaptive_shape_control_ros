@@ -1,5 +1,0 @@
-<launch>
-    <arg name="output" default="screen"/>
-    <node pkg="adaptive_ctrl" type="occ_grid.py" name="grid_py" output="$(arg output)"/>
-    <node pkg="adaptive_ctrl" type="find_inserter.py" name="find_inserter_py" output="$(arg output)"/>
-</launch>
