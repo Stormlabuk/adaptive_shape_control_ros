@@ -13,8 +13,8 @@
 #include <math.h>
 
 #include <eigen3/Eigen/Dense>
-#include <vector>
 #include <memory>
+#include <vector>
 
 using namespace Eigen;
 
@@ -24,18 +24,17 @@ using namespace Eigen;
  *
  */
 struct Joint {
-    int index;         //!< Position in joint chain
+    int index;                         //!< Position in joint chain
     std::shared_ptr<Joint> nextJoint;  //!< Pointer to next joint (i+1)
     std::shared_ptr<Joint> prevJoint;  //!< Pointer to previous joint (i-1)
-    Vector3d q;  //!< Joint angle in its own frame
-
+    Vector3d q;                        //!< Joint angle in its own frame
+    Matrix3d Orientation = Matrix3d::Zero(); //!< Orientation matrix
     Matrix3d Rotation = Matrix3d::Identity();  //!< Rotation part of local frame
-    Vector3d pLocal = Vector3d::Zero();    //!< Positional part of local frame
-    Matrix4d Transform = Matrix4d::Zero(); //!< Transform matrix
+    Vector3d pLocal = Vector3d::Zero();     //!< Positional part of local frame
+    Matrix4d Transform = Matrix4d::Zero();  //!< Transform matrix
 
     Vector3d GlobMag;  //!< Magnetisation in global frame. i.e. observed frame
-    Vector3d LocMag;   //!< Magnetisation in local frame. i.e. its own frame 
-
+    Vector3d LocMag;   //!< Magnetisation in local frame. i.e. its own frame
 };
 
 /**
@@ -45,14 +44,15 @@ struct Joint {
 struct Link {
     int index;  // position in link chain
 
-    std::shared_ptr<Joint> base;  //!< Joints i and i+1 that make up start and end of Link i
-    std::shared_ptr<Joint> head;  //!< Joints i and i+1 that make up start and end of Link i
+    std::shared_ptr<Joint>
+        base;  //!< Joints i and i+1 that make up start and end of Link i
+    std::shared_ptr<Joint>
+        head;  //!< Joints i and i+1 that make up start and end of Link i
 
     double dL;  //!< Link Length
     double d;   //!< Link Diameter
     int E;      //!< Young's modulus
     double v;   //!< Poissant's ratio
-
 };
 
 #endif

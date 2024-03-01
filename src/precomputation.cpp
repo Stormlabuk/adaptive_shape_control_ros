@@ -31,6 +31,7 @@ bool Precomputation::calculateField(
     // 2. Evaluate direct kinematics
     evaluateDirectKinematics();
     // 3. Evaluate geometric jacboian
+    evaluateGeometricJacobian();
     // 4. evaluate magnetisation to field map
     // 5. Ax = b
     // 6. Solve for x with lsqminnorm
@@ -124,21 +125,75 @@ void Precomputation::evaluateDirectKinematics() {
         throw std::runtime_error("Number of joints should be greater than 1");
         return;
     }
-    for (int i = 1; i < obvJointNo_; i++) {
-        AngleAxisd rotZ = AngleAxisd(joints_[i]->q[2], Vector3d::UnitZ());
-        AngleAxisd rotY = AngleAxisd(joints_[i]->q[1], Vector3d::UnitY());
-        AngleAxisd rotX = AngleAxisd(joints_[i]->q[0], Vector3d::UnitX());
-        joints_[i]->Rotation = joints_[i - 1]->Rotation * rotZ * rotY * rotX;
+    for (int i = 0; i < obvJointNo_; i++) {
+        if (i != 0) {
+            AngleAxisd rotZ = AngleAxisd(joints_[i]->q[2], Vector3d::UnitZ());
+            AngleAxisd rotY = AngleAxisd(joints_[i]->q[1], Vector3d::UnitY());
+            AngleAxisd rotX = AngleAxisd(joints_[i]->q[0], Vector3d::UnitX());
+            joints_[i]->Rotation =
+                joints_[i - 1]->Rotation * rotZ * rotY * rotX;
 
-        joints_[i]->pLocal =
-            joints_[i - 1]->pLocal +
-            joints_[i]->Rotation * Vector3d(0, 0, -links_[i - 1]->dL);
+            joints_[i]->pLocal =
+                joints_[i - 1]->pLocal +
+                joints_[i]->Rotation * Vector3d(0, 0, -links_[i - 1]->dL);
+        }
+        joints_[i]->Orientation(placeholders::all, 0) =
+            joints_[i]->Rotation * Vector3d::UnitX();
 
-        ROS_INFO("joints_[%d]->pLocal: %f, %f, %f", i, joints_[i]->pLocal[0],
-                 joints_[i]->pLocal[1], joints_[i]->pLocal[2]);
+        joints_[i]->Orientation(placeholders::all, 1) =
+            AngleAxisd(joints_[i]->q[0], Vector3d::UnitX()) *
+            joints_[i]->Rotation * Vector3d::UnitY();
+
+        joints_[i]->Orientation(placeholders::all, 2) =
+            AngleAxisd(joints_[i]->q[1], Vector3d::UnitY()) *
+            AngleAxisd(joints_[i]->q[0], Vector3d::UnitX()) *
+            joints_[i]->Rotation * Vector3d::UnitZ();
     }
 }
 
+MatrixXd Precomputation::evaluateGeometricJacobian() {
+    /**
+     * @note
+     *
+     * Given J = [ 	J00 J01
+     * 				J10 J11 	]
+     * Where J_xy = [Jp_xy
+     * 				Jo_xy]
+     *
+     * In the loops below, 	i tracks y
+     * 						k tracks x
+     *
+     * Also the 'stacking' of the full jacobian is actually done by
+     * initialising an empty Mat of the correct size and filling in the blocks
+     * stacking in the Matrix algebra library we use is possible, but
+     * a pain, so filling is good enough, probably.
+     */
+    Matrix3d Jp, Jo;
+    MatrixXd J(3 * obvJointNo_, 3 * obvJointNo_);
+    for( int i = 0; i < obvJointNo_; i++ ) {
+        // i goes vertically
+        for( int k = 0; k < obvJointNo_; k++ ) {
+            // k goes horizontally
+            if( k > i ) {
+                Jp = Matrix3d::Zero();
+                Jo = Matrix3d::Zero();
+            } else{
+                Vector3d pDiff = joints_[i+1]->pLocal - joints_[k]->pLocal;
+                Jp.col(0) = joints_[k]->Orientation.col(0).cross(pDiff);
+                Jp.col(0) = joints_[k]->Orientation.col(1).cross(pDiff);
+                Jp.col(0) = joints_[k]->Orientation.col(2).cross(pDiff);
+                
+                Jo.col(0) = joints_[k]->Orientation.col(0);
+                Jo.col(0) = joints_[k]->Orientation.col(1);
+                Jo.col(0) = joints_[k]->Orientation.col(2);
+            }
+            MatrixXd Jn(Jp.rows() + Jo.rows(), Jp.cols());
+            Jn << Jp, Jo;
+            J(seq(0 + i * 6, 5 + i * 6), seq(0 + k * 3, 2 + k * 3)) = Jn;
+        }
+    }
+    return J;
+}
 int main(int argc, char *argv[]) {
     ros::init(argc, argv, "precomputation");
     Precomputation precomputation;

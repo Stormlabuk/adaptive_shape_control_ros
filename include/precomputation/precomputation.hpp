@@ -32,7 +32,7 @@ class Precomputation {
     void populateStructs();
     MatrixXd evaluateStiffnessMatrix();
     void evaluateDirectKinematics();
-    void evaluateGeometricJacobian();
+    MatrixXd evaluateGeometricJacobian();
     MatrixXd MagnetisationToFieldMap();
 
 };
