@@ -12,7 +12,7 @@ class DiscretisePath:
         rospy.init_node('discretise_path', anonymous=False)
         base_planner = "/planner_ros_node/"
 
-        self.mm_pixel = rospy.get_param("~mm_pixel", 5) # 1mm = 5 pixel
+        self.mm_pixel = rospy.get_param("~mm_pixel", 5) # 1mm = 5 pixel. Converts mm to pixel
         self.pixel_mm = 1 / self.mm_pixel
         rospy.Subscriber(base_planner + "path", Path, self.PathCB_)
         self.marker_pub = rospy.Publisher("viz_angles", Marker, queue_size=10)
@@ -30,7 +30,7 @@ class DiscretisePath:
         path_points = np.flip(np.column_stack((x, y)), axis=0)
         interpolated_path = self.interpolate_points(path_points)
         # 3. find and slice the first 50mm worth of points
-        slice, link_no = self.getSlice(interpolated_path, 50)
+        slice, link_no = self.getSlice(interpolated_path, 10)
         rospy.loginfo("interpolated path length: %d, slice length: %d, link_no: %d" % (len(interpolated_path), len(slice), link_no))
         # 4. feed that to the discretise_curve service
         indices = np.linspace(0, len(slice) -
@@ -55,9 +55,10 @@ class DiscretisePath:
         fitted_links = 0
         sliced_points = []
         num_points = len(interpolated_path)
+        link_l = int(link_l * self.mm_pixel)
         fitted_links = int( np.floor(num_points / link_l))
-        if fitted_links > 5:
-            fitted_links = 5
+        if fitted_links > 6:
+            fitted_links = 6
         elif fitted_links < 1:
             fitted_links = 1
 
