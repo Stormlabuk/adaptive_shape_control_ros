@@ -4,6 +4,6 @@
         <rosparam file="$(find adaptive_ctrl)/config/default_tent_vals.yaml" />
     </group>
 
-    <node name="discretising_node" pkg="adaptive_ctrl" type="precomputation" output="screen" />
+    <node name="precomps" pkg="adaptive_ctrl" type="precomputation" output="screen" />
 
 </launch>

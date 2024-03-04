@@ -180,6 +180,7 @@ catkin_install_python(PROGRAMS
   scripts/discretise_path.py
   scripts/image_processor.py
   scripts/find_insertion_point.py
+  scripts/debug_trigger.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
