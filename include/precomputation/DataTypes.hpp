@@ -25,8 +25,8 @@ using namespace Eigen;
  */
 struct Joint {
     int index;                         //!< Position in joint chain
-    std::shared_ptr<Joint> nextJoint;  //!< Pointer to next joint (i+1)
-    std::shared_ptr<Joint> prevJoint;  //!< Pointer to previous joint (i-1)
+    std::shared_ptr<Joint> nextJoint = nullptr;  //!< Pointer to next joint (i+1)
+    std::shared_ptr<Joint> prevJoint = nullptr;  //!< Pointer to previous joint (i-1)
     Vector3d q;                        //!< Joint angle in its own frame
     Matrix3d Orientation = Matrix3d::Zero(); //!< Orientation matrix
     Matrix3d Rotation = Matrix3d::Identity();  //!< Rotation part of local frame

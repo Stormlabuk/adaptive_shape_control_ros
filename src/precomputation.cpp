@@ -25,17 +25,18 @@ bool Precomputation::calculateField(
     shapeforming_msgs::CalcInitialField::Request &req,
     shapeforming_msgs::CalcInitialField::Response &res) {
     ROS_INFO("Calculating initial field");
+    MatrixXd K, J;
     // 0. Populate the joint and link structs
     // 1. Evaluate stiffness matrix K
-    evaluateStiffnessMatrix();
+    K = evaluateStiffnessMatrix();
     // 2. Evaluate direct kinematics
     evaluateDirectKinematics();
     // 3. Evaluate geometric jacboian
-    evaluateGeometricJacobian();
+    J = evaluateGeometricJacobian();
     // 4. evaluate magnetisation to field map
     // 5. Ax = b
     // 6. Solve for x with lsqminnorm
-
+    // std::cout << "\n" << J << std::endl;
     res.success = true;
     res.field.header.frame_id = "world";
     res.field.header.stamp = ros::Time::now();
@@ -52,37 +53,56 @@ void Precomputation::populateStructs() {
     // 2. Populate the joint structs
     joints_.clear();
     joints_.resize(obvJointNo_);
+    links_.clear();
+    links_.resize(obvJointNo_);
     for (int i = 0; i < obvJointNo_; i++) {
         joints_[i] = std::make_shared<Joint>();
         joints_[i]->index = i;
         joints_[i]->LocMag = Vector3d(magX_[i], magY_[i], magZ_[i]);
-        joints_[i]->q = Vector3d(0, desiredAngles_[i], 0);
-        if (i > 0) {
-            joints_[i]->prevJoint = joints_[i - 1];
-        } else {
-            joints_[i]->prevJoint =
-                nullptr;  // Set the first joint's prevJoint to NULL
-        }
-        if (i < obvJointNo_ - 1) {
-            joints_[i]->nextJoint = joints_[i + 1];
-        } else {
-            joints_[i]->nextJoint =
-                nullptr;  // Set the last joint's nextJoint to NULL
-        }
-    }
-    // 3. Populate the link structs
-    links_.clear();
-    links_.resize(obvJointNo_ - 1);
-    for (int i = 0; i < obvJointNo_ - 1; i++) {
+        joints_[i]->q = Vector3d(0, desiredAngles_[i] * M_PI / 180, 0);
+
         links_[i] = std::make_shared<Link>();
         links_[i]->index = i;
-        links_[i]->base = joints_[i];
-        links_[i]->head = joints_[i + 1];
         links_[i]->d = d_;
         links_[i]->dL = len_;
         links_[i]->E = E_;
         links_[i]->v = v_;
     }
+
+    for (int i = 0; i < obvJointNo_; i++) {
+        if (i == 0) {
+            joints_[i]->prevJoint = nullptr;
+            joints_[i]->nextJoint = joints_[i + 1];
+            links_[i]->base = joints_[i];
+            links_[i]->head = joints_[i + 1];
+        } else if (i == obvJointNo_ - 1) {
+            joints_[i]->prevJoint = joints_[i - 1];
+            joints_[i]->nextJoint = nullptr;
+            links_[i]->base = joints_[i - 1];
+            links_[i]->head = joints_[i];
+        } else {
+            joints_[i]->prevJoint = joints_[i - 1];
+            joints_[i]->nextJoint = joints_[i + 1];
+            links_[i]->base = joints_[i - 1];
+            links_[i]->head = joints_[i + 1];
+        }
+    }
+
+    for (auto i : joints_) {
+        if (i->nextJoint != nullptr) {
+            ROS_INFO("Joint %d has next joint, it is joint %d", i->index,
+                     i->nextJoint->index);
+        } else {
+            ROS_INFO("Joint %d has no next joint", i->index);
+        }
+        if (i->prevJoint != nullptr) {
+            ROS_INFO("Joint %d has prev joint. It is joint %d", i->index,
+                     i->prevJoint->index);
+        } else {
+            ROS_INFO("Joint %d has no prev joint", i->index);
+        }
+    }
+
     ROS_INFO("Populated RL structs");
     return;
 }
@@ -127,9 +147,12 @@ void Precomputation::evaluateDirectKinematics() {
     }
     for (int i = 0; i < obvJointNo_; i++) {
         if (i != 0) {
-            AngleAxisd rotZ = AngleAxisd(joints_[i]->q[2], Vector3d::UnitZ());
-            AngleAxisd rotY = AngleAxisd(joints_[i]->q[1], Vector3d::UnitY());
-            AngleAxisd rotX = AngleAxisd(joints_[i]->q[0], Vector3d::UnitX());
+            AngleAxisd rotZ =
+                AngleAxisd(joints_[i - 1]->q[2], Vector3d::UnitZ());
+            AngleAxisd rotY =
+                AngleAxisd(joints_[i - 1]->q[1], Vector3d::UnitY());
+            AngleAxisd rotX =
+                AngleAxisd(joints_[i - 1]->q[0], Vector3d::UnitX());
             joints_[i]->Rotation =
                 joints_[i - 1]->Rotation * rotZ * rotY * rotX;
 
@@ -169,23 +192,35 @@ MatrixXd Precomputation::evaluateGeometricJacobian() {
      * a pain, so filling is good enough, probably.
      */
     Matrix3d Jp, Jo;
-    MatrixXd J(3 * obvJointNo_, 3 * obvJointNo_);
-    for( int i = 0; i < obvJointNo_; i++ ) {
+    int effJointNo = joints_.size();
+    MatrixXd J(6 * obvJointNo_, 3 * obvJointNo_);
+
+    for (int i = 0; i < effJointNo; i++) {
         // i goes vertically
-        for( int k = 0; k < obvJointNo_; k++ ) {
+        for (int k = 0; k < effJointNo; k++) {
             // k goes horizontally
-            if( k > i ) {
+            if (k > i) {
                 Jp = Matrix3d::Zero();
                 Jo = Matrix3d::Zero();
-            } else{
-                Vector3d pDiff = joints_[i+1]->pLocal - joints_[k]->pLocal;
-                Jp.col(0) = joints_[k]->Orientation.col(0).cross(pDiff);
-                Jp.col(0) = joints_[k]->Orientation.col(1).cross(pDiff);
-                Jp.col(0) = joints_[k]->Orientation.col(2).cross(pDiff);
-                
-                Jo.col(0) = joints_[k]->Orientation.col(0);
-                Jo.col(0) = joints_[k]->Orientation.col(1);
-                Jo.col(0) = joints_[k]->Orientation.col(2);
+            } else {
+                Vector3d pLocal;
+                if (joints_[i]->nextJoint == nullptr) {
+                    // ROS_INFO("i, k: %d, %d .Reached end of chain", i, k);
+                    pLocal = joints_[i]->pLocal;
+                } else
+                    pLocal = joints_[i + 1]->pLocal;
+                try {
+                    Vector3d pDiff = pLocal - joints_[k]->pLocal;
+                    Jp.col(0) = joints_[k]->Orientation.col(0).cross(pDiff);
+                    Jp.col(1) = joints_[k]->Orientation.col(1).cross(pDiff);
+                    Jp.col(2) = joints_[k]->Orientation.col(2).cross(pDiff);
+
+                    Jo.col(0) = joints_[k]->Orientation.col(0);
+                    Jo.col(1) = joints_[k]->Orientation.col(1);
+                    Jo.col(2) = joints_[k]->Orientation.col(2);
+                } catch (const std::exception &e) {
+                    std::cerr << e.what() << '\n';
+                }
             }
             MatrixXd Jn(Jp.rows() + Jo.rows(), Jp.cols());
             Jn << Jp, Jo;
