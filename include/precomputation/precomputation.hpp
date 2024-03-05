@@ -17,8 +17,8 @@ class Precomputation {
     std::vector<float> desiredAngles_;
     std::vector<float> magX_, magY_, magZ_;
 
-    std::vector<std::shared_ptr<Joint>> joints_;
-    std::vector<std::shared_ptr<Link>> links_;
+    std::vector<Joint> joints_;
+    std::vector<Link> links_;
     
     ros::ServiceServer preCalcService_;
     ros::Subscriber desiredAnglesSub_;
@@ -28,8 +28,9 @@ class Precomputation {
     Precomputation();
     bool calculateField(shapeforming_msgs::CalcInitialField::Request &req,
                         shapeforming_msgs::CalcInitialField::Response &res);
-    void desiredAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg);
+    // void desiredAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg);
     void populateStructs();
+    void releasePointers();
     MatrixXd evaluateStiffnessMatrix();
     void evaluateDirectKinematics();
     MatrixXd evaluateGeometricJacobian();

@@ -44,9 +44,9 @@ struct Joint {
 struct Link {
     int index;  // position in link chain
 
-    std::shared_ptr<Joint>
+    std::weak_ptr<Joint>
         base;  //!< Joints i and i+1 that make up start and end of Link i
-    std::shared_ptr<Joint>
+    std::weak_ptr<Joint>
         head;  //!< Joints i and i+1 that make up start and end of Link i
 
     double dL;  //!< Link Length
