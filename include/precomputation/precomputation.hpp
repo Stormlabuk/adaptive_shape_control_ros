@@ -17,13 +17,14 @@ class Precomputation {
     std::vector<float> desiredAngles_;
     std::vector<float> magX_, magY_, magZ_;
     ros::ServiceServer preCalcService_;
-    ros::Subscriber desiredAnglesSub_;
+    ros::Publisher baseFieldPub_;
     ros::NodeHandle nh_;
 
    public:
     Precomputation();
     bool calculateField(shapeforming_msgs::CalcInitialField::Request &req,
                         shapeforming_msgs::CalcInitialField::Response &res);
+    Vector3d rotateField(Vector3d field, Vector3d angle);
     void populateStructs(std::vector<Joint> &joints_,
                          std::vector<Link> &links_);
     MatrixXd evaluateStiffnessMatrix(std::vector<Link> &links_);

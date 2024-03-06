@@ -16,12 +16,19 @@ Precomputation::Precomputation() {
     preCalcService_ =
         nh.advertiseService("precomputation/calc_initial_field",
                             &Precomputation::calculateField, this);
+
+    baseFieldPub_ =
+        nh.advertise<ros_coils::magField>("precomputation/baseField", 1);
 }
 
 bool Precomputation::calculateField(
     shapeforming_msgs::CalcInitialField::Request &req,
     shapeforming_msgs::CalcInitialField::Response &res) {
     shapeforming_msgs::rl_angles tentacle;
+
+    Vector3d inserterOrientation;
+    inserterOrientation << req.orientation.x, req.orientation.y,
+        req.orientation.z;
     tentacle = req.tentacle;
 
     desiredAngles_ = tentacle.angles;
@@ -60,6 +67,8 @@ bool Precomputation::calculateField(
     MatrixXd LHS = K * Q;
     Vector3d solution = RHS.completeOrthogonalDecomposition().solve(LHS);
 
+    solution = rotateField(solution, inserterOrientation);
+
     res.success = true;
     res.field.header.frame_id = "world";
     res.field.header.stamp = ros::Time::now();
@@ -67,18 +76,30 @@ bool Precomputation::calculateField(
     res.field.by = solution(1) * 1000;
     res.field.bz = solution(2) * 1000;
 
+    ros_coils::magField field;
+    field = res.field;
 
+    baseFieldPub_.publish(field);
 
     // // Extra. Q = K^-1 * Jt * S * B
     // MatrixXd LHS2 = K;
     // MatrixXd RHS2 = Jt * S * solution;
     // MatrixXd Q2 = LHS2.completeOrthogonalDecomposition().solve(RHS2);
     // for (int i = 0; i < obvJointNo_; i++) {
-    //     ROS_INFO("Joint %d: q1: %f, q2: %f, q3: %f", i, Q2(3 * i, 0) * 180 / M_PI,
+    //     ROS_INFO("Joint %d: q1: %f, q2: %f, q3: %f", i, Q2(3 * i, 0) * 180 /
+    //     M_PI,
     //              Q2(3 * i + 1, 0) * 180 / M_PI, Q2(3 * i + 2, 0));
     // }
 
     return res.success;
+}
+
+Vector3d Precomputation::rotateField(Vector3d field, Vector3d angle) {
+    Matrix3d rotZ = AngleAxisd(angle[2], Vector3d::UnitZ()).toRotationMatrix();
+    Matrix3d rotY = AngleAxisd(angle[1], Vector3d::UnitY()).toRotationMatrix();
+    Matrix3d rotX = AngleAxisd(angle[0], Vector3d::UnitX()).toRotationMatrix();
+    Matrix3d rot = rotZ * rotY * rotX;
+    return rot * field;
 }
 
 void Precomputation::populateStructs(std::vector<Joint> &joints_,
