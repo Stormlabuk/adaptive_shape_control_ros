@@ -16,18 +16,14 @@ Precomputation::Precomputation() {
     preCalcService_ =
         nh.advertiseService("precomputation/calc_initial_field",
                             &Precomputation::calculateField, this);
-
-    // desiredAnglesSub_ = nh.subscribe(
-    //     "/des_angles", 10, &Precomputation::desiredAnglesCallback, this);
 }
 
 bool Precomputation::calculateField(
     shapeforming_msgs::CalcInitialField::Request &req,
     shapeforming_msgs::CalcInitialField::Response &res) {
-    
     shapeforming_msgs::rl_angles tentacle;
-    tentacle= req.tentacle;
-    
+    tentacle = req.tentacle;
+
     desiredAngles_ = tentacle.angles;
     obvJointNo_ = tentacle.count;
     ROS_INFO("Received desired angles. Num: %d", obvJointNo_);
@@ -36,37 +32,32 @@ bool Precomputation::calculateField(
         if (obvJointNo_ < 2) {
             throw std::runtime_error(
                 "Number of joints should be greater than 1");
-        } else {
-            links_.clear();
-            joints_.clear();
-            populateStructs();
         }
     } catch (const std::exception &e) {
         std::cerr << e.what() << '\n';
     }
+    std::vector<Joint> joints_(obvJointNo_);
+    std::vector<Link> links_(obvJointNo_);
+    populateStructs(joints_, links_);
 
     ROS_INFO("Calculating initial field");
-    MatrixXd K, J, S;
+    MatrixXd K, J, S, Q;
     // 1. Evaluate stiffness matrix K
-    K = evaluateStiffnessMatrix();
+    K = evaluateStiffnessMatrix(links_);
     // 2. Evaluate direct kinematics
-    evaluateDirectKinematics();
+    evaluateDirectKinematics(joints_, links_);
     // 3. Evaluate geometric jacboian
-    J = evaluateGeometricJacobian();
+    J = evaluateGeometricJacobian(joints_);
     // 4. evaluate magnetisation to field map
-    S = MagnetisationToFieldMap();
-    
+    S = MagnetisationToFieldMap(joints_);
+
     // 5. Build stacked deformation Matrix
-    MatrixXd Q = MatrixXd::Zero(3 * obvJointNo_, 1);
-    for (int i = 0; i < obvJointNo_; i++) {
-        Q(seq(0 + i * 3, 2 + i * 3), 0) = joints_[i].q;
-    }
+    Q = stackedDeformation(joints_);
 
     // 6. Ax = b
     MatrixXd Jt = J.transpose();
     MatrixXd RHS = Jt * S;
     MatrixXd LHS = K * Q;
-    // 7. Solve for x with lsqminnorm
     Vector3d solution = RHS.completeOrthogonalDecomposition().solve(LHS);
 
     res.success = true;
@@ -76,18 +67,15 @@ bool Precomputation::calculateField(
     res.field.by = solution(1) * 1000;
     res.field.bz = solution(2) * 1000;
 
-    releasePointers();
-
     return res.success;
 }
 
-void Precomputation::populateStructs() {
+void Precomputation::populateStructs(std::vector<Joint> &joints_,
+                                     std::vector<Link> &links_) {
     // Populate the joint and link structs
     // 1. Populate the posOri structs
 
     // 2. Populate the joint structs
-    joints_.resize(obvJointNo_);
-    links_.resize(obvJointNo_);
     for (int i = 0; i < obvJointNo_; i++) {
         joints_[i] = Joint();
         joints_[i].index = i;
@@ -100,37 +88,35 @@ void Precomputation::populateStructs() {
         links_[i].dL = len_;
         links_[i].E = E_;
         links_[i].v = v_;
-    }
 
-    for (int i = 0; i < obvJointNo_; i++) {
         if (i == 0) {
-            joints_[i].prevJoint = nullptr;
-            joints_[i].nextJoint = std::make_shared<Joint>(joints_[i + 1]);
-            links_[i].base = std::make_shared<Joint>(joints_[i]);
-            links_[i].head = std::make_shared<Joint>(joints_[i + 1]);
+            joints_[i].prevIndex = -1;
+            links_[i].prevIndex = -1;
+            links_[i].nextIndex = i + 1;
+            joints_[i].nextIndex = i + 1;
         } else if (i == obvJointNo_ - 1) {
-            joints_[i].prevJoint = std::make_shared<Joint>(joints_[i - 1]);
-            joints_[i].nextJoint = nullptr;
-            links_[i].base = std::make_shared<Joint>(joints_[i - 1]);
-            links_[i].head = std::make_shared<Joint>(joints_[i]);
+            joints_[i].nextIndex = -1;
+            links_[i].nextIndex = -1;
+            joints_[i].prevIndex = i - 1;
+            links_[i].prevIndex = i - 1;
         } else {
-            joints_[i].prevJoint = std::make_shared<Joint>(joints_[i - 1]);
-            joints_[i].nextJoint = std::make_shared<Joint>(joints_[i + 1]);
-            links_[i].base = std::make_shared<Joint>(joints_[i - 1]);
-            links_[i].head = std::make_shared<Joint>(joints_[i + 1]);
+            joints_[i].prevIndex = i - 1;
+            links_[i].prevIndex = i - 1;
+            links_[i].nextIndex = i + 1;
+            joints_[i].nextIndex = i + 1;
         }
     }
 
     // for (auto i : joints_) {
-    //     if (i.nextJoint != nullptr) {
+    //     if (i.nextIndex != -1) {
     //         ROS_INFO("Joint %d has next joint, it is joint %d", i.index,
-    //                  i.nextJoint.index);
+    //                  i.nextIndex);
     //     } else {
     //         ROS_INFO("Joint %d has no next joint", i.index);
     //     }
-    //     if (i.prevJoint != nullptr) {
+    //     if (i.prevIndex != -1) {
     //         ROS_INFO("Joint %d has prev joint. It is joint %d", i.index,
-    //                  i.prevJoint.index);
+    //                  i.prevIndex);
     //     } else {
     //         ROS_INFO("Joint %d has no prev joint", i.index);
     //     }
@@ -140,37 +126,8 @@ void Precomputation::populateStructs() {
     return;
 }
 
-void Precomputation::releasePointers() {
-    for (int i = 0; i < obvJointNo_; i++) {
-        joints_[i].nextJoint.reset();
-        joints_[i].prevJoint.reset();
-    }
-    joints_.clear();
-    links_.clear();
-    ROS_INFO("Released all pointers");
-}
-
-// void Precomputation::desiredAnglesCallback(
-//     const shapeforming_msgs::rl_angles::ConstPtr &msg) {
-//     desiredAngles_ = msg.angles;
-//     obvJointNo_ = msg.count;
-//     ROS_INFO("Received desired angles. Num: %d", obvJointNo_);
-//     try {
-//         if (obvJointNo_ < 2) {
-//             throw std::runtime_error(
-//                 "Number of joints should be greater than 1");
-//         } else {
-//             joints_.clear();
-//             links_.clear();
-//             populateStructs();
-//         }
-//     } catch (const std::exception &e) {
-//         std::cerr << e.what() << '\n';
-//     }
-// }
-
-MatrixXd Precomputation::evaluateStiffnessMatrix() {
-    MatrixXd K(3 * obvJointNo_, 3 * obvJointNo_);
+MatrixXd Precomputation::evaluateStiffnessMatrix(std::vector<Link> &links_) {
+    MatrixXd K = MatrixXd::Zero(3 * obvJointNo_, 3 * obvJointNo_);
     for (int i = 0; i < links_.size(); i++) {
         double lRadius = links_[i].d / 2;
         double I = M_PI_4 * pow(lRadius, 4);
@@ -185,7 +142,8 @@ MatrixXd Precomputation::evaluateStiffnessMatrix() {
     return K;
 }
 
-void Precomputation::evaluateDirectKinematics() {
+void Precomputation::evaluateDirectKinematics(std::vector<Joint> &joints_,
+                                              std::vector<Link> &links_) {
     if (obvJointNo_ < 2) {
         throw std::runtime_error("Number of joints should be greater than 1");
         return;
@@ -198,8 +156,7 @@ void Precomputation::evaluateDirectKinematics() {
                 AngleAxisd(joints_[i - 1].q[1], Vector3d::UnitY());
             AngleAxisd rotX =
                 AngleAxisd(joints_[i - 1].q[0], Vector3d::UnitX());
-            joints_[i].Rotation =
-                joints_[i - 1].Rotation * rotZ * rotY * rotX;
+            joints_[i].Rotation = joints_[i - 1].Rotation * rotZ * rotY * rotX;
 
             joints_[i].pLocal =
                 joints_[i - 1].pLocal +
@@ -219,7 +176,8 @@ void Precomputation::evaluateDirectKinematics() {
     }
 }
 
-MatrixXd Precomputation::evaluateGeometricJacobian() {
+MatrixXd Precomputation::evaluateGeometricJacobian(
+    std::vector<Joint> &joints_) {
     /**
      * @note
      *
@@ -249,7 +207,7 @@ MatrixXd Precomputation::evaluateGeometricJacobian() {
                 Jo = Matrix3d::Zero();
             } else {
                 Vector3d pLocal;
-                if (joints_[i].nextJoint == nullptr) {
+                if (joints_[i].nextIndex == -1) {
                     pLocal = joints_[i].pLocal;
                 } else
                     pLocal = joints_[i + 1].pLocal;
@@ -274,14 +232,14 @@ MatrixXd Precomputation::evaluateGeometricJacobian() {
     return J;
 }
 
-MatrixXd Precomputation::MagnetisationToFieldMap() {
+MatrixXd Precomputation::MagnetisationToFieldMap(std::vector<Joint> &joints_) {
     MatrixXd S = MatrixXd::Zero(6 * obvJointNo_, 3);
     for (int i = 0; i < obvJointNo_; i++) {
         Matrix3d rot;
-        if (joints_[i].nextJoint == nullptr) {
+        if (joints_[i].nextIndex == -1) {
             rot = joints_[i].Rotation;
         } else
-            rot = joints_[i].nextJoint->Rotation;
+            rot = joints_[joints_[i].nextIndex].Rotation;
         joints_[i].GlobMag = rot * joints_[i].LocMag;
         // Convert GlobMag to skew-symmetric matrix
         Matrix3d skewSymmetric;
@@ -291,6 +249,15 @@ MatrixXd Precomputation::MagnetisationToFieldMap() {
         S(seqN(3 + 6 * i, 3), seqN(0, 3)) = -skewSymmetric;
     }
     return S;
+}
+
+MatrixXd Precomputation::stackedDeformation(std::vector<Joint> &joints_) {
+    MatrixXd Q = MatrixXd::Zero(3 * obvJointNo_, 1);
+    for (int i = 0; i < obvJointNo_; i++) {
+        Q(seq(3 * i, 2 + i * 3), 0) = joints_[i].q;
+        ROS_INFO("Stacking deformation for joint %d", i);
+    }
+    return Q;
 }
 
 int main(int argc, char *argv[]) {

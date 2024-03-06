@@ -25,8 +25,7 @@ using namespace Eigen;
  */
 struct Joint {
     int index;                         //!< Position in joint chain
-    std::shared_ptr<Joint> nextJoint = nullptr;  //!< Pointer to next joint (i+1)
-    std::shared_ptr<Joint> prevJoint = nullptr;  //!< Pointer to previous joint (i-1)
+    int nextIndex, prevIndex;          //!< Index of next and previous joint
     Vector3d q;                        //!< Joint angle in its own frame
     Matrix3d Orientation = Matrix3d::Zero(); //!< Orientation matrix
     Matrix3d Rotation = Matrix3d::Identity();  //!< Rotation part of local frame
@@ -43,12 +42,7 @@ struct Joint {
  */
 struct Link {
     int index;  // position in link chain
-
-    std::weak_ptr<Joint>
-        base;  //!< Joints i and i+1 that make up start and end of Link i
-    std::weak_ptr<Joint>
-        head;  //!< Joints i and i+1 that make up start and end of Link i
-
+    int nextIndex, prevIndex;  // index of next and previous link
     double dL;  //!< Link Length
     double d;   //!< Link Diameter
     int E;      //!< Young's modulus
