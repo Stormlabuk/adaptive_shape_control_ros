@@ -9,11 +9,11 @@ class ControlNode {
    private:
     ros::NodeHandle nh_;
     ros::Subscriber desAnglesSub_, obvAnglesSub_, baseFieldSub_, errorSub_;
-    ros::Publisher errorPub_;
+    ros::Publisher errorPub_, adjustedField_;
 
     ros::Timer calcError_;
 
-    Eigen::Vector3d baseField_;
+    Eigen::Vector3d baseField_ = Eigen::Vector3d::Zero(), adjField_ = Eigen::Vector3d::Zero();
     Eigen::Vector3d held_field;
     Eigen::Vector3d desAngles_, obvAngles_;
 
@@ -26,6 +26,7 @@ class ControlNode {
     void obvAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg);
     void baseFieldCallback(const ros_coils::magField::ConstPtr& msg);
     void ComputeError(const ros::TimerEvent&);
+    void adjustField();
 };
 
 int main(int argc, char* argv[]);
