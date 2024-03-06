@@ -67,6 +67,17 @@ bool Precomputation::calculateField(
     res.field.by = solution(1) * 1000;
     res.field.bz = solution(2) * 1000;
 
+
+
+    // // Extra. Q = K^-1 * Jt * S * B
+    // MatrixXd LHS2 = K;
+    // MatrixXd RHS2 = Jt * S * solution;
+    // MatrixXd Q2 = LHS2.completeOrthogonalDecomposition().solve(RHS2);
+    // for (int i = 0; i < obvJointNo_; i++) {
+    //     ROS_INFO("Joint %d: q1: %f, q2: %f, q3: %f", i, Q2(3 * i, 0) * 180 / M_PI,
+    //              Q2(3 * i + 1, 0) * 180 / M_PI, Q2(3 * i + 2, 0));
+    // }
+
     return res.success;
 }
 
@@ -255,7 +266,7 @@ MatrixXd Precomputation::stackedDeformation(std::vector<Joint> &joints_) {
     MatrixXd Q = MatrixXd::Zero(3 * obvJointNo_, 1);
     for (int i = 0; i < obvJointNo_; i++) {
         Q(seq(3 * i, 2 + i * 3), 0) = joints_[i].q;
-        ROS_INFO("Stacking deformation for joint %d", i);
+        // ROS_INFO("Stacking deformation for joint %d", i);
     }
     return Q;
 }
