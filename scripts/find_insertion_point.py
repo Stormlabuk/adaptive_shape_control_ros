@@ -15,15 +15,14 @@ class FindInsertionPoint:
 
         self.inserter_sub = rospy.Subscriber(
             "inserter_img", Image, self.inserter_callback)
-
         self.insertion_point_pub = rospy.Publisher(
             "insertion_point", Point, queue_size=10)
         self.insertion_point_marker = rospy.Publisher(
             "insertion_point_marker", Marker, queue_size=10)
         self.orientation_pub = rospy.Publisher(
             "insertion_ori", Vector3, queue_size=10)
-        self.mm_pixel = rospy.get_param("~mm_pixel", 5) # 1mm = 5 pixel
-        self.pixel_mm = 1 / self.mm_pixel
+        self.mm_to_pixel = rospy.get_param("~mm_to_pixel", 5)  # 1mm = 5 pixel
+        self.pixel_to_mm = 1 / self.mm_to_pixel
 
     def inserter_callback(self, msg):
         bridge = CvBridge()
@@ -39,7 +38,7 @@ class FindInsertionPoint:
             self.inserter_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contour) > 0:
-            ## select the largest contour
+            # select the largest contour
             contour = max(contour, key=cv2.contourArea)
             approx = cv2.approxPolyDP(
                 contour, 0.01 * cv2.arcLength(contour, True), True)
@@ -58,15 +57,18 @@ class FindInsertionPoint:
         orientation = 90 - orientation if not left_hand_flag else -orientation
         polyRotated = self.rotatePolygon(
             approx, orientation, centroid)
-        tipRotated = np.array([np.mean(polyRotated[:, 0]), np.max(polyRotated[:, 1])])
-        scope_adj = np.array([1.2 * self.pixel_mm, -23.8 * self.pixel_mm])
+        tipRotated = np.array(
+            [np.mean(polyRotated[:, 0]), np.max(polyRotated[:, 1])])
+        scope_adj = np.array(
+            [1.2 * self.mm_to_pixel, -23.8 * self.mm_to_pixel])
+        print(scope_adj)
         tipRotated = tipRotated + scope_adj
         ins_point = self.rotatePolygon(
             tipRotated, -orientation, centroid)
         insertion_point.x = ins_point[0]
         insertion_point.y = ins_point[1]
         self.insertion_point_pub.publish(insertion_point)
-        self.orientation_pub.publish(Vector3(0, 0, orientation))
+        self.orientation_pub.publish(Vector3(0, orientation, 0))
         marker = self.PopulateMarker([insertion_point.x, insertion_point.y, 0])
         self.insertion_point_marker.publish(marker)
         return
@@ -119,9 +121,10 @@ class FindInsertionPoint:
         """
         angle_rad = np.deg2rad(angle)
         rotmatMan = np.array([[np.cos(angle_rad), -np.sin(angle_rad)],
-                                [np.sin(angle_rad), np.cos(angle_rad)]])
+                              [np.sin(angle_rad), np.cos(angle_rad)]])
         rotatedPoly = np.dot(rotmatMan, (poly - centroid).T).T + centroid
         return rotatedPoly
+
 
 if __name__ == "__main__":
     rospy.init_node('find_insertion_point', anonymous=False)
