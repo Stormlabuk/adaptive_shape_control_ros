@@ -14,7 +14,7 @@ ControlNode::ControlNode() {
     adjustedField_ = nh_.advertise<ros_coils::magField>("adjusted_field", 1);
 
     calcError_ =
-        nh_.createTimer(ros::Duration(1), &ControlNode::ComputeError, this);
+        nh_.createTimer(ros::Duration(2), &ControlNode::ComputeError, this);
 }
 
 void ControlNode::desAnglesCallback(
@@ -49,6 +49,10 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
     }
     Eigen::Vector3d diff = desAngles_ - obvAngles_;
     error_ = diff.norm();
+    for(int i = 0; i < diff.size(); i++) {
+        error_ += diff[i]*(i+1);
+    }
+
     error_dot_ = error_ - error_prev_;
     error_msg.error = error_;
     error_msg.error_dot = error_dot_;
@@ -59,7 +63,13 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
 
 void ControlNode::adjustField() {
     if (baseField_.norm() != 0) {
-        adjField_ = baseField_ + 0.1 * error_ * baseField_ / baseField_.norm();
+        
+        if (error_dot_ == 0)
+        {
+            error_dot_ = 0.1;
+        }
+        adjField_ = baseField_ + 0.1 * error_ / error_dot_ * baseField_ / baseField_.norm();
+        ROS_INFO("Adjusting by: %f", 0.1 * error_ / error_dot_);
         
         ros_coils::magField field_msg;
         field_msg.header.stamp = ros::Time::now();

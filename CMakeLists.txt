@@ -181,6 +181,7 @@ catkin_install_python(PROGRAMS
   scripts/image_processor.py
   scripts/find_insertion_point.py
   scripts/debug_trigger.py
+  scripts/debug_controller.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
