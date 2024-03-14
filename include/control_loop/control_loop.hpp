@@ -18,7 +18,7 @@ class ControlNode {
     Eigen::Vector3d desAngles_, obvAngles_;
 
     int desCount_, obvCount_;
-    int error_ = 0, error_prev_ = 0, error_dot_ = 0;
+    float error_ = 0, error_prev_ = 0, error_dot_ = 0;
 
    public:
     ControlNode();

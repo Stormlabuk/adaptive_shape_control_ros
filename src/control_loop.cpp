@@ -14,7 +14,7 @@ ControlNode::ControlNode() {
     adjustedField_ = nh_.advertise<ros_coils::magField>("adjusted_field", 1);
 
     calcError_ =
-        nh_.createTimer(ros::Duration(2), &ControlNode::ComputeError, this);
+        nh_.createTimer(ros::Duration(5), &ControlNode::ComputeError, this);
 }
 
 void ControlNode::desAnglesCallback(
@@ -68,8 +68,16 @@ void ControlNode::adjustField() {
         {
             error_dot_ = 0.1;
         }
-        adjField_ = baseField_ + 0.1 * error_ / error_dot_ * baseField_ / baseField_.norm();
-        ROS_INFO("Adjusting by: %f", 0.1 * error_ / error_dot_);
+        error_dot_ = abs(error_dot_);
+        if(adjField_.norm() == 0) {
+            adjField_ = baseField_;
+        }
+        // std::cout << "\n---------\n";
+        // std::cout << "Desired angles:\n" << desAngles_ << "\nObserved angles:\n" << obvAngles_ << std::endl;
+        // std::cout << "Error: " << error_ << " Error_dot: " << error_dot_ << std::endl;
+        // std::cout << "Overall adjustment would be " << 0.1 * error_ / error_dot_  << "%" << std::endl;
+        // std::cout << "Normalised field\n" << adjField_ / adjField_.norm() << std::endl;
+        adjField_ = adjField_ + 0.1 * error_ / error_dot_ * adjField_ /adjField_.norm();
         
         ros_coils::magField field_msg;
         field_msg.header.stamp = ros::Time::now();

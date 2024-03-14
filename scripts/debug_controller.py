@@ -25,6 +25,7 @@ if __name__ == '__main__':
     while not rospy.is_shutdown():
         des_anglePub.publish(des)
         obv_anglePub.publish(obv)
+        obv.angles = [obv.angles[0] + 1, obv.angles[1] + 1, obv.angles[2] + 1, obv.angles[3] + 1, obv.angles[4] + 1]
         base_fieldPub.publish(base_field)
         rate.sleep()
 
