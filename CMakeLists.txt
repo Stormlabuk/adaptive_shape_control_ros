@@ -177,6 +177,7 @@ catkin_install_python(PROGRAMS
   scripts/image_fetcher.py
   scripts/trigger_path.py
   scripts/process_costmap.py
+  scripts/tentacle_extractor.py
   scripts/discretise_path.py
   scripts/image_processor.py
   scripts/find_insertion_point.py

@@ -13,7 +13,8 @@ class DiscretisingNode:
 
         # Pubs and subs
         self.obvAnglesPub_ = rospy.Publisher(angle_pub_type + 'angles', rl_angles, queue_size=10)
-        
+        rospy.loginfo("Discretising node started. Name " + rospy.get_name() + " Type: " + angle_pub_type + "angles")
+
         # Services
         rospy.Service('discretise_curve', DiscretiseCurve, self.points_to_angles)
         print("Discretising node started")
