@@ -136,6 +136,7 @@ include_directories(
 add_executable(control_node src/control_loop.cpp)
 add_executable(precomputation src/precomputation.cpp)
 add_executable(path_extraction_node src/path_extractor.cpp)
+add_executable(tentacle_extractor src/tentacle_extractor.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -163,6 +164,10 @@ target_link_libraries(path_extraction_node
   ${catkin_LIBRARIES}
 )
 
+target_link_libraries(tentacle_extractor
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
@@ -177,7 +182,6 @@ catkin_install_python(PROGRAMS
   scripts/image_fetcher.py
   scripts/trigger_path.py
   scripts/process_costmap.py
-  scripts/tentacle_extractor.py
   scripts/discretise_path.py
   scripts/image_processor.py
   scripts/find_insertion_point.py

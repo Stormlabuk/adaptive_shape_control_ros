@@ -6,7 +6,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 from cv2 import ximgproc
-
+import matplotlib.pyplot as plt
 
 class TentacleExtractor():
     def __init__(self) -> None:
@@ -28,30 +28,19 @@ class TentacleExtractor():
         tent_img = cv2.cvtColor(self.tent_img, cv2.COLOR_BGR2GRAY)
         base_cv = cv2.bitwise_not(base_cv)
         tent_only = cv2.bitwise_xor(base_cv, tent_img)
-        tent = np.zeros_like(tent_only)
+        tent = np.zeros_likes_like(tent_only)
         tent[tent_only == 255] = 255
 
         # at this point, tent_only holds the tentacle and a bit of noise
-
-        filtered_tent = np.zeros_like(tent)
-
         filtered_tent = cv2.medianBlur(tent, 5)
-        filtered_tent = cv2.dilate(
-            filtered_tent, np.ones((5, 5), np.uint8), iterations=2)
-        # plt.imshow(filtered_tent)
-        # plt.show()
-
-        # 3.2 apply thinning
         thinned = ximgproc.thinning(filtered_tent)
-        # plt.imshow(thinned)
-        # plt.show()
-        # 3.3 find the thinned contour
-        thinned_contours, _ = cv2.findContours(
-            thinned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # cv2.imshow("tent_only", tent_only)
-        # cv2.waitKey(0)
+        points = np.argwhere(thinned == 255)
+        # order the points based on distance from the origin
+        points = points[np.argsort(np.linalg.norm(points, axis=1))]
+        
         return
+
+
 
 
 if __name__ == '__main__':
