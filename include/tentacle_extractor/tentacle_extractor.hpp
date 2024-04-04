@@ -6,6 +6,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
+#include <shapeforming_msgs/DiscretiseCurve.h>
+
 
 static const std::string OPENCV_WINDOW = "Image window";
 
@@ -17,12 +19,14 @@ private:
     image_transport::Subscriber base_sub_;
     cv::Mat tent_img;
     std::vector<cv::Point> tentacle_points;
-
+    ros::ServiceClient discretise_client;
+    int mm_pixel_; //!< 1mm = 5 pixel. Converts mm to pixel
+    double pixel_mm_; //!< Converts pixel to mm
     /* data */
 public:
     TentacleExtractor(/* args */);
-    ~TentacleExtractor();
     void base_callback(const sensor_msgs::ImageConstPtr& msg);
+    void extract_tentacle(cv::Mat &tent_only);
 };
 
 

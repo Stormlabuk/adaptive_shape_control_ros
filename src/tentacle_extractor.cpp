@@ -7,10 +7,14 @@ TentacleExtractor::TentacleExtractor() : it_(nh_) {
     tent_img = cv::imread(
         "/home/vittorio/ros_ws/src/adaptive_ctrl/fake_tentacle/neutral.png",
         cv::IMREAD_COLOR);
-    cv::namedWindow(OPENCV_WINDOW);
+
+    discretise_client = nh_.serviceClient<shapeforming_msgs::DiscretiseCurve>(
+        "obv_angles");
+
+    mm_pixel_ = ros::param::param<int>("~mm_pixel", 5);
+    pixel_mm_ = 1.0 / mm_pixel_;
 }
 
-TentacleExtractor::~TentacleExtractor() { cv::destroyWindow(OPENCV_WINDOW); }
 
 void TentacleExtractor::base_callback(const sensor_msgs::ImageConstPtr& msg) {
     if (tent_img.empty()) {
@@ -56,6 +60,37 @@ void TentacleExtractor::base_callback(const sensor_msgs::ImageConstPtr& msg) {
         return;
     }
     return;
+}
+
+void TentacleExtractor::extract_tentacle(cv::Mat &tent_only) {
+    shapeforming_msgs::DiscretiseCurve srv;
+    std::vector<cv::Point2i> points;
+    cv::findNonZero(tent_only, points);
+    // for now, we are going to assume the points are ordered properly.
+    for (auto point : points) {
+        srv.request.tentacle.px.push_back(point.x);
+        srv.request.tentacle.py.push_back(point.y);
+    }
+    // Calculate the distance covered by the points
+    double distance = 0.0;
+    for (int i = 1; i < points.size(); i++) {
+        cv::Point2i prevPoint = points[i - 1];
+        cv::Point2i currPoint = points[i];
+        double dx = currPoint.x - prevPoint.x;
+        double dy = currPoint.y - prevPoint.y;
+        distance += std::sqrt(dx * dx + dy * dy);
+    }
+
+    // Find the next highest multiple of 10mm (converted to pixels) that covers the points
+    int pixelDistance = static_cast<int>(std::ceil(distance * pixel_mm_));
+    int nextHighestMultiple = ((pixelDistance + 9) / 10) * 10;
+    srv.request.tentacle.num_points = nextHighestMultiple;
+    if (discretise_client.call(srv)) {
+        ROS_INFO("Discretised curve");
+    } else {
+        ROS_ERROR("Failed to call service");
+    }
+
 }
 
 int main(int argc, char* argv[]) {
