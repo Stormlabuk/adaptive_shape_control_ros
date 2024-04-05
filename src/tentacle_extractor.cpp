@@ -9,12 +9,11 @@ TentacleExtractor::TentacleExtractor() : it_(nh_) {
         cv::IMREAD_COLOR);
 
     discretise_client = nh_.serviceClient<shapeforming_msgs::DiscretiseCurve>(
-        "obv_angles");
+        "obv_discretise_curve");
 
     mm_pixel_ = ros::param::param<int>("~mm_pixel", 5);
     pixel_mm_ = 1.0 / mm_pixel_;
 }
-
 
 void TentacleExtractor::base_callback(const sensor_msgs::ImageConstPtr& msg) {
     if (tent_img.empty()) {
@@ -55,6 +54,7 @@ void TentacleExtractor::base_callback(const sensor_msgs::ImageConstPtr& msg) {
             cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
         cv::erode(tent_only, tent_only, element);
         cv::ximgproc::thinning(tent_only, tent_only);
+        extract_tentacle(tent_only);
     } catch (cv::Exception& e) {
         ROS_ERROR("OpenCV exception: %s", e.what());
         return;
@@ -62,15 +62,23 @@ void TentacleExtractor::base_callback(const sensor_msgs::ImageConstPtr& msg) {
     return;
 }
 
-void TentacleExtractor::extract_tentacle(cv::Mat &tent_only) {
-    shapeforming_msgs::DiscretiseCurve srv;
+void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
+    shapeforming_msgs::DiscretiseCurveRequest req;
     std::vector<cv::Point2i> points;
     cv::findNonZero(tent_only, points);
-    // for now, we are going to assume the points are ordered properly.
-    for (auto point : points) {
-        srv.request.tentacle.px.push_back(point.x);
-        srv.request.tentacle.py.push_back(point.y);
-    }
+    // Sort points based on distance from the origin
+    std::sort(points.begin(), points.end(),
+              [](const cv::Point2i& a, const cv::Point2i& b) {
+                  double distanceA = std::sqrt(a.x * a.x + a.y * a.y);
+                  double distanceB = std::sqrt(b.x * b.x + b.y * b.y);
+                  return distanceA < distanceB;
+              });
+
+    // Sort points with the same distance from the origin based on x values
+    std::stable_sort(
+        points.begin(), points.end(),
+        [](const cv::Point2i& a, const cv::Point2i& b) { return a.x < b.x; });
+
     // Calculate the distance covered by the points
     double distance = 0.0;
     for (int i = 1; i < points.size(); i++) {
@@ -81,16 +89,32 @@ void TentacleExtractor::extract_tentacle(cv::Mat &tent_only) {
         distance += std::sqrt(dx * dx + dy * dy);
     }
 
-    // Find the next highest multiple of 10mm (converted to pixels) that covers the points
+    // Find the next highest multiple of 10mm (converted to pixels) that covers
+    // the points
     int pixelDistance = static_cast<int>(std::ceil(distance * pixel_mm_));
-    int nextHighestMultiple = ((pixelDistance + 9) / 10) * 10;
-    srv.request.tentacle.num_points = nextHighestMultiple;
-    if (discretise_client.call(srv)) {
-        ROS_INFO("Discretised curve");
-    } else {
-        ROS_ERROR("Failed to call service");
+    int SlicedPoints = pixelDistance / 10;
+    req.tentacle.num_points = SlicedPoints;
+    int numPoints = points.size();
+
+    std::vector<cv::Point> selectedPoints;
+    for (int i = 0; i < SlicedPoints; i++) {
+        int index = i * numPoints / SlicedPoints;
+        req.tentacle.px.push_back(points[index].x);
+        req.tentacle.py.push_back(points[index].y);
     }
 
+    shapeforming_msgs::DiscretiseCurveResponse res;
+    try {
+        discretise_client.call(req, res);
+        if (res.success) {
+            ROS_INFO("Discretisation successful");
+        } else {
+            ROS_ERROR("Discretisation failed");
+        }
+    } catch (ros::Exception& e) {
+        ROS_ERROR("ROS exception: %s", e.what());
+        return;
+    }
 }
 
 int main(int argc, char* argv[]) {

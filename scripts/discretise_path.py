@@ -15,7 +15,6 @@ class DiscretisePath:
         self.mm_pixel = rospy.get_param("~mm_pixel", 5) # 1mm = 5 pixel. Converts mm to pixel
         self.pixel_mm = 1 / self.mm_pixel
         rospy.Subscriber(base_planner + "path", Path, self.PathCB_)
-        self.marker_pub = rospy.Publisher("viz_angles", Marker, queue_size=10)
         rospy.spin()
 
     def PathCB_(self, msg):
@@ -47,8 +46,6 @@ class DiscretisePath:
         if not success:
             rospy.logerr("DiscretiseCurve service failed")
             return
-        # 6. visualise the angles in rviz
-        self.visualiseAngles(disc_points, angles)
 
 
     def getSlice(self, interpolated_path, link_l):
@@ -97,67 +94,7 @@ class DiscretisePath:
 
         return interpolated_points
 
-    def populateMarker(self, marker, points, color, a):
-        """
-        Populates a Marker object with given points, color, and transparency.
-
-        Args:
-            marker (Marker): The Marker object to populate.
-            points (list): List of points to add to the Marker.
-            color (list): List of RGB values for the Marker color.
-            a (float): Transparency value for the Marker.
-
-        Returns:
-            Marker: The populated Marker object.
-        """
-        marker = Marker()
-        marker.header.frame_id = "map"
-        marker.header.stamp = rospy.Time.now()
-        marker.type = Marker.POINTS
-        marker.action = Marker.ADD
-        marker.pose.orientation.x = 0
-        marker.pose.orientation.y = 0
-        marker.pose.orientation.z = 0
-        marker.pose.orientation.w = 0
-        marker.scale.x = 10
-        marker.scale.y = 10
-        marker.color.r = color[0]
-        marker.color.g = color[1]
-        marker.color.b = color[2]
-        marker.color.a = a
-        for point in points:
-            marker_point = Point()
-            marker_point.x = point[0]
-            marker_point.y = point[1]
-            marker_point.z = point[2] if len(point) > 2 else 0.0
-            marker.points.append(marker_point)
-
-        return marker
-
-    def visualiseAngles(self, disc_points, angles):
-        """
-        Visualises the given angles in RViz.
-
-        Args:
-            angles (list): List of angles to visualise.
-        """        
-        start = disc_points[0]
-        verification_points = []
-        verification_points.append(start)
-        dx, dy = np.diff(disc_points, axis=0).T
-        distances = np.sqrt(dx**2 + dy**2)
-        for i in range(1, len(angles)):
-            angle = angles[i-1]
-            distance = distances[i-1]
-            dx = distance * np.cos(np.radians(angle))
-            dy = distance * np.sin(np.radians(angle))
-            point = verification_points[i-1] + [dx, dy]
-            verification_points.append(point)
-        verification_points.append(disc_points[-1])
-        marker = Marker()
-        marker = self.populateMarker(marker, verification_points, [0, 1, 0], 1)
-        self.marker_pub.publish(marker)
-
+    
 if __name__ == '__main__':
     try:
         DiscretisePath()
