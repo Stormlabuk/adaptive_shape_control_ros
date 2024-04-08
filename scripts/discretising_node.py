@@ -12,7 +12,12 @@ class DiscretisingNode:
         rospy.init_node('discretising_node', anonymous=False)
         
         angle_pub_type = rospy.get_param('~angle_pub_type', 'des_')
-
+        if angle_pub_type == 'obv_':
+            self.marker_color = [1, 0.5, 0]  # orange
+        elif angle_pub_type == 'des_':
+            self.marker_color = [0.5, 0, 1]  # purple
+        else:
+            self.marker_color = [1, 0, 0]  # default to red
         # Pubs and subs
         self.obvAnglesPub_ = rospy.Publisher(angle_pub_type + 'angles', rl_angles, queue_size=10)
         self.marker_pub = rospy.Publisher(angle_pub_type + "viz_angles", Marker, queue_size=10)
@@ -98,7 +103,7 @@ class DiscretisingNode:
             verification_points.append(point)
         verification_points.append(disc_points[-1])
         marker = Marker()
-        marker = self.populateMarker(marker, verification_points, [0, 1, 0], 1)
+        marker = self.populateMarker(marker, verification_points, self.marker_color, 1)
         self.marker_pub.publish(marker)
 
 if __name__ == '__main__':

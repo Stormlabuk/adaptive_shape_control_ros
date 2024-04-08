@@ -8,7 +8,7 @@ ControlNode::ControlNode() {
         "des_angles", 1, &ControlNode::desAnglesCallback, this);
 
     baseFieldSub_ = nh_.subscribe<ros_coils::magField>(
-        "base_field", 1, &ControlNode::baseFieldCallback, this);
+        "precomputation/baseField", 1, &ControlNode::baseFieldCallback, this);
 
     errorPub_ = nh_.advertise<shapeforming_msgs::error>("error", 1);
     adjustedField_ = nh_.advertise<ros_coils::magField>("adjusted_field", 1);
@@ -49,8 +49,8 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
     }
     Eigen::Vector3d diff = desAngles_ - obvAngles_;
     error_ = diff.norm();
-    for(int i = 0; i < diff.size(); i++) {
-        error_ += diff[i]*(i+1);
+    for (int i = 0; i < diff.size(); i++) {
+        error_ += diff[i] * (i + 1);
     }
 
     error_dot_ = error_ - error_prev_;
@@ -63,22 +63,23 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
 
 void ControlNode::adjustField() {
     if (baseField_.norm() != 0) {
-        
-        if (error_dot_ == 0)
-        {
+        if (error_dot_ == 0) {
             error_dot_ = 0.1;
         }
         error_dot_ = abs(error_dot_);
-        if(adjField_.norm() == 0) {
+        if (adjField_.norm() == 0) {
             adjField_ = baseField_;
         }
         // std::cout << "\n---------\n";
-        // std::cout << "Desired angles:\n" << desAngles_ << "\nObserved angles:\n" << obvAngles_ << std::endl;
-        // std::cout << "Error: " << error_ << " Error_dot: " << error_dot_ << std::endl;
-        // std::cout << "Overall adjustment would be " << 0.1 * error_ / error_dot_  << "%" << std::endl;
-        // std::cout << "Normalised field\n" << adjField_ / adjField_.norm() << std::endl;
-        adjField_ = adjField_ + 0.1 * error_ / error_dot_ * adjField_ /adjField_.norm();
-        
+        // std::cout << "Desired angles:\n" << desAngles_ << "\nObserved
+        // angles:\n" << obvAngles_ << std::endl; std::cout << "Error: " <<
+        // error_ << " Error_dot: " << error_dot_ << std::endl; std::cout <<
+        // "Overall adjustment would be " << 0.1 * error_ / error_dot_  << "%"
+        // << std::endl; std::cout << "Normalised field\n" << adjField_ /
+        // adjField_.norm() << std::endl;
+        adjField_ = adjField_ +
+                    0.1 * error_ / error_dot_ * adjField_ / adjField_.norm();
+
         ros_coils::magField field_msg;
         field_msg.header.stamp = ros::Time::now();
         field_msg.bx = adjField_[0];

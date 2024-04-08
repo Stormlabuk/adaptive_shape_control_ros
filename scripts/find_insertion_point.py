@@ -60,7 +60,7 @@ class FindInsertionPoint:
         tipRotated = np.array(
             [np.mean(polyRotated[:, 0]), np.max(polyRotated[:, 1])])
         scope_adj = np.array(
-            [1.2 * self.mm_to_pixel, -2.3 * self.mm_to_pixel])
+            [2.2 * self.mm_to_pixel, -3.3 * self.mm_to_pixel])
         tipRotated = tipRotated + scope_adj
         ins_point = self.rotatePolygon(
             tipRotated, -orientation, centroid)

@@ -63,5 +63,8 @@
 
     <node name="tentacle_extractor" pkg="adaptive_ctrl" type="tentacle_extractor" output="$(arg output)"/>
 
-    <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_v2.rviz"/> -->
+    <include file="$(find adaptive_ctrl)/launch/adaptive_control.launch"/>
+    <include file="$(find adaptive_ctrl)/launch/precomputation.launch"/>
+
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_v2.rviz"/>
 </launch>

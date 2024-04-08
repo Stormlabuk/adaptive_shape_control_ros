@@ -30,7 +30,7 @@ class DiscretisePath:
         interpolated_path = self.interpolate_points(path_points)
         # 3. find and slice the first 50mm worth of points
         slice, link_no = self.getSlice(interpolated_path, 10)
-        rospy.loginfo("interpolated path length: %d, slice length: %d, link_no: %d" % (len(interpolated_path), len(slice), link_no))
+        # rospy.loginfo("interpolated path length: %d, slice length: %d, link_no: %d" % (len(interpolated_path), len(slice), link_no))
         # 4. feed that to the discretise_curve service
         indices = np.linspace(0, len(slice) -
                               1, link_no, dtype=int) 
@@ -39,7 +39,7 @@ class DiscretisePath:
         req.tentacle.px = disc_points[:, 0].tolist()
         req.tentacle.py = disc_points[:, 1].tolist()
         req.tentacle.num_points = link_no
-        discProxy = rospy.ServiceProxy('discretise_curve', DiscretiseCurve)
+        discProxy = rospy.ServiceProxy('des_discretise_curve', DiscretiseCurve)
         res = discProxy(req)
         angles = res.angles
         success = res.success
@@ -54,8 +54,8 @@ class DiscretisePath:
         num_points = len(interpolated_path)
         link_l = int(link_l * self.mm_pixel)
         fitted_links = int( np.floor(num_points / link_l))
-        if fitted_links > 6:
-            fitted_links = 6
+        if fitted_links > 5:
+            fitted_links = 5
         elif fitted_links < 1:
             fitted_links = 1
 

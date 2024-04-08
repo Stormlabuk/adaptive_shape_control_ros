@@ -11,8 +11,8 @@ class TriggerPath:
         self.goal_marker_pub = rospy.Publisher('/goal_marker', Marker, queue_size=10)
         self.goal_sub = rospy.Subscriber('/goal_point', Point, self.goal_cb)
         self.goal = Point()
-        self.goal.x = 305
-        self.goal.y = 102
+        self.goal.x = 333
+        self.goal.y = 386
         self.goal.z = 0
 
     def populateMarker(self, marker, points, color, a):

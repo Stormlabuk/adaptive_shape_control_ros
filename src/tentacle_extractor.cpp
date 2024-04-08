@@ -91,10 +91,10 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
 
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
-    int pixelDistance = static_cast<int>(std::ceil(distance * pixel_mm_));
-    int SlicedPoints = pixelDistance / 10;
-    req.tentacle.num_points = SlicedPoints;
     int numPoints = points.size();
+    int link_px = 10 * mm_pixel_;
+    int SlicedPoints = numPoints / link_px;
+    req.tentacle.num_points = SlicedPoints;
 
     std::vector<cv::Point> selectedPoints;
     for (int i = 0; i < SlicedPoints; i++) {
@@ -106,11 +106,6 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
     shapeforming_msgs::DiscretiseCurveResponse res;
     try {
         discretise_client.call(req, res);
-        if (res.success) {
-            ROS_INFO("Discretisation successful");
-        } else {
-            ROS_ERROR("Discretisation failed");
-        }
     } catch (ros::Exception& e) {
         ROS_ERROR("ROS exception: %s", e.what());
         return;

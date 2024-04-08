@@ -182,8 +182,8 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /viz_angles
-      Name: RL_Points
+      Marker Topic: /des_viz_angles
+      Name: DES_Points
       Namespaces:
         "": true
       Queue Size: 100
@@ -192,6 +192,14 @@ Visualization Manager:
       Enabled: true
       Marker Topic: /insertion_point_marker
       Name: Insertion_Point
+      Namespaces:
+        "": true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /obv_viz_angles
+      Name: OBV_Points
       Namespaces:
         "": true
       Queue Size: 100
@@ -268,5 +276,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1267
-  X: 348
-  Y: 464
+  X: 313
+  Y: 371
