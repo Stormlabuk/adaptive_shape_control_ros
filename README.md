@@ -37,22 +37,44 @@ catkin build
 
 ### Nodes
 
-#### CV Side
+#### Messages, Topics
 
-|      Node Name       |                                                 Functionality                                                 |                                      Subscribers                                      |                                               Publishers                                                |              Services              | Done |
-| :------------------: | :-----------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------: | :--------------------------------: | :--: |
-|    image_fetcher     |                          Finds image paths and forwards them to the image_processor                           |                                         None                                          |                                    **std_msgs::String** img_path                                     |                None                |  ✅   |
-|   image_processor    | Applies contour based filtering to the fetched image path. Publishes forward the phantom and inserter images. |                           **std_msgs::String** img_path                            |                    **sensor_msgs::Image** phantom_img inserter_img base_img                    |                None                |  ✅   |
-| find_insertion_point |                            Processes inserter contour to find the insertion point                             |                        **sensor_msgs::Image** inserter_img                         | **geometry_msgs::Point** insertion_point **visualization_msgs::Marker** insertion_point_marker |                None                |  ✅   |
-|   process_costmap    |                              Processes inserter and phantom contour as costmaps                               |                   **sensor_msgs::Image** phantom_img base_img                   |                               **nav_msgs::OccupancyGrid** grid map                                |                None                |  ✅   |
-|     trigger_path     |  Takes in insertion point, checks that the costmap is up to date and requests a path with an arbitrary goal   | **geometry_msgs::Point** insertion_point **nav_msgs::OccupancyGrid** costmap |                                                  None                                                   |    Heuristic_Planners::GetPath     |  ✅   |
-|   discretise_path    |                                 Takes in path and discretises it to RL domain                                 |                              **nav_msgs::Path**  path                              |     **shapeforming_msgs::rl_angles** des_angles **visualization_msgs::Marker** viz_angles      | shapeforming_msgs::DiscretiseCurve |  ✅   |
+|      Node Name       |             Subscribes             |             Publishes              |
+| :------------------: | :--------------------------------: | :--------------------------------: |
+|    image_fetcher     |                 NA                 |          String: img_path          |
+|   image_processor    |          String: img_path          |        Image: inserter_img         |
+|                      |                                    |          Image: base_img           |
+|                      |                                    |         Image: phantom_img         |
+|                      |                                    |            Image: image            |
+| find_insertion_point |        Image: inserter_img         |       Point: insertion_point       |
+|                      |                                    |   Marker: insertion_point_marker   |
+|                      |                                    |       Vector3: insertion_ori       |
+|   process_costmap    |         Image: phantom_img         |       OccupancyGrid: costmap       |
+|                      |          Image: base_img           |        OccupancyGrid: grid         |
+|     trigger_path     |       Point: insertion_point       |        Marker: goal_marker         |
+|                      |         Point: goal_point          |                                    |
+|   discretise_path    |    Path: planner_ros_node/path     |                                    |
+|  tentacle_extractor  |          Image: base_img           |                                    |
+|    path_to_angle     |                                    |       rl_angles: des_angles        |
+|                      |                                    |       Marker: obv_viz_angles       |
+|    cline_to_angle    |                                    |       rl_angles: obv_angles        |
+|                      |                                    |       Marker: obv_viz_angles       |
+|     control_node     |       rl_angles: obv_angles        |            error: error            |
+|                      |       rl_angles: des_angles        |      magFeild: adjusted_field      |
+|                      | magField: precomputation/baseField |                                    |
+|    precomputation    |                                    | magField: precomputation/baseField |
 
-#### Control side
+#### Services
 
-### Node graph
-
-![Node Graph](img/cv_side_graph.png)
+|     Node Name      |          Service Client           |          Service Call          |
+| :----------------: | :-------------------------------: | :----------------------------: |
+|    trigger_path    |                                   | /planner_ros_node/request_path |
+|  planner_ros_node  |  /planner_ros_node/request_path   |                                |
+|   path_to_angle    |       des_discretise_curve        |                                |
+|   cline_to_angle   |       obv_discretise_curve        |                                |
+|  discretise_path   |                                   |      des_discretise_curve      |
+| tentacle_extractor |                                   |      obv_discretise_curve      |
+|   precomputation   | precomputation/calc_initial_field |                                |
 
 ## Usage
 

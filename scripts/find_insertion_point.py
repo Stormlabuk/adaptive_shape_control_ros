@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import rospy
 from sensor_msgs.msg import Image
-from shapeforming_msgs.srv import GetInsertion, GetInsertionRequest
 from geometry_msgs.msg import Point, Vector3
 from visualization_msgs.msg import Marker
 from cv_bridge import CvBridge
