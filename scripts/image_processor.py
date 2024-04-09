@@ -5,29 +5,48 @@ import os
 import numpy as np
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+from std_srvs.srv import SetBool, SetBoolResponse
 from std_msgs.msg import String
 
 
 class ImageProcessor():
     def __init__(self) -> None:
 
-        self.img_path_sub = rospy.Subscriber(
-            "img_path", String, self.image_callback)
+        # self.img_path_sub = rospy.Subscriber(
+        #     "img_path", String, self.image_callback)
+        self_live_img_sub = rospy.Subscriber(
+            "image_rec", Image, self.image_callback)
+
         self.inserter_pub = rospy.Publisher(
             "inserter_img", Image, queue_size=10)
         self.base_pub = rospy.Publisher("base_img", Image, queue_size=10)
         self.phantom_pub = rospy.Publisher("phantom_img", Image, queue_size=10)
         self.image_pub = rospy.Publisher("image", Image, queue_size=10)
+
+        self.initial_pubs = rospy.Service("initial_imgproc", SetBool, self.initial_image_processing)
+        self.publish_maps = True
+
         self.inserter = np.empty((0, 0), dtype=np.uint8)
         self.phantom = np.empty((0, 0), dtype=np.uint8)
+        self.bridge = CvBridge()
         rospy.init_node('image_processor', anonymous=False)
         rospy.spin()
 
-    def image_callback(self, data):
-        img = cv2.imread(data.data, cv2.IMREAD_COLOR)
+    def initial_image_processing(self, req):
+        self.publish_maps = req.data
+        return SetBool(success=True, message="Initial image processing started")
 
+    def image_callback(self, data):
+        try:     
+            img = self.bridge.imgmsg_to_cv2(data, "bgr8")
+        except CvBridgeError as e:
+            rospy.logerr(e)
         # 1. Convert to grayscale
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if(img.shape[2] == 3):
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = img
+
         # 2. Gaussian blur
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         # 3. Binary thresholding
@@ -68,12 +87,13 @@ class ImageProcessor():
         bridge = CvBridge()
         try:
             self.image_pub.publish(bridge.cv2_to_imgmsg(img, "bgr8"))
-            self.inserter_pub.publish(bridge.cv2_to_imgmsg(
-                self.inserter, "passthrough"))
-            self.phantom_pub.publish(bridge.cv2_to_imgmsg(
-                self.phantom, "passthrough"))
-            self.base_pub.publish(bridge.cv2_to_imgmsg(
-                base_img, "passthrough"))
+            if(self.publish_maps):
+                self.inserter_pub.publish(bridge.cv2_to_imgmsg(
+                    self.inserter, "passthrough"))
+                self.phantom_pub.publish(bridge.cv2_to_imgmsg(
+                    self.phantom, "passthrough"))
+                self.base_pub.publish(bridge.cv2_to_imgmsg(
+                    base_img, "passthrough"))
         except CvBridgeError as e:
             rospy.logerr(e)
 

@@ -137,6 +137,7 @@ add_executable(control_node src/control_loop.cpp)
 add_executable(precomputation src/precomputation.cpp)
 add_executable(path_extraction_node src/path_extractor.cpp)
 add_executable(tentacle_extractor src/tentacle_extractor.cpp)
+add_executable(high_controller src/high_controller.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -165,6 +166,10 @@ target_link_libraries(path_extraction_node
 )
 
 target_link_libraries(tentacle_extractor
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(high_controller
   ${catkin_LIBRARIES}
 )
 

@@ -14,7 +14,7 @@ ControlNode::ControlNode() {
     adjustedField_ = nh_.advertise<ros_coils::magField>("adjusted_field", 1);
 
     calcError_ =
-        nh_.createTimer(ros::Duration(5), &ControlNode::ComputeError, this);
+        nh_.createTimer(ros::Duration(4), &ControlNode::ComputeError, this);
 }
 
 void ControlNode::desAnglesCallback(
@@ -47,6 +47,7 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
         ROS_WARN("Desired or observed angles are not received");
         return;
     }
+    ROS_INFO("Desired and observed angles are received, proceeding with loop");
     Eigen::Vector3d diff = desAngles_ - obvAngles_;
     error_ = diff.norm();
     for (int i = 0; i < diff.size(); i++) {
