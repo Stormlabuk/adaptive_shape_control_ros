@@ -16,9 +16,13 @@ HighController::HighController() {
     initial_imgproc_ = nh_.serviceClient<std_srvs::SetBool>("initial_imgproc");
     path_client_ = nh_.serviceClient<heuristic_planners::GetPath>(
         "/planner_ros_node/request_path");
+    
     precomputation_client_ =
         nh_.serviceClient<shapeforming_msgs::CalcInitialField>(
             "/precomputation/calc_initial_field");
+
+    spin_controller_client_ = nh_.serviceClient<std_srvs::SetBool>(
+        "/control_node/spin_controller");
 
     reinitMap();
     recalcPath();
@@ -92,6 +96,22 @@ void HighController::recalcField() {
     if (!precompRes.success) {
         ROS_ERROR("Failed to call precomputation service");
         return;
+    }
+}
+
+/**
+ * @brief spins the controller by calling the spin_controller service.
+ * @param spin - true to start the controller, false to stop it.
+ 
+*/
+void HighController::spinController(bool spin) {
+    std_srvs::SetBoolRequest spinReq;
+    std_srvs::SetBoolResponse spinRes;
+    spinReq.data = spin;
+    try {
+        spin_controller_client_.call(spinReq, spinRes);
+    } catch (const ros::Exception& e) {
+        ROS_ERROR("Failed to call spin_controller service, error %s", e.what());
     }
 }
 
