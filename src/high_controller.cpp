@@ -1,6 +1,7 @@
 #include "high_controller/high_controller.hpp"
 
 HighController::HighController() {
+    // subscriber initialisation
     des_angles_sub_ = nh_.subscribe("des_angles", 1,
                                     &HighController::desAnglesCallback, this);
     obv_angles_sub_ = nh_.subscribe("obv_angles", 1,
@@ -11,27 +12,56 @@ HighController::HighController() {
 
     insertion_point_sub_ = nh_.subscribe(
         "insertion_point", 1, &HighController::insertionPointCallback, this);
+
     goal_sub_ = nh_.subscribe("goal", 1, &HighController::goalCallback, this);
 
+    error_sub_ =
+        nh_.subscribe("error", 1, &HighController::errorCallback, this);
+
+    // publishers initialisation
+    inserter_pub_ = nh_.advertise<std_msgs::Int32>("stepper", 1);
+    des_trunc_ = nh_.advertise<shapeforming_msgs::rl_angles>("des_trunc", 1);
+    obv_trunc_ = nh_.advertise<shapeforming_msgs::rl_angles>("obv_trunc", 1);
+
+    // ros parameters
+    nh_.param<double>("error_lb", error_lb, 0);
+    nh_.param<double>("error_dot__lb", error_dot_lb, 0);
+
+    // ros service clients
     initial_imgproc_ = nh_.serviceClient<std_srvs::SetBool>("initial_imgproc");
     path_client_ = nh_.serviceClient<heuristic_planners::GetPath>(
         "/planner_ros_node/request_path");
-    
+
     precomputation_client_ =
         nh_.serviceClient<shapeforming_msgs::CalcInitialField>(
             "/precomputation/calc_initial_field");
 
-    spin_controller_client_ = nh_.serviceClient<std_srvs::SetBool>(
-        "/control_node/spin_controller");
+    spin_controller_client_ =
+        nh_.serviceClient<std_srvs::SetBool>("/control_node/spin_controller");
 
     reinitMap();
     recalcPath();
     recalcField();
-
-    if (des_angles_.angles.size() != obv_angles_.angles.size()) {
-        ROS_WARN("Desired and observed angles are not the same size");
-        return;
+    inserter_pub_.publish(10);
+    while(obv_angles_.angles.size() < 1){
+        inserter_pub_.publish(1);
     }
+
+    spinController(true);
+}
+
+void HighController::highLoop() {
+    bool error_bound = (abs(error_.error) < error_lb);
+    bool error_dot_bound = (abs(error_.error_dot) < error_dot_lb);
+    if (error_bound && error_dot_bound) {
+        spinController(false);
+    }
+    int target_insertion = obv_angles_.angles.size() + 1;
+    inserter_pub_.publish(10);
+    while(obv_angles_.angles.size() < target_insertion){
+        inserter_pub_.publish(1);
+    }
+
 }
 
 /**
@@ -53,10 +83,11 @@ void HighController::reinitMap() {
 }
 
 /**
- * @brief recalculates the path by triggering the /planner_ros_node/request_path.
- * Goal and insertion point are fetched via subscribers.
- * Calling this service will eventually cause the path to be republished.
- * Which will in turn cause the des_angles to be recalculated by the appropriate node.
+ * @brief recalculates the path by triggering the
+ * /planner_ros_node/request_path. Goal and insertion point are fetched via
+ * subscribers. Calling this service will eventually cause the path to be
+ * republished. Which will in turn cause the des_angles to be recalculated by
+ * the appropriate node.
  */
 void HighController::recalcPath() {
     path_client_.waitForExistence();
@@ -72,9 +103,10 @@ void HighController::recalcPath() {
 }
 
 /**
- * @brief recalculates the field by triggering the /precomputation/calc_initial_field.
- * Desired angles are fetched via subscribers.
- * Calling this service will eventually cause the field to be republished.
+ * @brief recalculates the field by triggering the
+ * /precomputation/calc_initial_field. Desired angles are fetched via
+ * subscribers. Calling this service will eventually cause the field to be
+ * republished.
  */
 void HighController::recalcField() {
     // 1. Initialise a calcinitialfield service
@@ -102,7 +134,7 @@ void HighController::recalcField() {
 /**
  * @brief spins the controller by calling the spin_controller service.
  * @param spin - true to start the controller, false to stop it.
- 
+
 */
 void HighController::spinController(bool spin) {
     std_srvs::SetBoolRequest spinReq;
@@ -115,17 +147,19 @@ void HighController::spinController(bool spin) {
     }
 }
 
-void HighController::highLoop(){
-	return;
+void HighController::errorCallback(
+    const shapeforming_msgs::error::ConstPtr& msg) {
+    ROS_INFO("Received error values");
+    error_ = *msg;
 }
 
 void HighController::desAnglesCallback(
     const shapeforming_msgs::rl_angles::ConstPtr& msg) {
     ROS_INFO("Received desired angles");
     des_angles_ = *msg;
-	if(des_angles_.angles.size() != 0) {
-		recalcField();
-	}
+    if (des_angles_.angles.size() != 0) {
+        recalcField();
+    }
 }
 
 void HighController::obvAnglesCallback(
@@ -138,7 +172,6 @@ void HighController::insertionOriCallback(
     const geometry_msgs::Vector3::ConstPtr& msg) {
     ROS_INFO("Received insertion orientation");
     insertion_ori_ = *msg;
-	
 }
 
 void HighController::insertionPointCallback(

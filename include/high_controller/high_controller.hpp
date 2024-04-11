@@ -10,6 +10,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Vector3.h>
 #include <shapeforming_msgs/rl_angles.h>
+#include <shapeforming_msgs/error.h>
 
 // ros services
 #include <heuristic_planners/GetPath.h>
@@ -38,6 +39,7 @@ class HighController {
     void insertionOriCallback(const geometry_msgs::Vector3::ConstPtr& msg);
     void insertionPointCallback(const geometry_msgs::Point::ConstPtr& msg);
     void goalCallback(const geometry_msgs::Point::ConstPtr& msg);
+    void errorCallback(const shapeforming_msgs::error::ConstPtr& msg);
 
     void highLoop();
     void reinitMap();
@@ -45,13 +47,17 @@ class HighController {
     void recalcPath();
     void spinController(bool spin);
 
+    double error_lb = 0, error_dot_lb = 0;
+
    private:
     ros::NodeHandle nh_;
-    ros::ServiceClient initial_imgproc_, path_client_, precomputation_client_, spin_controller_client_;
+    ros::ServiceClient initial_imgproc_, path_client_, precomputation_client_,
+        spin_controller_client_;
 
     ros::Subscriber insertion_point_sub_, insertion_ori_sub_, goal_sub_;
     ros::Subscriber des_angles_sub_, obv_angles_sub_;
     ros::Subscriber path_sub_;
+    ros::Subscriber error_sub_;
 
     ros::Publisher des_trunc_, obv_trunc_;
     ros::Publisher inserter_pub_;
@@ -61,6 +67,8 @@ class HighController {
     geometry_msgs::Vector3 insertion_ori_ = geometry_msgs::Vector3();
 
     shapeforming_msgs::rl_angles des_angles_, obv_angles_;
+    shapeforming_msgs::error error_;
+
 };
 
 int main(int argc, char* argv[]);
