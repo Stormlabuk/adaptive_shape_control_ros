@@ -15,6 +15,23 @@ ControlNode::ControlNode() {
 
     calcError_ =
         nh_.createTimer(ros::Duration(4), &ControlNode::ComputeError, this);
+    calcError_.stop();
+    spin_controller_srv_ = nh_.advertiseService(
+        "spin_controller", &ControlNode::spinController, this);
+}
+
+bool ControlNode::spinController(std_srvs::SetBool::Request& req,
+                                 std_srvs::SetBool::Response& res) {
+    if (req.data) {
+        calcError_.start();
+        res.success = true;
+        res.message = "Controller started";
+    } else {
+        calcError_.stop();
+        res.success = true;
+        res.message = "Controller stopped";
+    }
+    return res.success;
 }
 
 void ControlNode::desAnglesCallback(

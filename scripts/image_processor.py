@@ -94,6 +94,7 @@ class ImageProcessor():
                     self.phantom, "passthrough"))
                 self.base_pub.publish(bridge.cv2_to_imgmsg(
                     base_img, "passthrough"))
+                self.publish_maps = False
         except CvBridgeError as e:
             rospy.logerr(e)
 

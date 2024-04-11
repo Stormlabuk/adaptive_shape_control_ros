@@ -1,13 +1,20 @@
-#include <geometry_msgs/Point.h>
-#include <geometry_msgs/Vector3.h>
-#include <heuristic_planners/GetPath.h>
+// ros includes
 #include <ros/exception.h>
 #include <ros/ros.h>
-#include <shapeforming_msgs/rl_angles.h>
-#include <std_srvs/SetBool.h>
 
+// std includes
 #include <iostream>
 #include <vector>
+
+// ros messages
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Vector3.h>
+#include <shapeforming_msgs/rl_angles.h>
+
+// ros services
+#include <heuristic_planners/GetPath.h>
+#include <shapeforming_msgs/CalcInitialField.h>
+#include <std_srvs/SetBool.h>
 
 /**
  * @todo
@@ -32,6 +39,11 @@ class HighController {
     void insertionPointCallback(const geometry_msgs::Point::ConstPtr& msg);
     void goalCallback(const geometry_msgs::Point::ConstPtr& msg);
 
+    void highLoop();
+    void reinitMap();
+    void recalcField();
+    void recalcPath();
+
    private:
     ros::NodeHandle nh_;
     ros::ServiceClient initial_imgproc_, path_client_, precomputation_client_;
@@ -45,6 +57,7 @@ class HighController {
 
     geometry_msgs::Point goal_ = geometry_msgs::Point(),
                          insertion_point_ = geometry_msgs::Point();
+    geometry_msgs::Vector3 insertion_ori_ = geometry_msgs::Vector3();
 
     shapeforming_msgs::rl_angles des_angles_, obv_angles_;
 };

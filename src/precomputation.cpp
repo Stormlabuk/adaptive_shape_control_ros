@@ -111,7 +111,6 @@ void Precomputation::populateStructs(std::vector<Joint> &joints_,
     for (int i = 0; i < obvJointNo_; i++) {
         joints_[i] = Joint();
         joints_[i].index = i;
-        joints_[i].LocMag = Vector3d(magX_[i], magY_[i], magZ_[i]);
         joints_[i].q = Vector3d(0, desiredAngles_[i] * M_PI / 180, 0);
 
         links_[i] = Link();
@@ -137,6 +136,11 @@ void Precomputation::populateStructs(std::vector<Joint> &joints_,
             links_[i].nextIndex = i + 1;
             joints_[i].nextIndex = i + 1;
         }
+    }
+
+    // iterate over joints_ from front to back
+    for(int i = joints_.size(); i --> 0; ){
+        joints_.at(i).LocMag << magX_[i], magY_[i], magZ_[i];
     }
 
     // for (auto i : joints_) {

@@ -10,6 +10,7 @@ project(adaptive_ctrl)
 find_package(catkin REQUIRED COMPONENTS
   ros_coils
   shapeforming_msgs
+  heuristic_planners
   roscpp
   rospy
   cv_bridge
@@ -103,7 +104,7 @@ find_package( OpenCV REQUIRED )
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES adaptive_ctrl
- CATKIN_DEPENDS ros_coils shapeforming_msgs roscpp rospy message_runtime
+ CATKIN_DEPENDS ros_coils heuristic_planners shapeforming_msgs roscpp rospy message_runtime
 #  DEPENDS system_lib
 )
 
@@ -135,7 +136,6 @@ include_directories(
 # add_executable(${PROJECT_NAME}_node src/adaptive_ctrl_node.cpp)
 add_executable(control_node src/control_loop.cpp)
 add_executable(precomputation src/precomputation.cpp)
-add_executable(path_extraction_node src/path_extractor.cpp)
 add_executable(tentacle_extractor src/tentacle_extractor.cpp)
 add_executable(high_controller src/high_controller.cpp)
 ## Rename C++ executable without prefix
@@ -161,9 +161,6 @@ target_link_libraries(precomputation
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(path_extraction_node
-  ${catkin_LIBRARIES}
-)
 
 target_link_libraries(tentacle_extractor
   ${catkin_LIBRARIES}
