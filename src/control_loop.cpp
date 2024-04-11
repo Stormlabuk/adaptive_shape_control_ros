@@ -2,10 +2,10 @@
 
 ControlNode::ControlNode() {
     obvAnglesSub_ = nh_.subscribe<shapeforming_msgs::rl_angles>(
-        "obv_angles", 1, &ControlNode::obvAnglesCallback, this);
+        "obv_trunc", 1, &ControlNode::obvAnglesCallback, this);
 
     desAnglesSub_ = nh_.subscribe<shapeforming_msgs::rl_angles>(
-        "des_angles", 1, &ControlNode::desAnglesCallback, this);
+        "des_trunc", 1, &ControlNode::desAnglesCallback, this);
 
     baseFieldSub_ = nh_.subscribe<ros_coils::magField>(
         "precomputation/baseField", 1, &ControlNode::baseFieldCallback, this);

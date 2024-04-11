@@ -48,6 +48,7 @@ class HighController {
     void spinController(bool spin);
 
     double error_lb = 0, error_dot_lb = 0;
+    bool controller_spinning_ = false;
 
    private:
     ros::NodeHandle nh_;

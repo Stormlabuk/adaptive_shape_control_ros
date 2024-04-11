@@ -42,24 +42,30 @@ HighController::HighController() {
     reinitMap();
     recalcPath();
     recalcField();
-    inserter_pub_.publish(10);
-    while(obv_angles_.angles.size() < 1){
+    inserter_pub_.publish(8);
+    while (obv_angles_.angles.size() < 1) {
         inserter_pub_.publish(1);
     }
-
-    spinController(true);
+    controller_spinning_ = true;
+    spinController(controller_spinning_);
 }
 
 void HighController::highLoop() {
     bool error_bound = (abs(error_.error) < error_lb);
     bool error_dot_bound = (abs(error_.error_dot) < error_dot_lb);
     if (error_bound && error_dot_bound) {
-        spinController(false);
-    }
-    int target_insertion = obv_angles_.angles.size() + 1;
-    inserter_pub_.publish(10);
-    while(obv_angles_.angles.size() < target_insertion){
-        inserter_pub_.publish(1);
+        // Stop the controller and insert until the next link
+        controller_spinning_ = false;
+        spinController(controller_spinning_);
+        int target_insertion = obv_angles_.angles.size() + 1;
+        if (target_insertion > 6) {
+            ROS_INFO("Reached maximum number of links");
+            return;
+        }
+        if (obv_angles_.angles.size() < target_insertion) {
+            inserter_pub_.publish(2);
+            return;
+        }
     }
 
 }
@@ -115,11 +121,13 @@ void HighController::recalcField() {
 
     // 2. Truncate des_angles_ to whatever subslice is suitable
     int joints_found = obv_angles_.angles.size();
-    shapeforming_msgs::rl_angles des_slice;
+    shapeforming_msgs::rl_angles des_slice, obv_slice;
     des_slice.count = joints_found + 1;
     des_slice.angles = std::vector<float>(
         des_angles_.angles.begin(), des_angles_.angles.begin() + joints_found);
-
+    obv_slice.count = des_slice.count;
+    obv_slice.angles = std::vector<float>(
+        obv_angles_.angles.begin(), obv_angles_.angles.begin() + joints_found);
     precompReq.tentacle.header.stamp = ros::Time::now();
     precompReq.tentacle = des_slice;
     precompReq.orientation = insertion_ori_;
@@ -129,6 +137,9 @@ void HighController::recalcField() {
         ROS_ERROR("Failed to call precomputation service");
         return;
     }
+    des_trunc_.publish(des_slice);
+    obv_trunc_.publish(obv_slice);
+    
 }
 
 /**
