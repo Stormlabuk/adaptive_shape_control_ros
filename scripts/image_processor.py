@@ -7,7 +7,7 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from std_srvs.srv import SetBool, SetBoolResponse
 from std_msgs.msg import String
-
+import matplotlib.pyplot as plt 
 
 class ImageProcessor():
     def __init__(self) -> None:
@@ -15,7 +15,7 @@ class ImageProcessor():
         # self.img_path_sub = rospy.Subscriber(
         #     "img_path", String, self.image_callback)
         self_live_img_sub = rospy.Subscriber(
-            "image_rec", Image, self.image_callback)
+            "/pylon_camera_node/image_rect", Image, self.image_callback)
 
         self.inserter_pub = rospy.Publisher(
             "inserter_img", Image, queue_size=10)
@@ -34,11 +34,14 @@ class ImageProcessor():
 
     def initial_image_processing(self, req):
         self.publish_maps = req.data
-        return SetBool(success=True, message="Initial image processing started")
+        res = SetBoolResponse(success=True, message="Initial image processing started")
+        return res
 
     def image_callback(self, data):
         try:     
             img = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            img = img[0:1200, 234:1470]
+            img = cv2.resize(img, (600,600))
         except CvBridgeError as e:
             rospy.logerr(e)
         # 1. Convert to grayscale
@@ -94,7 +97,7 @@ class ImageProcessor():
                     self.phantom, "passthrough"))
                 self.base_pub.publish(bridge.cv2_to_imgmsg(
                     base_img, "passthrough"))
-                self.publish_maps = False
+                # self.publish_maps = False
         except CvBridgeError as e:
             rospy.logerr(e)
 

@@ -1,11 +1,15 @@
 <launch>
     <arg name="output" default="screen"/>
     
+    <include file="$(find pylon_camera)/launch/pylon_camera_node.launch"/>
+
+
+
     <node name="image_fetcher" pkg="adaptive_ctrl" type="image_fetcher.py" output="$(arg output)"/>
     <node name="image_processsor" pkg="adaptive_ctrl" type="image_processor.py" output="$(arg output)"/>
     <node name="find_insertion_point" pkg="adaptive_ctrl" type="find_insertion_point.py" output="$(arg output)"/>
     <node name="process_costmap" pkg="adaptive_ctrl" type="process_costmap.py" output="$(arg output)"/>
-    <node name="trigger_path" pkg="adaptive_ctrl" type="trigger_path.py" output="$(arg output)"/>
+    <!-- <node name="trigger_path" pkg="adaptive_ctrl" type="trigger_path.py" output="$(arg output)"/> -->
     <node name="discretise_path" pkg="adaptive_ctrl" type="discretise_path.py" output="$(arg output)"/>
     <node name="tentacle_extractor" pkg="adaptive_ctrl" type="tentacle_extractor" output="$(arg output)"/>
 
@@ -16,9 +20,12 @@
         <param name="angle_pub_type" value="obv_"/>
     </node>
 
+    <node name="high_controller" pkg="adaptive_ctrl" type="high_controller" output="$(arg output)"/>
+
     <include file="$(find adaptive_ctrl)/launch/adaptive_control.launch"/>
     <include file="$(find adaptive_ctrl)/launch/precomputation.launch"/>
     <include file="$(find adaptive_ctrl)/launch/path_planner.launch"/>
+
 
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_v2.rviz"/>
 </launch>
