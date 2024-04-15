@@ -13,7 +13,7 @@ HighController::HighController() {
     insertion_point_sub_ = nh_.subscribe(
         "insertion_point", 1, &HighController::insertionPointCallback, this);
 
-    goal_sub_ = nh_.subscribe("goal", 1, &HighController::goalCallback, this);
+    goal_sub_ = nh_.subscribe("clicked_point", 1, &HighController::goalCallback, this);
 
     error_sub_ =
         nh_.subscribe("error", 1, &HighController::errorCallback, this);
