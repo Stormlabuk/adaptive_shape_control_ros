@@ -1,9 +1,0 @@
-<!-- FILEPATH: /home/vittorio/ros_ws/src/adaptive_ctrl/launch/adaptive_control.launch -->
-
-<launch>
-
-  <!-- Instantiate control_node -->
-  <node name="control_node" pkg="adaptive_ctrl" type="control_node" output="screen" />
-
-
-</launch>

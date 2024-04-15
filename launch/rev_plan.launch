@@ -3,8 +3,6 @@
     
     <include file="$(find pylon_camera)/launch/pylon_camera_node.launch"/>
 
-
-
     <node name="image_fetcher" pkg="adaptive_ctrl" type="image_fetcher.py" output="$(arg output)"/>
     <node name="image_processsor" pkg="adaptive_ctrl" type="image_processor.py" output="$(arg output)"/>
     <node name="find_insertion_point" pkg="adaptive_ctrl" type="find_insertion_point.py" output="$(arg output)"/>
@@ -22,7 +20,7 @@
 
     <node name="high_controller" pkg="adaptive_ctrl" type="high_controller" output="$(arg output)"/>
 
-    <include file="$(find adaptive_ctrl)/launch/adaptive_control.launch"/>
+    <node name="control_node" pkg="adaptive_ctrl" type="control_node" output="screen" />
     <include file="$(find adaptive_ctrl)/launch/precomputation.launch"/>
     <include file="$(find adaptive_ctrl)/launch/path_planner.launch"/>
 

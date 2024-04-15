@@ -26,6 +26,9 @@ class ImageProcessor():
         self.initial_pubs = rospy.Service("initial_imgproc", SetBool, self.initial_image_processing)
         self.publish_maps = True
 
+        self.phantom_thresh = rospy.get_param("~phantom_thresh", 140)
+        self.inserter_thresh = rospy.get_param("~inserter_thresh", 105)
+
         self.inserter = np.empty((0, 0), dtype=np.uint8)
         self.phantom = np.empty((0, 0), dtype=np.uint8)
         self.bridge = CvBridge()
@@ -53,7 +56,7 @@ class ImageProcessor():
         # 2. Gaussian blur
         blurred = cv2.GaussianBlur(gray, (5, 5), 0)
         # 3. Binary thresholding
-        _, thresh = cv2.threshold(blurred, 127, 255, cv2.THRESH_BINARY)
+        _, thresh = cv2.threshold(blurred, self.phantom_thresh, 255, cv2.THRESH_BINARY)
         # 4. find contours
         contours, _ = cv2.findContours(
             thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -66,11 +69,13 @@ class ImageProcessor():
             self.phantom, contours[:2], -1, 255, -1)
         # 7. Draw the bounding rect of the phantom, use as a mask for the inserter
         merged_contour = cv2.findNonZero(self.phantom)
-        box = cv2.boundingRect(merged_contour)
         self.inserter = gray.copy()
-        cv2.rectangle(self.inserter, box, (0), cv2.FILLED)
-        # 8. Canny edge the inserter
-        inserter_th = cv2.Canny(self.inserter, 180, 255)
+        for i in range(merged_contour.shape[0]):
+            self.inserter[merged_contour[i][0][1], merged_contour[i][0][0]] = 0
+
+        self.inserter[:, 250:600] = 0
+        inserter_th = cv2.threshold(
+            self.inserter, self.inserter_th, 255, cv2.THRESH_BINARY)[1]
         # 9. Dilate the edges
         inserter_dilated = cv2.dilate(inserter_th, None, iterations=1)
         # 10. Find contours on inserter
