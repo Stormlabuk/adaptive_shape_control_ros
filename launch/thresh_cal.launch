@@ -3,7 +3,7 @@
     
     <include file="$(find pylon_camera)/launch/pylon_camera_node.launch"/>
 
-    <node name="thresh_cal" pkg="adaptive_ctrl" type="threshold_cal" output="$(arg output)"/>
+    <node name="thresh_cal" pkg="adaptive_ctrl" type="threshold_cal.py" output="$(arg output)"/>
 
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/calibrate_thresholds.rviz"/>
 
