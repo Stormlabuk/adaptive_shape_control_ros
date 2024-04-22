@@ -22,21 +22,21 @@ class ThresholdCal():
             "inserter_th", Int32, self.inserter_th_callback
         )
 
-        self.phantom_th = 140
-        self.inserter_th = 105
+        self.phantom_th = 105
+        self.inserter_th = 50
         self.bridge = CvBridge()
         rospy.spin()
 
     def image_callback(self, data):
         try:
-            img = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            img = img[0:1200, 234:1470]
+            img = self.bridge.imgmsg_to_cv2(data, "passthrough")
+            img = img[:, 250:1400]
             img = cv2.resize(img, (600, 600))
         except CvBridgeError as e:
             rospy.logerr(e)
         # 1. Convert to grayscale
-        if (img.shape[2] == 3):
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if (len(img.shape) > 2):
+            gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         else:
             gray = img
 
