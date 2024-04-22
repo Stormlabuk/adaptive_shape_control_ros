@@ -58,26 +58,27 @@ class ThresholdCal():
 
         merged_contour = cv2.findNonZero(phantom)
         # box = cv2.boundingRect(merged_contour)
-        inserter = gray.copy()
+        inserter = img.copy()
         # remove all merged_contour from inserter
         for i in range(merged_contour.shape[0]):
             inserter[merged_contour[i][0][1], merged_contour[i][0][0]] = 0
 
-        inserter[:, 250:600] = 0
-        inserter_th = cv2.threshold(
-            inserter, self.inserter_th, 255, cv2.THRESH_BINARY)[1]
-        # plt.imshow(inserter_th, cmap='gray')
-        # plt.show()
-        # 9. Dilate the edges
-        inserter_dilated = cv2.dilate(inserter_th, None, iterations=1)
-        # # 10. Find contours on inserter
+        # inserter[:, 250:600] = 0
+        inserter_hsv = cv2.cvtColor(inserter, cv2.COLOR_RGB2HSV)
+        inserter = cv2.inRange(inserter_hsv, (0, 19, 8), (105, 152, 165)) # these might need calibrating
+        inserter_dilate = cv2.dilate(inserter, np.ones((5, 5), np.uint8), iterations=1)
+        inserter_erode = cv2.erode(inserter_dilate, np.ones((5, 5), np.uint8), iterations=2)
+
         contours, _ = cv2.findContours(
-            inserter_dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        # # 11. Sort by surface area
+            inserter_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # 5. sort contours by surface area
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        hull = cv2.convexHull(contours[0])
-        inserter = np.zeros_like(inserter)
-        inserter = cv2.drawContours(inserter, [hull], -1, 255, -1)
+        inserter = np.zeros_like(gray)
+        inserter = cv2.drawContours(inserter, contours[:1], -1, (0, 255, 0), -1)
+
+
+
+
         self.inserter_pub.publish(self.bridge.cv2_to_imgmsg(inserter, "mono8"))
 
     def phantom_th_callback(self, data):
