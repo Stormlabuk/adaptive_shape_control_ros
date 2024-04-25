@@ -3,9 +3,10 @@ import rospy
 import cv2
 import numpy as np
 from sensor_msgs.msg import Image
-from std_msgs.msg import Int32
+from geometry_msgs.msg import Vector3
 from cv_bridge import CvBridge, CvBridgeError
 import matplotlib.pyplot as plt
+
 
 
 class ThresholdCal():
@@ -16,76 +17,76 @@ class ThresholdCal():
         self.inserter_pub = rospy.Publisher(
             "inserter_img", Image, queue_size=10)
 
-        self.phantom_th_sub = rospy.Subscriber(
-            "phantom_th", Int32, self.phantom_th_callback)
-        self.inserter_th_sub = rospy.Subscriber(
-            "inserter_th", Int32, self.inserter_th_callback
-        )
+        self.phantom_hsv_low = rospy.Subscriber(
+            "phantom_hsv_low", Vector3, self.phantom_hsv_low_callback)
+        
+        self.phantom_hsv_high = rospy.Subscriber(
+            "phantom_hsv_high", Vector3, self.phantom_hsv_high_callback)
+        
+        
+        # self.inserter_hsv_low = rospy.Subscriber(
+        #     "inserter_hsv_low", Vector3, self.inserter_hsv_low_callback)
+        
+        # self.inserter_hsv_high = rospy.Subscriber(
+        #     "inserter_hsv_high", Vector3, self.inserter_hsv_high_callback)
 
-        self.phantom_th = 105
-        self.inserter_th = 50
+        self.phantom_low_ = (90,0,100)
+        self.phantom_high_ = (180,100,185)
+        self.inserter_low_ = (0,0,0)
+        self.inserter_high_ = (131,212,87)
         self.bridge = CvBridge()
+
         rospy.spin()
 
     def image_callback(self, data):
         try:
-            img = self.bridge.imgmsg_to_cv2(data, "passthrough")
-            img = img[:, 250:1400]
-            img = cv2.resize(img, (600, 600))
+            image = self.bridge.imgmsg_to_cv2(data, "passthrough")
+            image_resize = image[:, 250:1400]
+            image_resize = cv2.resize(image_resize, (600, 600))
         except CvBridgeError as e:
             rospy.logerr(e)
-        # 1. Convert to grayscale
-        if (len(img.shape) > 2):
-            gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        else:
-            gray = img
+        # convert to hsv
+        image_hsv = cv2.cvtColor(image_resize, cv2.COLOR_BGR2HSV)
+        phantom = cv2.inRange(image_hsv, self.phantom_low_, self.phantom_high_)
+        inserter = cv2.inRange(image_hsv, self.inserter_low_, self.inserter_high_)
 
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        # 3. Binary thresholding
-        _, thresh = cv2.threshold(
-            blurred, self.phantom_th, 255, cv2.THRESH_BINARY)
-        # plt.imshow(thresh)
-
+        # phantom_blur = cv2.GaussianBlur(phantom, (5, 5), 0)
+        phantom_erode = cv2.erode(phantom, None, iterations=2)
+        phantom_erode = cv2.dilate(phantom_erode, None, iterations=3)
         # 4. find contours
-        contours, _ = cv2.findContours(
-            thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        ph_contours, _ = cv2.findContours(
+            phantom_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         # 5. sort contours by surface area
-        contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        phantom = np.zeros_like(gray)
-        # 6. draw contours
-        phantom = cv2.drawContours(phantom, contours[:3], -1, 255, -1)
-        self.phantom_pub.publish(self.bridge.cv2_to_imgmsg(phantom, "mono8"))
+        ph_contours = sorted(ph_contours, key=cv2.contourArea, reverse=True)
+        disp = np.zeros_like(phantom)
+        cv2.drawContours(disp, ph_contours[:3], -1, 255, -1)
+        phantom = disp
 
-        merged_contour = cv2.findNonZero(phantom)
-        # box = cv2.boundingRect(merged_contour)
-        inserter = img.copy()
-        # remove all merged_contour from inserter
-        for i in range(merged_contour.shape[0]):
-            inserter[merged_contour[i][0][1], merged_contour[i][0][0]] = 0
-
-        # inserter[:, 250:600] = 0
-        inserter_hsv = cv2.cvtColor(inserter, cv2.COLOR_RGB2HSV)
-        inserter = cv2.inRange(inserter_hsv, (0, 19, 8), (105, 152, 165)) # these might need calibrating
-        inserter_dilate = cv2.dilate(inserter, np.ones((5, 5), np.uint8), iterations=1)
-        inserter_erode = cv2.erode(inserter_dilate, np.ones((5, 5), np.uint8), iterations=2)
-
-        contours, _ = cv2.findContours(
+        inserter_erode = cv2.erode(inserter, None, iterations=1)
+        inserter_erode = cv2.dilate(inserter_erode, None, iterations=6)
+        # 4. find contours
+        in_contours, _ = cv2.findContours(
             inserter_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         # 5. sort contours by surface area
-        contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        inserter = np.zeros_like(gray)
-        inserter = cv2.drawContours(inserter, contours[:1], -1, (0, 255, 0), -1)
+        in_contours = sorted(in_contours, key=cv2.contourArea, reverse=True)
+        disp = np.zeros_like(inserter)
+        cv2.drawContours(disp, in_contours[:3], -1, 255, -1)
+        inserter = disp
 
-
-
-
+        self.phantom_pub.publish(self.bridge.cv2_to_imgmsg(phantom, "mono8"))
         self.inserter_pub.publish(self.bridge.cv2_to_imgmsg(inserter, "mono8"))
 
-    def phantom_th_callback(self, data):
-        self.phantom_th = data.data
+    def phantom_hsv_low_callback(self, data):
+        self.phantom_low_ = (data.x, data.y, data.z)
 
-    def inserter_th_callback(self, data):
-        self.inserter_th = data.data
+    def phantom_hsv_high_callback(self, data):
+        self.phantom_high_ = (data.x, data.y, data.z)
+    
+    def inserter_hsv_low_callback(self, data):
+        self.inserter_low_ = (data.x, data.y, data.z)
+
+    def inserter_hsv_high_callback(self, data):
+        self.inserter_high_ = (data.x, data.y, data.z)
 
 
 if __name__ == "__main__":
