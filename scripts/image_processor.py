@@ -26,11 +26,15 @@ class ImageProcessor():
         self.initial_pubs = rospy.Service("initial_imgproc", SetBool, self.initial_image_processing)
         self.publish_maps = True
 
-        self.phantom_thresh = rospy.get_param("~phantom_thresh", 140)
-        self.inserter_thresh = rospy.get_param("~inserter_thresh", 105)
+        self.phantom_low_p = rospy.get_param("~phantom_low_p", (90,0,100))
+        self.phantom_high_p = rospy.get_param("~phantom_high_p", (180,100,185))
+        self.inserter_low_p = rospy.get_param("~phantom_low_p", (0,0,0))
+        self.inserter_high_p = rospy.get_param("~phantom_high_p", (131,212,87))
 
-        self.inserter = np.empty((0, 0), dtype=np.uint8)
-        self.phantom = np.empty((0, 0), dtype=np.uint8)
+        self.phantom_low_ = self.phantom_low_p
+        self.phantom_high_ = self.phantom_high_p
+        self.inserter_low_ = self.inserter_low_p
+        self.inserter_high_ = self.inserter_high_p
         self.bridge = CvBridge()
         rospy.init_node('image_processor', anonymous=False)
         rospy.spin()
@@ -41,60 +45,45 @@ class ImageProcessor():
         return res
 
     def image_callback(self, data):
-        try:     
-            img = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            img = img[0:1200, 234:1470]
-            img = cv2.resize(img, (600,600))
+        try:
+            image = self.bridge.imgmsg_to_cv2(data, "passthrough")
+            image_resize = image[:, 250:1400]
+            image_resize = cv2.resize(image_resize, (600, 600))
         except CvBridgeError as e:
             rospy.logerr(e)
-        # 1. Convert to grayscale
-        if(img.shape[2] == 3):
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        else:
-            gray = img
+        # convert to hsv
+        image_hsv = cv2.cvtColor(image_resize, cv2.COLOR_BGR2HSV)
+        phantom = cv2.inRange(image_hsv, self.phantom_low_, self.phantom_high_)
+        inserter = cv2.inRange(image_hsv, self.inserter_low_, self.inserter_high_)
 
-        # 2. Gaussian blur
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        # 3. Binary thresholding
-        _, thresh = cv2.threshold(blurred, self.phantom_thresh, 255, cv2.THRESH_BINARY)
+        # phantom_blur = cv2.GaussianBlur(phantom, (5, 5), 0)
+        phantom_erode = cv2.erode(phantom, None, iterations=2)
+        phantom_erode = cv2.dilate(phantom_erode, None, iterations=3)
         # 4. find contours
-        contours, _ = cv2.findContours(
-            thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        ph_contours, _ = cv2.findContours(
+            phantom_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         # 5. sort contours by surface area
-        contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        # 6. Draw the top 2 contours. That is the phantom image
-        self.phantom = np.zeros_like(gray)
-        # self.phantom = cv2.cvtColor(self.phantom, cv2.COLOR_BGR2GRAY)
-        self.phantom = cv2.drawContours(
-            self.phantom, contours[:2], -1, 255, -1)
-        # 7. Draw the bounding rect of the phantom, use as a mask for the inserter
-        merged_contour = cv2.findNonZero(self.phantom)
-        self.inserter = gray.copy()
-        for i in range(merged_contour.shape[0]):
-            self.inserter[merged_contour[i][0][1], merged_contour[i][0][0]] = 0
+        ph_contours = sorted(ph_contours, key=cv2.contourArea, reverse=True)
+        disp = np.zeros_like(phantom)
+        cv2.drawContours(disp, ph_contours[:3], -1, 255, -1)
+        phantom = disp
 
-        self.inserter[:, 250:600] = 0
-        inserter_th = cv2.threshold(
-            self.inserter, self.inserter_th, 255, cv2.THRESH_BINARY)[1]
-        # 9. Dilate the edges
-        inserter_dilated = cv2.dilate(inserter_th, None, iterations=1)
-        # 10. Find contours on inserter
-        contours, _ = cv2.findContours(
-            inserter_dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        # 11. Sort by surface area
-        contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        # 12. Draw the convex Hull of the top contour
-
-        hull = cv2.convexHull(contours[0])
-        self.inserter = np.zeros_like(self.inserter)
-        self.inserter = cv2.drawContours(
-            self.inserter, [hull], -1, 255, cv2.FILLED)
+        inserter_erode = cv2.erode(inserter, None, iterations=1)
+        inserter_erode = cv2.dilate(inserter_erode, None, iterations=6)
+        # 4. find contours
+        in_contours, _ = cv2.findContours(
+            inserter_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # 5. sort contours by surface area
+        in_contours = sorted(in_contours, key=cv2.contourArea, reverse=True)
+        disp = np.zeros_like(inserter)
+        cv2.drawContours(disp, in_contours[:3], -1, 255, -1)
+        inserter = disp
 
         base_img = cv2.add(self.inserter, self.phantom)
 
         bridge = CvBridge()
         try:
-            self.image_pub.publish(bridge.cv2_to_imgmsg(img, "bgr8"))
+            self.image_pub.publish(bridge.cv2_to_imgmsg(image, "bgr8"))
             if(self.publish_maps):
                 self.inserter_pub.publish(bridge.cv2_to_imgmsg(
                     self.inserter, "passthrough"))
