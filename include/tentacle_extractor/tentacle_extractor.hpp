@@ -17,7 +17,8 @@ private:
     ros::NodeHandle nh_;
     image_transport::ImageTransport it_;
     image_transport::Subscriber base_sub_;
-    cv::Mat tent_img;
+    image_transport::Subscriber live_sub_;
+    cv::Mat tent_img, base_img;
     std::vector<cv::Point> tentacle_points;
     ros::ServiceClient discretise_client;
     int mm_pixel_; //!< 1mm = 5 pixel. Converts mm to pixel
@@ -26,7 +27,9 @@ private:
 public:
     TentacleExtractor(/* args */);
     void base_callback(const sensor_msgs::ImageConstPtr& msg);
+    void live_callback(const sensor_msgs::ImageConstPtr& msg);
     void extract_tentacle(cv::Mat &tent_only);
+
 };
 
 

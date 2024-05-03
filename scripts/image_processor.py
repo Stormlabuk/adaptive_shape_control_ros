@@ -82,7 +82,7 @@ class ImageProcessor():
 
         bridge = CvBridge()
         try:
-            self.image_pub.publish(bridge.cv2_to_imgmsg(image, "bgr8"))
+            self.image_pub.publish(bridge.cv2_to_imgmsg(image_resize, "bgr8"))
             if(self.publish_maps):
                 self.inserter_pub.publish(bridge.cv2_to_imgmsg(
                     inserter, "passthrough"))
@@ -90,7 +90,7 @@ class ImageProcessor():
                     phantom, "passthrough"))
                 self.base_pub.publish(bridge.cv2_to_imgmsg(
                     base_img, "passthrough"))
-                # self.publish_maps = False
+                self.publish_maps = False
         except CvBridgeError as e:
             rospy.logerr(e)
 

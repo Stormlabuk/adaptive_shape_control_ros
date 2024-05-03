@@ -164,11 +164,6 @@ void HighController::recalcField() {
         return;
 }
 
-/**
- * @brief spins the controller by calling the spin_controller service.
- * @param spin - true to start the controller, false to stop it.
-
-*/
 void HighController::spinController(bool spin) {
     std_srvs::SetBoolRequest spinReq;
     std_srvs::SetBoolResponse spinRes;
@@ -216,6 +211,8 @@ void HighController::insertionPointCallback(
 void HighController::goalCallback(const geometry_msgs::PointStamped::ConstPtr& msg) {
     ROS_INFO("Received goal");
     goal_ = msg->point;
+    recalcPath();
+    // recalcField();
 }
 
 int main(int argc, char* argv[]) {
