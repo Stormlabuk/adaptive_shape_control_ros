@@ -40,8 +40,8 @@ HighController::HighController() {
         nh_.serviceClient<std_srvs::SetBool>("/control_node/spin_controller");
 
     reinitMap();
-    recalcPath();
-    recalcField();
+    // recalcPath();
+    // recalcField();
     //     std_msgs::Int32 stepper_msg;
     //     stepper_msg.data = 8;
     //     inserter_pub_.publish(stepper_msg);
@@ -57,6 +57,7 @@ HighController::HighController() {
 }
 
 void HighController::highLoop() {
+    // recalcPath();
     // bool error_bound = (abs(error_.error) < error_lb);
     // bool error_dot_bound = (abs(error_.error_dot) < error_dot_lb);
     // std_msgs::Int32 stepper_msg;
@@ -196,25 +197,25 @@ void HighController::desAnglesCallback(
 
 void HighController::obvAnglesCallback(
     const shapeforming_msgs::rl_angles::ConstPtr& msg) {
-    ROS_INFO("Received observed angles");
+    // ROS_INFO("Received observed angles");
     obv_angles_ = *msg;
 }
 
 void HighController::insertionOriCallback(
     const geometry_msgs::Vector3::ConstPtr& msg) {
-    ROS_INFO("Received insertion orientation");
+    // ROS_INFO("Received insertion orientation");
     insertion_ori_ = *msg;
 }
 
 void HighController::insertionPointCallback(
     const geometry_msgs::Point::ConstPtr& msg) {
-    ROS_INFO("Received insertion point");
+    // ROS_INFO("Received insertion point");
     insertion_point_ = *msg;
 }
 
-void HighController::goalCallback(const geometry_msgs::Point::ConstPtr& msg) {
+void HighController::goalCallback(const geometry_msgs::PointStamped::ConstPtr& msg) {
     ROS_INFO("Received goal");
-    goal_ = *msg;
+    goal_ = msg->point;
 }
 
 int main(int argc, char* argv[]) {

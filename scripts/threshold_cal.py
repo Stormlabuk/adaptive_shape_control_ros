@@ -23,25 +23,27 @@ class ThresholdCal():
         self.phantom_hsv_high = rospy.Subscriber(
             "phantom_hsv_high", Vector3, self.phantom_hsv_high_callback)
         
-        
-        # self.inserter_hsv_low = rospy.Subscriber(
-        #     "inserter_hsv_low", Vector3, self.inserter_hsv_low_callback)
-        
-        # self.inserter_hsv_high = rospy.Subscriber(
-        #     "inserter_hsv_high", Vector3, self.inserter_hsv_high_callback)
+        self.image_resize_pub = rospy.Publisher(
+            "image_resize", Image, queue_size=10)
 
-        self.phantom_low_ = (90,0,100)
-        self.phantom_high_ = (180,100,185)
-        self.inserter_low_ = (0,0,0)
-        self.inserter_high_ = (131,212,87)
+        self.inserter_hsv_low = rospy.Subscriber(
+            "inserter_hsv_low", Vector3, self.inserter_hsv_low_callback)
+        
+        self.inserter_hsv_high = rospy.Subscriber(
+            "inserter_hsv_high", Vector3, self.inserter_hsv_high_callback)
+
+        self.phantom_low_ = (0,0,88)
+        self.phantom_high_ = (180,82,171)
+        self.inserter_low_ = (45,76,12)
+        self.inserter_high_ = (118,216,255)
         self.bridge = CvBridge()
 
         rospy.spin()
 
     def image_callback(self, data):
         try:
-            image = self.bridge.imgmsg_to_cv2(data, "passthrough")
-            image_resize = image[:, 250:1400]
+            image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            image_resize = image[100:1132, 0:1057]
             image_resize = cv2.resize(image_resize, (600, 600))
         except CvBridgeError as e:
             rospy.logerr(e)
@@ -70,11 +72,12 @@ class ThresholdCal():
         # 5. sort contours by surface area
         in_contours = sorted(in_contours, key=cv2.contourArea, reverse=True)
         disp = np.zeros_like(inserter)
-        cv2.drawContours(disp, in_contours[:3], -1, 255, -1)
+        cv2.drawContours(disp, in_contours[:1], -1, 255, -1)
         inserter = disp
 
         self.phantom_pub.publish(self.bridge.cv2_to_imgmsg(phantom, "mono8"))
         self.inserter_pub.publish(self.bridge.cv2_to_imgmsg(inserter, "mono8"))
+        self.image_resize_pub.publish(self.bridge.cv2_to_imgmsg(image_resize, "bgr8"))
 
     def phantom_hsv_low_callback(self, data):
         self.phantom_low_ = (data.x, data.y, data.z)

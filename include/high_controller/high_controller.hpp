@@ -7,7 +7,7 @@
 #include <vector>
 
 // ros messages
-#include <geometry_msgs/Point.h>
+#include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/Vector3.h>
 #include <shapeforming_msgs/rl_angles.h>
 #include <shapeforming_msgs/error.h>
@@ -38,7 +38,7 @@ class HighController {
     void obvAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg);
     void insertionOriCallback(const geometry_msgs::Vector3::ConstPtr& msg);
     void insertionPointCallback(const geometry_msgs::Point::ConstPtr& msg);
-    void goalCallback(const geometry_msgs::Point::ConstPtr& msg);
+    void goalCallback(const geometry_msgs::PointStamped::ConstPtr& msg);
     void errorCallback(const shapeforming_msgs::error::ConstPtr& msg);
 
     void highLoop();
