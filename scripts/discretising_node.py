@@ -105,6 +105,8 @@ class DiscretisingNode:
         marker = Marker()
         marker = self.populateMarker(marker, verification_points, self.marker_color, 1)
         self.marker_pub.publish(marker)
+        marker.header.frame_id = "pylon_camera"
+        self.marker_pub.publish(marker)
 
 if __name__ == '__main__':
     try:

@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   cv_bridge
   image_transport
+  tf2
 )
 
 ## System dependencies are found with CMake's conventions
@@ -190,6 +191,8 @@ catkin_install_python(PROGRAMS
   scripts/debug_trigger.py
   scripts/debug_controller.py
   scripts/threshold_cal.py
+  scripts/isolate_tentacle.py
+  scripts/transform_camera_frame.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

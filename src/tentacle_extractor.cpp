@@ -1,15 +1,10 @@
 #include "tentacle_extractor/tentacle_extractor.hpp"
 
 TentacleExtractor::TentacleExtractor() : it_(nh_) {
-    base_sub_ =
-        it_.subscribe("base_img", 1, &TentacleExtractor::base_callback, this);
+    skeleton_sub_ = it_.subscribe("tentacle_img", 1,
+                                  &TentacleExtractor::skeleton_callback, this);
 
-    // tent_img = cv::imread(
-    //     "/home/vittorio/ros_ws/src/adaptive_ctrl/fake_tentacle/neutral.png",
-    //     cv::IMREAD_COLOR);
 
-    live_sub_ =
-        it_.subscribe("image", 1, &TentacleExtractor::live_callback, this);
 
     discretise_client = nh_.serviceClient<shapeforming_msgs::DiscretiseCurve>(
         "obv_discretise_curve");
@@ -18,59 +13,12 @@ TentacleExtractor::TentacleExtractor() : it_(nh_) {
     pixel_mm_ = 1.0 / mm_pixel_;
 }
 
-void TentacleExtractor::live_callback(const sensor_msgs::ImageConstPtr& msg) {
+void TentacleExtractor::skeleton_callback(
+    const sensor_msgs::ImageConstPtr& msg) {
     if (msg->data.empty()) {
-        ROS_WARN("Live image is not received");
+        ROS_WARN("Skeleton image is not received");
         return;
     }
-    cv_bridge::CvImagePtr cv_ptr;
-    try {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    } catch (cv_bridge::Exception& e) {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-    tent_img = cv_ptr->image;
-    cv::cvtColor(tent_img, tent_img, cv::COLOR_BGR2GRAY);
-    cv::Mat tent_only = cv::Mat::zeros(tent_img.size(), CV_8UC1);
-    if(base_img.rows == 0 || base_img.cols == 0){
-        ROS_WARN("Base image is not received");
-        return;
-    }
-    try {
-        cv::bitwise_not(base_img, base_img);
-        cv::bitwise_xor(base_img, tent_img, tent_only);
-        cv::compare(tent_only, 255, tent_only, cv::CMP_EQ);
-        cv::Mat element =
-            cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
-        cv::erode(tent_only, tent_only, element);
-        cv::ximgproc::thinning(tent_only, tent_only);
-        extract_tentacle(tent_only);
-    } catch (cv::Exception& e) {
-        ROS_ERROR("OpenCV exception: %s", e.what());
-        return;
-    }
-    return;
-}
-
-void TentacleExtractor::base_callback(const sensor_msgs::ImageConstPtr& msg) {
-
-
-    if (msg->data.empty()) {
-        ROS_WARN("Base image is not received");
-        return;
-    }
-    // sensor_msgs::Image tent_msg = *msg;
-    // tent_msg.encoding = sensor_msgs::image_encodings::MONO8;
-    // cv_bridge::CvImagePtr cv_ptr;
-    // try {
-    //     cv_ptr =
-    //         cv_bridge::toCvCopy(tent_msg, sensor_msgs::image_encodings::MONO8);
-    // } catch (cv_bridge::Exception& e) {
-    //     ROS_ERROR("cv_bridge exception: %s", e.what());
-    //     return;
-    // }
-    // cv::Mat base_img = cv_ptr->image;
     cv_bridge::CvImagePtr cv_ptr;
     try {
         cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
@@ -78,14 +26,20 @@ void TentacleExtractor::base_callback(const sensor_msgs::ImageConstPtr& msg) {
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
-    base_img = cv_ptr->image;
-    if(base_img.rows == 0 || base_img.cols == 0){
+    skeleton_img_ = cv_ptr->image;
+    // cv::imshow(OPENCV_WINDOW, skeleton_img_);
+    // cv::waitKey(3);
+    if (skeleton_img_.rows == 0 || skeleton_img_.cols == 0) {
         ROS_WARN("Base image is not received");
         return;
     }
-    if (base_img.channels() != 1) {
-        cv::cvtColor(base_img, base_img, cv::COLOR_BGR2GRAY);
+    try {
+        extract_tentacle(skeleton_img_);
+    } catch (cv::Exception& e) {
+        ROS_ERROR("OpenCV exception: %s", e.what());
+        return;
     }
+    return;
 }
 
 void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
@@ -118,7 +72,7 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
     int numPoints = points.size();
-    int link_px = 10 * mm_pixel_;
+    int link_px = 5 * mm_pixel_;
     int SlicedPoints = numPoints / link_px;
     req.tentacle.num_points = SlicedPoints;
 

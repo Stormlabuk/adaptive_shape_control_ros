@@ -66,6 +66,7 @@
   <exec_depend>heuristic_planners</exec_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
+  <exec_depend>tf2</exec_depend>
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>shapeforming_msgs</exec_depend>
   

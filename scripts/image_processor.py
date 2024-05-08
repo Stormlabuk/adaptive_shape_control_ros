@@ -26,10 +26,10 @@ class ImageProcessor():
         self.initial_pubs = rospy.Service("initial_imgproc", SetBool, self.initial_image_processing)
         self.publish_maps = True
 
-        self.phantom_low_p = rospy.get_param("~phantom_low_p", (0,0,88))
-        self.phantom_high_p = rospy.get_param("~phantom_high_p", (180,82,171))
-        self.inserter_low_p = rospy.get_param("~phantom_low_p", (45,76,12))
-        self.inserter_high_p = rospy.get_param("~phantom_high_p", (118,216,255))
+        self.phantom_low_p = rospy.get_param("~phantom_low_p", (0,0,143))
+        self.phantom_high_p = rospy.get_param("~phantom_high_p", (180,59,255))
+        self.inserter_low_p = rospy.get_param("~inserter_low_p", (28,144,82))
+        self.inserter_high_p = rospy.get_param("~inserter_high_p", (151,255,156))
         self.phantom_low_ = self.phantom_low_p
         self.phantom_high_ = self.phantom_high_p
         self.inserter_low_ = self.inserter_low_p
@@ -85,11 +85,11 @@ class ImageProcessor():
             self.image_pub.publish(bridge.cv2_to_imgmsg(image_resize, "bgr8"))
             if(self.publish_maps):
                 self.inserter_pub.publish(bridge.cv2_to_imgmsg(
-                    inserter, "passthrough"))
+                    inserter, "mono8"))
                 self.phantom_pub.publish(bridge.cv2_to_imgmsg(
-                    phantom, "passthrough"))
+                    phantom, "mono8"))
                 self.base_pub.publish(bridge.cv2_to_imgmsg(
-                    base_img, "passthrough"))
+                    base_img, "mono8"))
                 self.publish_maps = False
         except CvBridgeError as e:
             rospy.logerr(e)

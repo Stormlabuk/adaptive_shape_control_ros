@@ -32,8 +32,8 @@ class ThresholdCal():
         self.inserter_hsv_high = rospy.Subscriber(
             "inserter_hsv_high", Vector3, self.inserter_hsv_high_callback)
 
-        self.phantom_low_ = (0,0,88)
-        self.phantom_high_ = (180,82,171)
+        self.phantom_low_ = (0,0,143)
+        self.phantom_high_ = (180,59,255)
         self.inserter_low_ = (45,76,12)
         self.inserter_high_ = (118,216,255)
         self.bridge = CvBridge()
