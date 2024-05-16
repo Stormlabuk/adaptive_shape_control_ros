@@ -32,18 +32,23 @@ class ThresholdCal():
         self.inserter_hsv_high = rospy.Subscriber(
             "inserter_hsv_high", Vector3, self.inserter_hsv_high_callback)
 
-        self.phantom_low_ = (0,0,143)
-        self.phantom_high_ = (180,59,255)
-        self.inserter_low_ = (45,76,12)
-        self.inserter_high_ = (118,216,255)
+        self.phantom_low_ = (15,0,165)
+        self.phantom_high_ = (180,88,255)
+        self.inserter_low_ = (80,179,16)
+        self.inserter_high_ = (180,255,255)
         self.bridge = CvBridge()
+
+        self.cam_width = rospy.get_param("cam_width", 1124)
+        self.cam_height = rospy.get_param("cam_height", 1040)
+        self.cam_offset_x = rospy.get_param("cam_offset_x", 284)
+        self.cam_offset_y = rospy.get_param("cam_offset_y", 74)
 
         rospy.spin()
 
     def image_callback(self, data):
         try:
             image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            image_resize = image[100:1132, 0:1057]
+            image_resize = image[:self.cam_width, 0:self.cam_height]
             image_resize = cv2.resize(image_resize, (600, 600))
         except CvBridgeError as e:
             rospy.logerr(e)

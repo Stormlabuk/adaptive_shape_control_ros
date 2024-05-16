@@ -23,24 +23,24 @@ class GridProcessor:
 
     def phantom_callback(self, msg):
         # self.phantom = msg
-        phantom_cv = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+        phantom_cv = self.bridge.imgmsg_to_cv2(msg, desired_encoding="mono8")
         element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
         phantom_cv = cv2.dilate(phantom_cv, element, iterations=2)
         vals = np.array(phantom_cv.tolist())
         vals = vals / 255 * 100
         vals = vals.astype(np.uint8)
-        self.phantom = self.bridge.cv2_to_imgmsg(vals, encoding="passthrough")
+        self.phantom = self.bridge.cv2_to_imgmsg(vals, encoding="mono8")
         self.process_costmap()
         return
 
     def base_callback(self, msg):
-        base_cv = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
+        base_cv = self.bridge.imgmsg_to_cv2(msg, desired_encoding="mono8")
         # element = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7))
         # inserter_cv = cv2.dilate(inserter_cv, element, iterations=1)
         vals = np.array(base_cv.tolist())
         vals = vals / 255 * 100
         vals = vals.astype(np.uint8)
-        self.base = self.bridge.cv2_to_imgmsg(vals, encoding="passthrough")
+        self.base = self.bridge.cv2_to_imgmsg(vals, encoding="mono8")
         self.process_occgrid()
         return
 
