@@ -57,13 +57,13 @@ HighController::HighController() {
 }
 
 void HighController::highLoop() {
-    if(obv_angles_.angles.size() != 0) {
-        recalcField();
-        return;
-    }
+    // if(obv_angles_.angles.size() != 0) {
+    //     recalcField();
+    //     return;
+    // }
     // recalcPath();
-    // bool error_bound = (abs(error_.error) < error_lb);
-    // bool error_dot_bound = (abs(error_.error_dot) < error_dot_lb);
+    bool error_bound = (abs(error_.error) < error_lb);
+    bool error_dot_bound = (abs(error_.error_dot) < error_dot_lb);
     // std_msgs::Int32 stepper_msg;
     // stepper_msg.data = 2;
     // if (error_bound && error_dot_bound) {
@@ -128,6 +128,7 @@ void HighController::recalcPath() {
     } catch (const ros::Exception& e) {
         ROS_ERROR("Failed to call get_path service, error %s", e.what());
     }
+    recalcField();
 }
 
 /**
