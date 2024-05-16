@@ -112,8 +112,6 @@ void HighController::recalcPath() {
     path_client_.waitForExistence();
     heuristic_planners::GetPathRequest pathReq;
     heuristic_planners::GetPathResponse pathRes;
-    pathReq.start = insertion_point_;
-    pathReq.goal = goal_;
     if (insertion_point_.x == 0 && insertion_point_.y == 0 &&
         insertion_point_.z == 0) {
         ROS_WARN("Insertion point is 0,0,0");
@@ -123,6 +121,12 @@ void HighController::recalcPath() {
         ROS_WARN("Goal is 0,0,0");
         return;
     }
+    goal_.z = 0;
+
+
+    pathReq.start = insertion_point_;
+    pathReq.goal = goal_;
+    pathReq.goal.z = 0;
     try {
         path_client_.call(pathReq, pathRes);
     } catch (const ros::Exception& e) {
