@@ -46,7 +46,7 @@ class ImageProcessor():
     def image_callback(self, data):
         try:
             image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            image_resize = image[100:1132, 0:1057]
+            image_resize = image[0:1132, 0:1057]
             image_resize = cv2.resize(image_resize, (600, 600))
         except CvBridgeError as e:
             rospy.logerr(e)
