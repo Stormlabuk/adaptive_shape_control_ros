@@ -79,7 +79,7 @@ bool Precomputation::calculateField(
     ros_coils::magField field;
     field = res.field;
 
-    baseFieldPub_.publish(field);
+    // baseFieldPub_.publish(field);
 
     // // Extra. Q = K^-1 * Jt * S * B
     // MatrixXd LHS2 = K;
