@@ -23,18 +23,23 @@ class ImageProcessor():
         self.phantom_pub = rospy.Publisher("phantom_img", Image, queue_size=10)
         self.image_pub = rospy.Publisher("image", Image, queue_size=10)
 
+
+
+        self.phantom_low_p = rospy.get_param("phantom_low_p", [0,0,143])
+        self.phantom_high_p = rospy.get_param("phantom_high_p", [180,59,255])
+        self.inserter_low_p = rospy.get_param("inserter_low_p", [28,144,82])
+        self.inserter_high_p = rospy.get_param("inserter_high_p", [151,255,156])
+        self.phantom_low_ = np.array(self.phantom_low_p)
+        self.phantom_high_ = np.array(self.phantom_high_p)
+        self.inserter_low_ = np.array(self.inserter_low_p)
+        self.inserter_high_ = np.array(self.inserter_high_p)
+        self.cam_width = rospy.get_param("cam_width", 1124)
+        self.cam_height = rospy.get_param("cam_height", 1040)
+        self.cam_offset_x = rospy.get_param("cam_offset_x", 284)
+        self.cam_offset_y = rospy.get_param("cam_offset_y", 74)
+        self.bridge = CvBridge()
         self.initial_pubs = rospy.Service("initial_imgproc", SetBool, self.initial_image_processing)
         self.publish_maps = True
-
-        self.phantom_low_p = rospy.get_param("~phantom_low_p", (0,0,143))
-        self.phantom_high_p = rospy.get_param("~phantom_high_p", (180,59,255))
-        self.inserter_low_p = rospy.get_param("~inserter_low_p", (28,144,82))
-        self.inserter_high_p = rospy.get_param("~inserter_high_p", (151,255,156))
-        self.phantom_low_ = self.phantom_low_p
-        self.phantom_high_ = self.phantom_high_p
-        self.inserter_low_ = self.inserter_low_p
-        self.inserter_high_ = self.inserter_high_p
-        self.bridge = CvBridge()
         rospy.init_node('image_processor', anonymous=False)
         rospy.spin()
 
@@ -46,7 +51,7 @@ class ImageProcessor():
     def image_callback(self, data):
         try:
             image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            image_resize = image[0:1132, 0:1057]
+            image_resize = image[:self.cam_width, 0:self.cam_height]
             image_resize = cv2.resize(image_resize, (600, 600))
         except CvBridgeError as e:
             rospy.logerr(e)
@@ -56,8 +61,8 @@ class ImageProcessor():
         inserter = cv2.inRange(image_hsv, self.inserter_low_, self.inserter_high_)
 
         # phantom_blur = cv2.GaussianBlur(phantom, (5, 5), 0)
-        phantom_erode = cv2.erode(phantom, None, iterations=2)
-        phantom_erode = cv2.dilate(phantom_erode, None, iterations=3)
+        phantom_erode = cv2.erode(phantom, None, iterations=1)
+        phantom_erode = cv2.dilate(phantom_erode, None, iterations=1)
         # 4. find contours
         ph_contours, _ = cv2.findContours(
             phantom_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -66,7 +71,7 @@ class ImageProcessor():
         disp = np.zeros_like(phantom)
         cv2.drawContours(disp, ph_contours[:3], -1, 255, -1)
         phantom = disp
-
+        
         inserter_erode = cv2.erode(inserter, None, iterations=1)
         inserter_erode = cv2.dilate(inserter_erode, None, iterations=6)
         # 4. find contours
