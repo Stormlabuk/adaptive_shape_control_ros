@@ -39,13 +39,20 @@ class ImageProcessor():
         self.cam_offset_y = rospy.get_param("cam_offset_y", 74)
         self.bridge = CvBridge()
         self.initial_pubs = rospy.Service("initial_imgproc", SetBool, self.initial_image_processing)
+        self.phantom_pub = rospy.Service("phantom_imgproc", SetBool, self.phantom_image_processing)
         self.publish_maps = True
+        self.publish_phantom = True
         rospy.init_node('image_processor', anonymous=False)
         rospy.spin()
 
     def initial_image_processing(self, req):
         self.publish_maps = req.data
         res = SetBoolResponse(success=True, message="Initial image processing started")
+        return res
+    
+    def phantom_image_processing(self, req):
+        self.publish_phantom = req.data
+        res = SetBoolResponse(success=True, message="Phantom processing started")
         return res
 
     def image_callback(self, data):
@@ -96,6 +103,10 @@ class ImageProcessor():
                 self.base_pub.publish(bridge.cv2_to_imgmsg(
                     base_img, "mono8"))
                 self.publish_maps = False
+            if(self.publish_phantom):
+                self.phantom_pub.publish(bridge.cv2_to_imgmsg(
+                    phantom, "mono8"))
+                self.publish_phantom = False
         except CvBridgeError as e:
             rospy.logerr(e)
 
