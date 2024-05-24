@@ -193,6 +193,7 @@ catkin_install_python(PROGRAMS
   scripts/threshold_cal.py
   scripts/isolate_tentacle.py
   scripts/transform_camera_frame.py
+  scripts/sliders.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
