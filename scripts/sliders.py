@@ -17,6 +17,27 @@ hsv_ph = Vector3()
 hsv_il = Vector3()
 hsv_ih = Vector3()
 
+phantom_low_p = rospy.get_param("phantom_low_p", [0,0,143])
+phantom_high_p = rospy.get_param("phantom_high_p", [180,59,255])
+inserter_low_p = rospy.get_param("inserter_low_p", [28,144,82])
+inserter_high_p = rospy.get_param("inserter_high_p", [151,255,156])
+hsv_pl.x = phantom_low_p[0]
+hsv_pl.y = phantom_low_p[1]
+hsv_pl.z = phantom_low_p[2]
+
+hsv_ph.x = phantom_high_p[0]
+hsv_ph.y = phantom_high_p[1]
+hsv_ph.z = phantom_high_p[2]
+
+hsv_il.x = inserter_low_p[0]
+hsv_il.y = inserter_low_p[1]
+hsv_il.z = inserter_low_p[2]
+
+hsv_ih.x = inserter_high_p[0]
+hsv_ih.y = inserter_high_p[1]
+hsv_ih.z = inserter_high_p[2]
+
+
 # Phantom low sliders
 def slider_command_h_pl(val):
     """Value callback from slider."""
@@ -31,8 +52,8 @@ def slider_command_s_pl(val):
 
 def slider_command_v_pl(val):
     """Value callback from slider."""
-    hsv_ph.z = float(val)
-    pub_pl.publish(hsv_ph)
+    hsv_pl.z = float(val)
+    pub_pl.publish(hsv_pl)
 
 # Phantom high sliders
 def slider_command_h_ph(val):
@@ -129,18 +150,18 @@ slider_v_ih = tk.Scale(root, from_=0, to=255, orient='horizontal', length='200',
 # Label and pack Phantom sliders    
 lbl_h_pl = tk.Label(root, text='HSV low, phantom')
 lbl_h_pl.pack()
-slider_h_pl.set(0)
-slider_s_pl.set(0)
-slider_v_pl.set(0)
+slider_h_pl.set(phantom_low_p[0])
+slider_s_pl.set(phantom_low_p[1])
+slider_v_pl.set(phantom_low_p[2])
 slider_h_pl.pack()
 slider_s_pl.pack()
 slider_v_pl.pack()
 
 lbl_h_ph = tk.Label(root, text='HSV high, phantom')
 lbl_h_ph.pack()
-slider_h_ph.set(180)
-slider_s_ph.set(255)
-slider_v_ph.set(255)
+slider_h_ph.set(phantom_high_p[0])
+slider_s_ph.set(phantom_high_p[1])
+slider_v_ph.set(phantom_high_p[2])
 slider_h_ph.pack()
 slider_s_ph.pack()
 slider_v_ph.pack()
@@ -149,18 +170,18 @@ slider_v_ph.pack()
 # Label and pack Inserter sliders
 lbl_h_il = tk.Label(root, text='HSV low, inserter')
 lbl_h_il.pack()
-slider_h_il.set(0)
-slider_s_il.set(0)
-slider_v_il.set(0)
+slider_h_il.set(inserter_low_p[0])
+slider_s_il.set(inserter_low_p[1])
+slider_v_il.set(inserter_low_p[2])
 slider_h_il.pack()
 slider_s_il.pack()
 slider_v_il.pack()
 
 lbl_h_ih = tk.Label(root, text='HSV high, inserter')
 lbl_h_ih.pack()
-slider_h_ih.set(180)
-slider_s_ih.set(255)
-slider_v_ih.set(255)
+slider_h_ih.set(inserter_high_p[0])
+slider_s_ih.set(inserter_high_p[1])
+slider_v_ih.set(inserter_high_p[2])
 slider_h_ih.pack()
 slider_s_ih.pack()
 slider_v_ih.pack()

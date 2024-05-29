@@ -86,15 +86,19 @@ class ThresholdCal():
 
     def phantom_hsv_low_callback(self, data):
         self.phantom_low_ = (data.x, data.y, data.z)
+        rospy.loginfo(f"Phantom low: {self.phantom_low_}")
 
     def phantom_hsv_high_callback(self, data):
         self.phantom_high_ = (data.x, data.y, data.z)
+        rospy.loginfo(f"Phantom high: {self.phantom_high_}")
     
     def inserter_hsv_low_callback(self, data):
         self.inserter_low_ = (data.x, data.y, data.z)
+        rospy.loginfo(f"Inserter low: {self.inserter_low_}")
 
     def inserter_hsv_high_callback(self, data):
         self.inserter_high_ = (data.x, data.y, data.z)
+        rospy.loginfo(f"Inserter high: {self.inserter_high_}")
 
 
 if __name__ == "__main__":
