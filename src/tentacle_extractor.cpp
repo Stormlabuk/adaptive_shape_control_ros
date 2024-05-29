@@ -75,7 +75,9 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
     int link_px = link_mm * mm_pixel_;
     int SlicedPoints = numPoints / link_px;
     req.tentacle.num_points = SlicedPoints;
-
+    ROS_INFO("Number of points: %d", numPoints);
+    ROS_INFO("Number of sliced points: %d", SlicedPoints);
+        
     std::vector<cv::Point> selectedPoints;
     for (int i = 0; i < SlicedPoints; i++) {
         int index = i * numPoints / SlicedPoints;

@@ -20,9 +20,10 @@ class IsolateTentacle():
         self.tent_img_pub = rospy.Publisher(
             "tentacle_img", Image, queue_size=10)
 
-        self.hsv_low = rospy.get_param("~inserter_low_p", (28, 144, 82))
-        self.hsv_high = rospy.get_param("~inserter_high_p", (151, 255, 156))
-
+        self.hsv_low = rospy.get_param("inserter_low_p", (28, 144, 82))
+        self.hsv_high = rospy.get_param("inserter_high_p", (151, 255, 156))
+        # rospy.loginfo("HSV low: " + str(self.hsv_low))
+        # rospy.loginfo("HSV high: " + str(self.hsv_high))
         self.hsv_low = np.array(self.hsv_low)
         self.hsv_high = np.array(self.hsv_high)
 
