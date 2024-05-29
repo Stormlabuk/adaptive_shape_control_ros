@@ -39,7 +39,7 @@ class ImageProcessor():
         self.cam_offset_y = rospy.get_param("cam_offset_y", 74)
         self.bridge = CvBridge()
         self.initial_pubs = rospy.Service("initial_imgproc", SetBool, self.initial_image_processing)
-        self.phantom_pub = rospy.Service("phantom_imgproc", SetBool, self.phantom_image_processing)
+        self.phantom_pub_srv = rospy.Service("phantom_imgproc", SetBool, self.phantom_image_processing)
         self.publish_maps = True
         self.publish_phantom = True
         rospy.init_node('image_processor', anonymous=False)

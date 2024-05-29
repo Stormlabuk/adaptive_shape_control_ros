@@ -86,8 +86,8 @@ def slider_command_s_il(val):
 
 def slider_command_v_il(val):
     """Value callback from slider."""
-    hsv_ih.z = float(val)
-    pub_il.publish(hsv_ih)
+    hsv_il.z = float(val)
+    pub_il.publish(hsv_il)
 
 # Inserter high sliders
 def slider_command_h_ih(val):

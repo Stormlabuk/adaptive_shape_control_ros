@@ -5,8 +5,8 @@
 
     <rosparam param="phantom_low_p">[0,0,140]</rosparam>
     <rosparam param="phantom_high_p">[180,95,255]</rosparam>
-    <rosparam param="inserter_low_p">[28,144,82]</rosparam>
-    <rosparam param="inserter_high_p">[161, 255, 208]</rosparam>
+    <rosparam param="inserter_low_p">[43,85,27]</rosparam>
+    <rosparam param="inserter_high_p">[165, 255, 255]</rosparam>
     <rosparam param="cam_width">1108</rosparam>
     <rosparam param="cam_height">1016</rosparam>
     <rosparam param="cam_offset_x">368</rosparam>

@@ -8,8 +8,8 @@
 
     <rosparam param="phantom_low_p">[0,0,140]</rosparam>
     <rosparam param="phantom_high_p">[180,95,255]</rosparam>
-    <rosparam param="inserter_low_p">[28,144,82]</rosparam>
-    <rosparam param="inserter_high_p">[161, 255, 208]</rosparam>
+    <rosparam param="inserter_low_p">[43,85,27]</rosparam>
+    <rosparam param="inserter_high_p">[165, 255, 255]</rosparam>
 
     <include file="$(find pylon_camera)/launch/pylon_camera_node.launch"/>
 

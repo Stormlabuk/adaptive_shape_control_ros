@@ -24,6 +24,7 @@ private:
     ros::ServiceClient discretise_client;
     int mm_pixel_; //!< 1mm = 5 pixel. Converts mm to pixel
     double pixel_mm_; //!< Converts pixel to mm
+    int link_mm = 10; //!< Length of each link in mm
     /* data */
 public:
     TentacleExtractor(/* args */);

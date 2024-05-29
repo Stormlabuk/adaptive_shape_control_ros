@@ -72,7 +72,7 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
     int numPoints = points.size();
-    int link_px = 5 * mm_pixel_;
+    int link_px = link_mm * mm_pixel_;
     int SlicedPoints = numPoints / link_px;
     req.tentacle.num_points = SlicedPoints;
 
