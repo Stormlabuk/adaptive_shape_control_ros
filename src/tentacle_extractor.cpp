@@ -4,12 +4,10 @@ TentacleExtractor::TentacleExtractor() : it_(nh_) {
     skeleton_sub_ = it_.subscribe("tentacle_img", 1,
                                   &TentacleExtractor::skeleton_callback, this);
 
-
-
     discretise_client = nh_.serviceClient<shapeforming_msgs::DiscretiseCurve>(
         "obv_discretise_curve");
 
-    mm_pixel_ = ros::param::param<int>("~mm_pixel", 15);
+    mm_pixel_ = ros::param::param<int>("mm_pixel", 15);
     pixel_mm_ = 1.0 / mm_pixel_;
 }
 
@@ -59,30 +57,52 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
         points.begin(), points.end(),
         [](const cv::Point2i& a, const cv::Point2i& b) { return a.x < b.x; });
 
-    // Calculate the distance covered by the points
-    double distance = 0.0;
+    // create an array containing the distance between each point and the first
+    // point in the rray
+    std::vector<double> distances;
+    distances.push_back(0.0);
     for (int i = 1; i < points.size(); i++) {
-        cv::Point2i prevPoint = points[i - 1];
+        cv::Point2i firstPoint = points[0];
         cv::Point2i currPoint = points[i];
-        double dx = currPoint.x - prevPoint.x;
-        double dy = currPoint.y - prevPoint.y;
-        distance += std::sqrt(dx * dx + dy * dy);
+        double dx = currPoint.x - firstPoint.x;
+        double dy = currPoint.y - firstPoint.y;
+        distances.push_back(std::sqrt(dx * dx + dy * dy));
     }
-
+    double totalDistance = distances.back();
+    ROS_INFO("Total distance: %f", totalDistance);
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
-    int numPoints = points.size();
     int link_px = link_mm * mm_pixel_;
-    int SlicedPoints = numPoints / link_px;
-    req.tentacle.num_points = SlicedPoints;
-    ROS_INFO("Number of points: %d", numPoints);
-    ROS_INFO("Number of sliced points: %d", SlicedPoints);
-        
-    std::vector<cv::Point> selectedPoints;
-    for (int i = 0; i < SlicedPoints; i++) {
-        int index = i * numPoints / SlicedPoints;
-        req.tentacle.px.push_back(points[index].x);
-        req.tentacle.py.push_back(points[index].y);
+    int numLinks = std::ceil(totalDistance / link_px) + 1;
+    
+    if(totalDistance < link_px){
+        ROS_INFO("Tentacle is too short");
+        return;
+    }
+    
+    if (numLinks > 2) {
+        int linksToFind = numLinks - 2;
+        req.tentacle.num_points = numLinks;
+        req.tentacle.px.resize(numLinks);
+        req.tentacle.py.resize(numLinks);
+        req.tentacle.px[0] = points[0].x;
+        req.tentacle.py[0] = points[0].y;
+        req.tentacle.px[numLinks - 1] = points.back().x;
+        req.tentacle.py[numLinks - 1] = points.back().y;
+
+        for (int i = 0; i < linksToFind; i++) {
+            double targetDistance = (i + 1) * link_px;
+            int j = 0;
+            while (distances[j] < targetDistance) {
+                j++;
+            }
+            double ratio = (targetDistance - distances[j - 1]) /
+                           (distances[j] - distances[j - 1]);
+            req.tentacle.px[i + 1] =
+                points[j - 1].x + ratio * (points[j].x - points[j - 1].x);
+            req.tentacle.py[i + 1] =
+                points[j - 1].y + ratio * (points[j].y - points[j - 1].y);
+        }
     }
 
     shapeforming_msgs::DiscretiseCurveResponse res;

@@ -64,8 +64,8 @@ void HighController::highLoop() {
     // recalcPath();
     bool error_bound = (abs(error_.error) < error_lb);
     bool error_dot_bound = (abs(error_.error_dot) < error_dot_lb);
-    // std_msgs::Int32 stepper_msg;
-    // stepper_msg.data = 2;
+    std_msgs::Int32 stepper_msg;
+    stepper_msg.data = 2;
     // if (error_bound && error_dot_bound) {
     //     // Stop the controller and insert until the next link
     //     controller_spinning_ = false;
@@ -75,10 +75,13 @@ void HighController::highLoop() {
     //         ROS_INFO("Reached maximum number of links");
     //         return;
     //     }
-    //     if (obv_angles_.angles.size() < target_insertion) {
-    //         inserter_pub_.publish(stepper_msg);
-    //         return;
-    //     }
+    int target_insertion = 2;
+    // ROS_INFO("I need to insert");
+    // if (obv_angles_.angles.size() < target_insertion) {
+    //     inserter_pub_.publish(stepper_msg);
+    //     ROS_INFO("Pushing inserter by %d", stepper_msg.data);
+    //     return;
+    // }
     // }
     return;
 }

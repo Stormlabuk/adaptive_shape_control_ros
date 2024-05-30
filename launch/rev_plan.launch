@@ -32,7 +32,7 @@
     <node name="high_controller" pkg="adaptive_ctrl" type="high_controller" output="$(arg output)"/>
 
     <node name="control_node" pkg="adaptive_ctrl" type="control_node" output="screen" />
-    <include file="$(find adaptive_ctrl)/launch/precomputation.launch"/>
+    <!-- <include file="$(find adaptive_ctrl)/launch/precomputation.launch"/> -->
     <include file="$(find adaptive_ctrl)/launch/path_planner.launch"/>
     
 

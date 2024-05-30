@@ -56,6 +56,7 @@ class IsolateTentacle():
             tent_only = cv2.erode(tent_only, None, iterations=8)
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
+
             self.tent_img_pub.publish(self.bridge.cv2_to_imgmsg(skeleton, "mono8"))
         else:
             rospy.logwarn("Base image not found")
