@@ -4,9 +4,9 @@
     <arg name="use_costs" default="true"/>
     <!-- This param is very important -->
     <arg name="use3d" default="false"/>
-    <arg name="world_size_x" default="600"/>
-    <arg name="world_size_y" default="600"/>
-    <arg name="resolution" default="1"/>
+    <arg name="world_size_x" default="6"/>
+    <arg name="world_size_y" default="6"/>
+    <arg name="resolution" default="0.01"/>
     <arg name="world_size_z" default="$(arg resolution)"/>
 
     <arg name="inflate_map" default="false"/>
