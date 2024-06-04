@@ -49,9 +49,9 @@ class GridProcessor:
         costmap = OccupancyGrid()
         costmap.header.stamp = rospy.Time.now()
         costmap.header.frame_id = "map"
-        costmap.info.resolution = 1
-        costmap.info.width = 600
-        costmap.info.height = 600
+        costmap.info.resolution = 0.05
+        costmap.info.width = 30
+        costmap.info.height = 30
         costmap.info.origin.position.x = 0
         costmap.info.origin.position.y = 0
         costmap.info.origin.position.z = 0
@@ -73,9 +73,9 @@ class GridProcessor:
         grid = OccupancyGrid()
         grid.header.stamp = rospy.Time.now()
         grid.header.frame_id = "map"
-        grid.info.resolution = 1
-        grid.info.width = 600
-        grid.info.height = 600
+        grid.info.resolution = 0.05
+        grid.info.width = 30
+        grid.info.height = 30
         grid.info.origin.position.x = 0
         grid.info.origin.position.y = 0
         grid.info.origin.position.z = 0
