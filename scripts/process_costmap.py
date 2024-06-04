@@ -6,6 +6,9 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from nav_msgs.msg import OccupancyGrid
 import matplotlib.pyplot as plt
+import tf_conversions
+import tf2_ros
+
 class GridProcessor:
     def __init__(self) -> None:
 
@@ -14,7 +17,8 @@ class GridProcessor:
 
         self.costmap_pub = rospy.Publisher('/costmap', OccupancyGrid, queue_size=1)
         self.occ_grid_pub = rospy.Publisher('/grid', OccupancyGrid, queue_size=1)
-        
+        self.width = 0
+        self.height = 0
         self.phantom = Image()
         self.base = Image()
         self.bridge = CvBridge()
@@ -30,6 +34,8 @@ class GridProcessor:
         vals = vals / 255 * 100
         vals = vals.astype(np.uint8)
         self.phantom = self.bridge.cv2_to_imgmsg(vals, encoding="mono8")
+        self.width = self.phantom.width
+        self.height = self.phantom.height
         self.process_costmap()
         return
 
@@ -41,6 +47,8 @@ class GridProcessor:
         vals = vals / 255 * 100
         vals = vals.astype(np.uint8)
         self.base = self.bridge.cv2_to_imgmsg(vals, encoding="mono8")
+        self.width = self.base.width
+        self.height = self.base.height
         self.process_occgrid()
         return
 
@@ -49,16 +57,18 @@ class GridProcessor:
         costmap = OccupancyGrid()
         costmap.header.stamp = rospy.Time.now()
         costmap.header.frame_id = "map"
-        costmap.info.resolution = 0.05
-        costmap.info.width = 30
-        costmap.info.height = 30
+        costmap.info.resolution = 0.000442
+        costmap.info.width = self.width
+        costmap.info.height = self.height
+        
         costmap.info.origin.position.x = 0
         costmap.info.origin.position.y = 0
         costmap.info.origin.position.z = 0
-        costmap.info.origin.orientation.x = 0
-        costmap.info.origin.orientation.y = 0
-        costmap.info.origin.orientation.z = 0
-        costmap.info.origin.orientation.w = 1
+        q = tf_conversions.transformations.quaternion_from_euler(np.pi, 0, 0)
+        costmap.info.origin.orientation.x = q[0]
+        costmap.info.origin.orientation.y = q[1]
+        costmap.info.origin.orientation.z = q[2]
+        costmap.info.origin.orientation.w = q[3]
         # costmap.data = np.zeros((600*600, 1), dtype=np.uint8).flatten().tolist()
 
         costmap.data = self.phantom.data
@@ -73,16 +83,17 @@ class GridProcessor:
         grid = OccupancyGrid()
         grid.header.stamp = rospy.Time.now()
         grid.header.frame_id = "map"
-        grid.info.resolution = 0.05
-        grid.info.width = 30
-        grid.info.height = 30
+        grid.info.resolution = 0.000442
+        grid.info.width = self.width
+        grid.info.height = self.height
         grid.info.origin.position.x = 0
         grid.info.origin.position.y = 0
         grid.info.origin.position.z = 0
-        grid.info.origin.orientation.x = 0
-        grid.info.origin.orientation.y = 0
-        grid.info.origin.orientation.z = 0
-        grid.info.origin.orientation.w = 1
+        q = tf_conversions.transformations.quaternion_from_euler(np.pi, 0, 0)
+        grid.info.origin.orientation.x = q[0]
+        grid.info.origin.orientation.y = q[1]
+        grid.info.origin.orientation.z = q[2]
+        grid.info.origin.orientation.w = q[3]
         grid.data = self.base.data
 
         

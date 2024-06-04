@@ -58,8 +58,8 @@ class ImageProcessor():
     def image_callback(self, data):
         try:
             image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            image_resize = image[:self.cam_width, 0:self.cam_height]
-            image_resize = cv2.resize(image_resize, (600, 600))
+            image_resize = image[:self.cam_height, 0:self.cam_width]
+            # image_resize = cv2.resize(image_resize, (600, 600))
         except CvBridgeError as e:
             rospy.logerr(e)
         # convert to hsv
