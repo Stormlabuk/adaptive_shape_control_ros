@@ -65,7 +65,7 @@ class GridProcessor:
         costmap.info.origin.position.x = 0
         costmap.info.origin.position.y = 0
         costmap.info.origin.position.z = 0
-        q = tf_conversions.transformations.quaternion_from_euler(np.pi, 0, 0)
+        q = tf_conversions.transformations.quaternion_from_euler(0, 0, 0)
         costmap.info.origin.orientation.x = q[0]
         costmap.info.origin.orientation.y = q[1]
         costmap.info.origin.orientation.z = q[2]
@@ -90,7 +90,7 @@ class GridProcessor:
         grid.info.origin.position.x = 0
         grid.info.origin.position.y = 0
         grid.info.origin.position.z = 0
-        q = tf_conversions.transformations.quaternion_from_euler(np.pi, 0, 0)
+        q = tf_conversions.transformations.quaternion_from_euler(0, 0, 0)
         grid.info.origin.orientation.x = q[0]
         grid.info.origin.orientation.y = q[1]
         grid.info.origin.orientation.z = q[2]
