@@ -6,17 +6,17 @@
     <rosparam param="cam_offset_x">416</rosparam>
     <rosparam param="cam_offset_y">130</rosparam>
 
-    <rosparam param="phantom_low_p">[0,0,111]</rosparam>
-    <rosparam param="phantom_high_p">[180,82,255]</rosparam>
-    <rosparam param="inserter_low_p">[39,121,29]</rosparam>
-    <rosparam param="inserter_high_p">[165, 255, 255]</rosparam>
+    <rosparam param="phantom_low_p">[6,0,100]</rosparam>
+    <rosparam param="phantom_high_p">[180,94,255]</rosparam>
+    <rosparam param="inserter_low_p">[25,146,0]</rosparam>
+    <rosparam param="inserter_high_p">[170, 234, 255]</rosparam>
 
     <include file="$(find pylon_camera)/launch/pylon_camera_node.launch"/>
+    <include file="$(find launch_utils)/launch/adjust_framerate.launch"/>
 
     <node name="thresh_cal" pkg="adaptive_ctrl" type="threshold_cal.py" output="$(arg output)"/>
     <node name="sliders" pkg="adaptive_ctrl" type="sliders.py" output="$(arg output)"/>
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/calibrate_thresholds.rviz"/>
-    <include file="$(find launch_utils)/launch/adjust_framerate.launch"/>
 
 
 </launch>

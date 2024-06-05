@@ -209,7 +209,7 @@ Visualization Manager:
       Marker Topic: /obv_viz_angles
       Name: OBV_Points
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -278,7 +278,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 1040.711669921875
+      Distance: 2321.683837890625
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -286,17 +286,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 255.57061767578125
-        Y: 385.961669921875
-        Z: 2.6720694222603925e-05
+        X: 403.291015625
+        Y: 583.8424072265625
+        Z: 3.856402327073738e-05
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -1.5497963428497314
+      Pitch: -1.5397963523864746
       Target Frame: <Fixed Frame>
-      Yaw: 4.707617282867432
+      Yaw: 4.772623062133789
     Saved: ~
 Window Geometry:
   Camera:

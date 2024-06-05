@@ -3,10 +3,10 @@
     
     <rosparam param="mm_to_pixel">7</rosparam>
 
-    <rosparam param="phantom_low_p">[0,0,111]</rosparam>
-    <rosparam param="phantom_high_p">[180,82,255]</rosparam>
-    <rosparam param="inserter_low_p">[39,121,29]</rosparam>
-    <rosparam param="inserter_high_p">[165, 255, 255]</rosparam>
+    <rosparam param="phantom_low_p">[6,0,100]</rosparam>
+    <rosparam param="phantom_high_p">[180,94,255]</rosparam>
+    <rosparam param="inserter_low_p">[25,146,0]</rosparam>
+    <rosparam param="inserter_high_p">[170, 234, 255]</rosparam>
     <rosparam param="cam_width">1088</rosparam>
     <rosparam param="cam_height">996</rosparam>
     <rosparam param="cam_offset_x">416</rosparam>
