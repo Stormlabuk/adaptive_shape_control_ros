@@ -194,6 +194,7 @@ catkin_install_python(PROGRAMS
   scripts/isolate_tentacle.py
   scripts/transform_camera_frame.py
   scripts/sliders.py
+  scripts/dummy_marker.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

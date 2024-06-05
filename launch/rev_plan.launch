@@ -20,6 +20,7 @@
     <node name="process_costmap" pkg="adaptive_ctrl" type="process_costmap.py" output="$(arg output)"/>
     <node name="discretise_path" pkg="adaptive_ctrl" type="discretise_path.py" output="$(arg output)"/>
     <node name="isolate_tentacle" pkg="adaptive_ctrl" type="isolate_tentacle.py" output="$(arg output)"/>
+    <node name="tentacle_extractor" pkg="adaptive_ctrl" type="tentacle_extractor" output="$(arg output)"/>
 
     <node name="path_to_angle" pkg="adaptive_ctrl" type="discretising_node.py" output="$(arg output)">
         <param name="angle_pub_type" value="des_"/>

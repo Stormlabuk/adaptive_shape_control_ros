@@ -6,6 +6,9 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 from nav_msgs.msg import OccupancyGrid
 import matplotlib.pyplot as plt
+import tf_conversions
+import tf2_ros
+
 class GridProcessor:
     def __init__(self) -> None:
 
@@ -18,7 +21,6 @@ class GridProcessor:
         self.height = 0
         self.cam_width = rospy.get_param("cam_width", 1124)
         self.cam_height = rospy.get_param("cam_height", 1040)
-
         self.phantom = Image()
         self.base = Image()
         self.bridge = CvBridge()
@@ -63,10 +65,11 @@ class GridProcessor:
         costmap.info.origin.position.x = 0
         costmap.info.origin.position.y = 0
         costmap.info.origin.position.z = 0
-        costmap.info.origin.orientation.x = 0
-        costmap.info.origin.orientation.y = 0
-        costmap.info.origin.orientation.z = 0
-        costmap.info.origin.orientation.w = 1
+        q = tf_conversions.transformations.quaternion_from_euler(np.pi, 0, 0)
+        costmap.info.origin.orientation.x = q[0]
+        costmap.info.origin.orientation.y = q[1]
+        costmap.info.origin.orientation.z = q[2]
+        costmap.info.origin.orientation.w = q[3]
         # costmap.data = np.zeros((600*600, 1), dtype=np.uint8).flatten().tolist()
 
         costmap.data = self.phantom.data
@@ -87,10 +90,11 @@ class GridProcessor:
         grid.info.origin.position.x = 0
         grid.info.origin.position.y = 0
         grid.info.origin.position.z = 0
-        grid.info.origin.orientation.x = 0
-        grid.info.origin.orientation.y = 0
-        grid.info.origin.orientation.z = 0
-        grid.info.origin.orientation.w = 1
+        q = tf_conversions.transformations.quaternion_from_euler(np.pi, 0, 0)
+        grid.info.origin.orientation.x = q[0]
+        grid.info.origin.orientation.y = q[1]
+        grid.info.origin.orientation.z = q[2]
+        grid.info.origin.orientation.w = q[3]
         grid.data = self.base.data
 
         
