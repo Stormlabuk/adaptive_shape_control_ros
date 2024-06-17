@@ -69,14 +69,14 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
         distances.push_back(std::sqrt(dx * dx + dy * dy));
     }
     double totalDistance = distances.back();
-    ROS_INFO("Total distance: %f", totalDistance);
+    // ROS_INFO("Total distance: %f", totalDistance);
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
     int link_px = link_mm * mm_pixel_;
     int numLinks = std::ceil(totalDistance / link_px) + 1;
     
     if(totalDistance < link_px){
-        ROS_INFO("Tentacle is too short");
+        // ROS_INFO("Tentacle is too short");
         return;
     }
     

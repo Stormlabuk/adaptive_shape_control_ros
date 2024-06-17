@@ -5,6 +5,8 @@ from shapeforming_msgs.msg import rl_angles
 from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveResponse
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import Point
+import tf_conversions
+import tf2_ros
 import cv2
 
 class DiscretisingNode:
@@ -63,10 +65,15 @@ class DiscretisingNode:
         marker.header.stamp = rospy.Time.now()
         marker.type = Marker.POINTS
         marker.action = Marker.ADD
-        marker.pose.orientation.x = 0
-        marker.pose.orientation.y = 0
-        marker.pose.orientation.z = 0
-        marker.pose.orientation.w = 0
+        # marker.pose.orientation.x = 0
+        # marker.pose.orientation.y = 0
+        # marker.pose.orientation.z = 0
+        # marker.pose.orientation.w = 0
+        q = tf_conversions.transformations.quaternion_from_euler(np.pi, 0, 0)
+        marker.pose.orientation.x = q[0]
+        marker.pose.orientation.y = q[1]
+        marker.pose.orientation.z = q[2]
+        marker.pose.orientation.w = q[3]
         marker.scale.x = 10
         marker.scale.y = 10
         marker.color.r = color[0]

@@ -225,7 +225,7 @@ Visualization Manager:
       Image Rendering: background and overlay
       Image Topic: /pylon_camera_node/image_rect
       Name: Camera
-      Overlay Alpha: 0.5
+      Overlay Alpha: 1
       Queue Size: 2
       Transport Hint: raw
       Unreliable: false

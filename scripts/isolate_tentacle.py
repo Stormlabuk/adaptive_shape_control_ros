@@ -25,6 +25,9 @@ class IsolateTentacle():
 
         self.hsv_low = rospy.get_param("inserter_low_p", (28, 144, 82))
         self.hsv_high = rospy.get_param("inserter_high_p", (151, 255, 156))
+        
+        self.hsv_low = np.array([0,0,0])
+        self.hsv_high = np.array([132,138,255])
         self.mm_pixel = rospy.get_param("mm_pixel", 5)
         self.link_l_mm = rospy.get_param("precomputation/len", 10)
         self.pixel_mm = 1/self.mm_pixel
@@ -59,6 +62,7 @@ class IsolateTentacle():
             tent_inserter = cv2.dilate(tent_inserter, None, iterations=10)
             tent_only = cv2.bitwise_xor(tent_inserter, self.base_image)
             tent_only = cv2.erode(tent_only, None, iterations=8)
+
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
 

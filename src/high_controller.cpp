@@ -125,7 +125,8 @@ void HighController::recalcPath() {
         return;
     }
     goal_.z = 0;
-
+    ROS_INFO("Given insertion point: %f, %f, %f", insertion_point_.x, insertion_point_.y, insertion_point_.z);
+    ROS_INFO("Given goal: %f, %f, %f", goal_.x, goal_.y, goal_.z);
 
     pathReq.start = insertion_point_;
     pathReq.goal = goal_;
