@@ -23,11 +23,11 @@ class IsolateTentacle():
         self.tent_img_pub = rospy.Publisher(
             "tentacle_img", Image, queue_size=10)
 
-        self.hsv_low = rospy.get_param("inserter_low_p", (28, 144, 82))
-        self.hsv_high = rospy.get_param("inserter_high_p", (151, 255, 156))
+        self.hsv_low = rospy.get_param("tentacle_low_p", (28, 144, 82))
+        self.hsv_high = rospy.get_param("tentacle_high_p", (151, 255, 156))
         
-        self.hsv_low = np.array([0,0,0])
-        self.hsv_high = np.array([132,138,255])
+        # self.hsv_low = np.array([0,0,0])
+        # self.hsv_high = np.array([132,138,255])
         self.mm_pixel = rospy.get_param("mm_pixel", 5)
         self.link_l_mm = rospy.get_param("precomputation/len", 10)
         self.pixel_mm = 1/self.mm_pixel
@@ -57,14 +57,25 @@ class IsolateTentacle():
         except CvBridgeError as e:
             rospy.logerr(e)
         if (self.base_image_found):
+
             tent_inserter = cv2.inRange(image_hsv, self.hsv_low, self.hsv_high)
             tent_inserter = cv2.erode(tent_inserter, None, iterations=2)
             tent_inserter = cv2.dilate(tent_inserter, None, iterations=10)
             tent_only = cv2.bitwise_xor(tent_inserter, self.base_image)
             tent_only = cv2.erode(tent_only, None, iterations=8)
 
+
+
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
+            skeleton[:skeleton.shape[0]//2, :] = 0
+            skeleton[:, :20] = 0
+            concatenated_image = np.concatenate((
+                cv2.cvtColor( tent_only, cv2.COLOR_GRAY2BGR), 
+                cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR), 
+                image), axis=1)
+            cv2.imshow("Concatenated Image", concatenated_image)
+            cv2.waitKey(1)
 
             self.tent_img_pub.publish(
                 self.bridge.cv2_to_imgmsg(skeleton, "mono8"))

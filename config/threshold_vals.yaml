@@ -1,0 +1,29 @@
+phantom_low_p:
+  - 0
+  - 0
+  - 0
+
+phantom_high_p:
+  - 180
+  - 61
+  - 255
+
+inserter_low_p:
+  - 84
+  - 114
+  - 35
+
+inserter_high_p:
+  - 140
+  - 255
+  - 80
+
+tentacle_low_p:
+  - 0
+  - 58
+  - 32
+
+tentacle_high_p:
+  - 120
+  - 255
+  - 76
