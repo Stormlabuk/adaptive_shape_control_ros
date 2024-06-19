@@ -42,16 +42,16 @@ HighController::HighController() {
     reinitMap();
     // recalcPath();
     // recalcField();
-    //     std_msgs::Int32 stepper_msg;
-    //     stepper_msg.data = 8;
-    //     inserter_pub_.publish(stepper_msg);
+    // std_msgs::Int32 stepper_msg;
+    // stepper_msg.data = 1;
+        // inserter_pub_.publish(stepper_msg);
     //     /*
     //     * @brief fix this to wait for the first link to be inserted
     //     */
     //    stepper_msg.data = 1;
-    //     while (obv_angles_.angles.size() < 1) {
-    //         inserter_pub_.publish(stepper_msg);
-    //     }
+    // while (obv_angles_.angles.size() < 1) {
+    //     inserter_pub_.publish(stepper_msg);
+    // }
     //     controller_spinning_ = true;
     //     spinController(controller_spinning_);
 }
@@ -172,6 +172,7 @@ void HighController::recalcField() {
             ROS_ERROR("Failed to call precomputation service");
             return;
         }
+        ROS_INFO("Truncated angles and recalculated field");
         des_trunc_.publish(des_slice);
         obv_trunc_.publish(obv_slice);
     } else

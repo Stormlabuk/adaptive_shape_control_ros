@@ -70,46 +70,17 @@ class IsolateTentacle():
             skeleton = skeleton.astype(np.uint8) * 255
             skeleton[:skeleton.shape[0]//2, :] = 0
             skeleton[:, :20] = 0
-            concatenated_image = np.concatenate((
-                cv2.cvtColor( tent_only, cv2.COLOR_GRAY2BGR), 
-                cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR), 
-                image), axis=1)
-            cv2.imshow("Concatenated Image", concatenated_image)
-            cv2.waitKey(1)
+            # concatenated_image = np.concatenate((
+            #     cv2.cvtColor( tent_only, cv2.COLOR_GRAY2BGR), 
+            #     cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR), 
+            #     image), axis=1)
+            # cv2.imshow("Concatenated Image", concatenated_image)
+            # cv2.waitKey(1)
 
             self.tent_img_pub.publish(
                 self.bridge.cv2_to_imgmsg(skeleton, "mono8"))
         else:
             rospy.logwarn("Base image not found")
-
-    def extract_tentacle(self, image):
-        skeleton_points = np.argwhere(image == 255)
-        total_distance = np.linalg.norm(
-            skeleton_points[-1] - skeleton_points[0])
-        first_point = skeleton_points[0]
-        last_point = skeleton_points[-1]
-        distances = np.linalg.norm(skeleton_points - first_point, axis=1)
-        total_fittable_points = int(total_distance / self.link_px)+1
-        if total_fittable_points > 2:
-            rl_points = np.zeros((total_fittable_points, 2))
-            rl_points[0] = first_point
-            rl_points[-1] = last_point
-            points_to_fill = total_fittable_points-2
-
-            for i in range(points_to_fill):
-                idx = np.argmin(np.abs(distances - self.link_px * (i + 1)))
-                rl_points[i+1] = skeleton_points[idx]
-
-        else:
-            rl_points = last_point
-            total_fittable_points = 1
-
-        disc_req = DiscretiseCurveRequest()
-        disc_req.tentacle.px = rl_points[:, 0]
-        disc_req.tentacle.py = rl_points[:, 1]
-        disc_req.tentacle.num_points = total_fittable_points
-
-        disc_res = self.discretise_call(disc_req)
 
     def base_image_callback(self, data):
         self.base_image = self.bridge.imgmsg_to_cv2(data, "mono8")

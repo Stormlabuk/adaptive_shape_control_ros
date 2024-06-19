@@ -5,9 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Path Point Markers1
-        - /Marker1
-        - /Camera1
       Splitter Ratio: 0.4882352948188782
     Tree Height: 676
   - Class: rviz/Selection
@@ -209,7 +206,7 @@ Visualization Manager:
       Marker Topic: /obv_viz_angles
       Name: OBV_Points
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -278,7 +275,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 2321.683837890625
+      Distance: 1392.3031005859375
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -294,9 +291,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -1.5397963523864746
+      Pitch: -1.5297963619232178
       Target Frame: <Fixed Frame>
-      Yaw: 4.772623062133789
+      Yaw: 4.787623405456543
     Saved: ~
 Window Geometry:
   Camera:

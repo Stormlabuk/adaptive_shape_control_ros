@@ -69,16 +69,16 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
         distances.push_back(std::sqrt(dx * dx + dy * dy));
     }
     double totalDistance = distances.back();
-    // ROS_INFO("Total distance: %f", totalDistance);
+    
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
     int link_px = link_mm * mm_pixel_;
     int numLinks = std::ceil(totalDistance / link_px) + 1;
-    
-    if(totalDistance < link_px){
-        // ROS_INFO("Tentacle is too short");
-        return;
-    }
+    // ROS_INFO("Total distance: %f. link_px: %f", totalDistance, link_px);
+    // if(totalDistance < link_px){
+    //     // ROS_INFO("Tentacle is too short");
+    //     return;
+    // }
     
     if (numLinks > 2) {
         int linksToFind = numLinks - 2;
@@ -103,6 +103,17 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
             req.tentacle.py[i + 1] =
                 points[j - 1].y + ratio * (points[j].y - points[j - 1].y);
         }
+    } else if(numLinks == 2){
+        req.tentacle.num_points = 2;
+        req.tentacle.px.resize(2);
+        req.tentacle.py.resize(2);
+        req.tentacle.px[0] = points[0].x;
+        req.tentacle.py[0] = points[0].y;
+        req.tentacle.px[1] = points.back().x;
+        req.tentacle.py[1] = points.back().y;
+    } else {
+        // ROS_INFO("Tentacle is too short");
+        return;
     }
 
     shapeforming_msgs::DiscretiseCurveResponse res;
