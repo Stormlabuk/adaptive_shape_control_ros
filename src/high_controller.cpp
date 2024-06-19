@@ -136,7 +136,6 @@ void HighController::recalcPath() {
     } catch (const ros::Exception& e) {
         ROS_ERROR("Failed to call get_path service, error %s", e.what());
     }
-    recalcField();
 }
 
 /**
@@ -203,6 +202,7 @@ void HighController::desAnglesCallback(
     if (des_angles_.angles.size() != 0) {
         recalcField();
     }
+    recalcField();
 }
 
 void HighController::obvAnglesCallback(
