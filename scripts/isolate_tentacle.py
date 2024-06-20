@@ -8,7 +8,7 @@ from sensor_msgs.msg import Image
 from std_srvs.srv import SetBool, SetBoolResponse, SetBoolRequest
 from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveRequest, DiscretiseCurveResponse
 from cv_bridge import CvBridge, CvBridgeError
-
+from geometry_msgs.msg import Point, Vector3
 
 class IsolateTentacle():
     def __init__(self) -> None:
@@ -23,6 +23,9 @@ class IsolateTentacle():
         self.tent_img_pub = rospy.Publisher(
             "tentacle_img", Image, queue_size=10)
 
+        self.ins_point_sub = rospy.Subscriber(
+            "/insertion_point", Point, self.insertion_point_callback)
+        self.insertion_point = Point(0,0,0)
         self.hsv_low = rospy.get_param("tentacle_low_p", (28, 144, 82))
         self.hsv_high = rospy.get_param("tentacle_high_p", (151, 255, 156))
         
@@ -61,21 +64,28 @@ class IsolateTentacle():
             tent_inserter = cv2.inRange(image_hsv, self.hsv_low, self.hsv_high)
             tent_inserter = cv2.erode(tent_inserter, None, iterations=2)
             tent_inserter = cv2.dilate(tent_inserter, None, iterations=10)
+            tent_cnt, _ = cv2.findContours(tent_inserter, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            tent_cnt = sorted(tent_cnt, key=cv2.contourArea, reverse=True)
+            tent_inserter = cv2.drawContours(tent_inserter, tent_cnt[:1], -1, 255, -1)
+            
             tent_only = cv2.bitwise_xor(tent_inserter, self.base_image)
-            tent_only = cv2.erode(tent_only, None, iterations=8)
-
-
+            tent_only = cv2.erode(tent_only, None, iterations=10)
+            # tent_only = cv2.blur(tent_only, (15, 15))
+            
 
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
-            skeleton[:skeleton.shape[0]//2, :] = 0
-            skeleton[:, :20] = 0
-            # concatenated_image = np.concatenate((
-            #     cv2.cvtColor( tent_only, cv2.COLOR_GRAY2BGR), 
-            #     cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR), 
-            #     image), axis=1)
-            # cv2.imshow("Concatenated Image", concatenated_image)
-            # cv2.waitKey(1)
+            
+            skeleton[:int(self.insertion_point.y), :int(self.insertion_point.x)] = 0
+            skeleton[:150, :] = 0
+            rospy.loginfo("Insertion point: " + str(self.insertion_point))
+            concatenated_image = np.concatenate((
+                self.base_image,
+                tent_only, 
+                skeleton
+            ), axis=1)
+            cv2.imshow("Concatenated Image", concatenated_image)
+            cv2.waitKey(1)
 
             self.tent_img_pub.publish(
                 self.bridge.cv2_to_imgmsg(skeleton, "mono8"))
@@ -86,6 +96,9 @@ class IsolateTentacle():
         self.base_image = self.bridge.imgmsg_to_cv2(data, "mono8")
         self.base_image_found = True
 
+    def insertion_point_callback(self, data):
+        self.insertion_point = data
+        return
 
 if __name__ == "__main__":
     rospy.init_node('isolate_tentacle', anonymous=False)

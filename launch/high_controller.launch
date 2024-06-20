@@ -1,0 +1,17 @@
+<launch>
+    <arg name="output" default="screen"/>
+    
+    <rosparam param="mm_to_pixel">12</rosparam>
+
+    <rosparam file="$(find adaptive_ctrl)/config/threshold_vals.yaml" />
+
+    <rosparam param="cam_width">1088</rosparam>
+    <rosparam param="cam_height">996</rosparam>
+    <rosparam param="cam_offset_x">416</rosparam>
+    <rosparam param="cam_offset_y">130</rosparam>
+
+
+
+    <node name="high_controller" pkg="adaptive_ctrl" type="high_controller" output="$(arg output)"/>
+
+</launch>
