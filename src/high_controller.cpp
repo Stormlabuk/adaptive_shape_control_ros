@@ -44,11 +44,8 @@ HighController::HighController() {
     // recalcField();
     // std_msgs::Int32 stepper_msg;
     // stepper_msg.data = 1;
-        // inserter_pub_.publish(stepper_msg);
-    //     /*
-    //     * @brief fix this to wait for the first link to be inserted
-    //     */
-    //    stepper_msg.data = 1;
+
+    //     inserter_pub_.publish(stepper_msg);
     // while (obv_angles_.angles.size() < 1) {
     //     inserter_pub_.publish(stepper_msg);
     // }

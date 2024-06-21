@@ -32,7 +32,9 @@ class IsolateTentacle():
         # self.hsv_low = np.array([0,0,0])
         # self.hsv_high = np.array([132,138,255])
         self.mm_pixel = rospy.get_param("mm_pixel", 5)
-        self.link_l_mm = rospy.get_param("precomputation/len", 10)
+        self.link_l_mm = rospy.get_param("precomputation/len", 10) 
+
+        self.link_l_mm = float(self.link_l_mm)
         self.pixel_mm = 1/self.mm_pixel
         self.link_px = self.link_l_mm * self.pixel_mm
         # rospy.loginfo("HSV low: " + str(self.hsv_low))
@@ -78,14 +80,14 @@ class IsolateTentacle():
             
             skeleton[:int(self.insertion_point.y), :int(self.insertion_point.x)] = 0
             skeleton[:150, :] = 0
-            rospy.loginfo("Insertion point: " + str(self.insertion_point))
-            concatenated_image = np.concatenate((
-                self.base_image,
-                tent_only, 
-                skeleton
-            ), axis=1)
-            cv2.imshow("Concatenated Image", concatenated_image)
-            cv2.waitKey(1)
+            skeleton[-50:, :] = 0
+            # concatenated_image = np.concatenate((
+            #     self.base_image,
+            #     tent_inserter, 
+            #     skeleton
+            # ), axis=1)
+            # cv2.imshow("Concatenated Image", concatenated_image)
+            # cv2.waitKey(1)
 
             self.tent_img_pub.publish(
                 self.bridge.cv2_to_imgmsg(skeleton, "mono8"))

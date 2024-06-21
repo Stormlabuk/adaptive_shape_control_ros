@@ -69,7 +69,7 @@ class DiscretisingNode:
         # marker.pose.orientation.y = 0
         # marker.pose.orientation.z = 0
         # marker.pose.orientation.w = 0
-        q = tf_conversions.transformations.quaternion_from_euler(np.pi, 0, 0)
+        q = tf_conversions.transformations.quaternion_from_euler(0, 0, 0)
         marker.pose.orientation.x = q[0]
         marker.pose.orientation.y = q[1]
         marker.pose.orientation.z = q[2]
@@ -112,7 +112,7 @@ class DiscretisingNode:
         marker = Marker()
         marker = self.populateMarker(marker, verification_points, self.marker_color, 1)
         self.marker_pub.publish(marker)
-        marker.header.frame_id = "pylon_camera"
+        marker.header.frame_id = "map"
         self.marker_pub.publish(marker)
 
 if __name__ == '__main__':

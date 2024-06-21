@@ -65,7 +65,14 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
         return;
     }
     ROS_INFO("Desired and observed angles are received, proceeding with loop");
-    Eigen::Vector3d diff = desAngles_ - obvAngles_;
+    ROS_INFO("Desired angles:\n%f %f %f\nObserved angles:\n%f %f %f",
+             desAngles_[0], desAngles_[1], desAngles_[2], obvAngles_[0],
+             obvAngles_[1], obvAngles_[2]);
+    Eigen::Vector3d diff;
+    diff[0] = obvAngles_[0] - desAngles_[0];
+    diff[1] = obvAngles_[1] - desAngles_[1];
+    diff[2] = obvAngles_[2] - desAngles_[2];
+    ROS_INFO("Difference in angles:\n%f %f %f", diff[0], diff[1], diff[2]);
     error_ = diff.norm();
     for (int i = 0; i < diff.size(); i++) {
         error_ += diff[i] * (i + 1);

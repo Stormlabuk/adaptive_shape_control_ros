@@ -4,7 +4,7 @@
 #include <ros_coils/magField.h>
 #include <shapeforming_msgs/CalcInitialField.h>
 #include <shapeforming_msgs/rl_angles.h>
-
+#include <math.h>
 #include <eigen3/Eigen/Dense>
 
 #include "DataTypes.hpp"
