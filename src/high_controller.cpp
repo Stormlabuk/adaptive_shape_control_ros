@@ -13,7 +13,11 @@ HighController::HighController() {
     insertion_point_sub_ = nh_.subscribe(
         "insertion_point", 1, &HighController::insertionPointCallback, this);
 
-    goal_sub_ = nh_.subscribe("clicked_point", 1, &HighController::goalCallback, this);
+
+    stepper_sub_ = nh_.subscribe("stepper", 1, &HighController::stepperCallback, this);
+
+    goal_sub_ =
+        nh_.subscribe("clicked_point", 1, &HighController::goalCallback, this);
 
     error_sub_ =
         nh_.subscribe("error", 1, &HighController::errorCallback, this);
@@ -29,6 +33,7 @@ HighController::HighController() {
 
     // ros service clients
     initial_imgproc_ = nh_.serviceClient<std_srvs::SetBool>("initial_imgproc");
+    skeleton_init_ = nh_.serviceClient<std_srvs::SetBool>("publish_skeleton");
     path_client_ = nh_.serviceClient<heuristic_planners::GetPath>(
         "/planner_ros_node/request_path");
 
@@ -59,6 +64,12 @@ void HighController::highLoop() {
     //     return;
     // }
     // recalcPath();
+    if(current_step_ > 0){
+        SetBoolRequest skeleton_req;
+        skeleton_req.data = true;
+        skeleton_init_.call(skeleton_req, std_srvs::SetBoolResponse());        
+    }
+
     bool error_bound = (abs(error_.error) < error_lb);
     bool error_dot_bound = (abs(error_.error_dot) < error_dot_lb);
     std_msgs::Int32 stepper_msg;
@@ -122,8 +133,9 @@ void HighController::recalcPath() {
         return;
     }
     goal_.z = 0;
-    ROS_INFO("Given insertion point: %f, %f, %f", insertion_point_.x, insertion_point_.y, insertion_point_.z);
-    ROS_INFO("Given goal: %f, %f, %f", goal_.x, goal_.y, goal_.z);
+    // ROS_INFO("Given insertion point: %f, %f, %f", insertion_point_.x,
+    // insertion_point_.y, insertion_point_.z); ROS_INFO("Given goal: %f, %f,
+    // %f", goal_.x, goal_.y, goal_.z);
 
     pathReq.start = insertion_point_;
     pathReq.goal = goal_;
@@ -168,7 +180,7 @@ void HighController::recalcField() {
             ROS_ERROR("Failed to call precomputation service");
             return;
         }
-        ROS_INFO("Truncated angles and recalculated field");
+        // ROS_INFO("Truncated angles and recalculated field");
         des_trunc_.publish(des_slice);
         obv_trunc_.publish(obv_slice);
     } else
@@ -196,10 +208,9 @@ void HighController::desAnglesCallback(
     const shapeforming_msgs::rl_angles::ConstPtr& msg) {
     ROS_INFO("Received desired angles");
     des_angles_ = *msg;
-    if (des_angles_.angles.size() != 0) {
-        recalcField();
-    }
-    recalcField();
+    // if (des_angles_.angles.size() != 0) {
+    //     recalcField();
+    // }
 }
 
 void HighController::obvAnglesCallback(
@@ -220,11 +231,25 @@ void HighController::insertionPointCallback(
     insertion_point_ = *msg;
 }
 
-void HighController::goalCallback(const geometry_msgs::PointStamped::ConstPtr& msg) {
-    ROS_INFO("Received goal");
+void HighController::goalCallback(
+    const geometry_msgs::PointStamped::ConstPtr& msg) {
+    // ROS_INFO("Received goal");
     goal_ = msg->point;
     recalcPath();
     // recalcField();
+}
+
+void HighController::stepperCallback(const std_msgs::Int32::ConstPtr& msg) {
+    current_step_ += msg->data;
+}
+
+HighController::~HighController() {
+    if(current_step_ > 0){
+        ROS_WARN("Resetting stepper to 0");
+        std_msgs::Int32 stepper_msg;
+        stepper_msg.data = -current_step_;
+        inserter_pub_.publish(stepper_msg);
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -234,5 +259,6 @@ int main(int argc, char* argv[]) {
         highController.highLoop();
         ros::spinOnce();
     }
+    highController.~HighController();
     return 0;
 }

@@ -1,0 +1,8 @@
+<launch>
+    <arg name="output" default="screen"/>
+    
+    <include file="$(find pylon_camera)/launch/pylon_camera_node.launch"/>
+
+    <node type="transform_camera_frame.py" name="transform_camera_frame" pkg="adaptive_ctrl" output="$(arg output)"/>
+
+</launch>

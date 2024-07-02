@@ -7,6 +7,7 @@
 #include <vector>
 
 // ros messages
+#include <std_msgs/Int32.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/Vector3.h>
 #include <shapeforming_msgs/rl_angles.h>
@@ -33,6 +34,7 @@
 class HighController {
    public:
     HighController();
+    ~HighController();
 
     void desAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg);
     void obvAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg);
@@ -40,6 +42,7 @@ class HighController {
     void insertionPointCallback(const geometry_msgs::Point::ConstPtr& msg);
     void goalCallback(const geometry_msgs::PointStamped::ConstPtr& msg);
     void errorCallback(const shapeforming_msgs::error::ConstPtr& msg);
+    void stepperCallback(const std_msgs::Int32::ConstPtr& msg);
 
     void highLoop();
     void reinitMap();
@@ -53,12 +56,13 @@ class HighController {
    private:
     ros::NodeHandle nh_;
     ros::ServiceClient initial_imgproc_, path_client_, precomputation_client_,
-        spin_controller_client_;
+        spin_controller_client_, pub_skeleton_client_;
 
     ros::Subscriber insertion_point_sub_, insertion_ori_sub_, goal_sub_;
     ros::Subscriber des_angles_sub_, obv_angles_sub_;
     ros::Subscriber path_sub_;
     ros::Subscriber error_sub_;
+    ros::Subscriber stepper_sub_;
 
     ros::Publisher des_trunc_, obv_trunc_;
     ros::Publisher inserter_pub_;
@@ -69,6 +73,7 @@ class HighController {
 
     shapeforming_msgs::rl_angles des_angles_, obv_angles_;
     shapeforming_msgs::error error_;
+    int current_step_ = 0;
 
 };
 

@@ -10,7 +10,7 @@
     <rosparam param="cam_offset_x">416</rosparam>
     <rosparam param="cam_offset_y">130</rosparam>
 
-    <include file="$(find pylon_camera)/launch/pylon_camera_node.launch"/>
+    <include file="$(find adaptive_ctrl)/launch/path_planner.launch"/>
 
     <node name="image_fetcher" pkg="adaptive_ctrl" type="image_fetcher.py" output="$(arg output)"/>
     <node name="image_processsor" pkg="adaptive_ctrl" type="image_processor.py" output="$(arg output)"/>
@@ -33,10 +33,8 @@
 
     <node name="control_node" pkg="adaptive_ctrl" type="control_node" output="screen" />
     <include file="$(find adaptive_ctrl)/launch/precomputation.launch"/>
-    <include file="$(find adaptive_ctrl)/launch/path_planner.launch"/>
 
     <include file="$(find ring_ctrl)/launch/stepper.launch"/>
 
-    <node type="transform_camera_frame.py" name="transform_camera_frame" pkg="adaptive_ctrl" output="$(arg output)"/>
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_v2.rviz"/>
 </launch>

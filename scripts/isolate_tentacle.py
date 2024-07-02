@@ -17,6 +17,9 @@ class IsolateTentacle():
         self.base_img_sub = rospy.Subscriber(
             "/inserter_img", Image, self.base_image_callback)
         self.imgproc_call = rospy.ServiceProxy("initial_imgproc", SetBool)
+        self.skel_pub_flag = rospy.Service("publish_skeleton", SetBool, self.skel_pub_callback)
+
+
         self.discretise_call = rospy.ServiceProxy(
             "obv_discretise_curve", DiscretiseCurve)
 
@@ -46,6 +49,7 @@ class IsolateTentacle():
         self.live_image = None
         self.bridge = CvBridge()
         self.base_image_found = False
+        self.pub_skeleton = False
 
         rospy.wait_for_service("initial_imgproc")
         req = SetBoolRequest()
@@ -88,9 +92,9 @@ class IsolateTentacle():
             # ), axis=1)
             # cv2.imshow("Concatenated Image", concatenated_image)
             # cv2.waitKey(1)
-
-            self.tent_img_pub.publish(
-                self.bridge.cv2_to_imgmsg(skeleton, "mono8"))
+            if(self.pub_skeleton):
+                self.tent_img_pub.publish(
+                    self.bridge.cv2_to_imgmsg(skeleton, "mono8"))
         else:
             rospy.logwarn("Base image not found")
 
@@ -101,6 +105,11 @@ class IsolateTentacle():
     def insertion_point_callback(self, data):
         self.insertion_point = data
         return
+    
+    def skel_pub_callback(self, req):
+        self.pub_skeleton = req.data
+        res = SetBoolResponse(success=True, message="Skeleton publishing started")
+        return res
 
 if __name__ == "__main__":
     rospy.init_node('isolate_tentacle', anonymous=False)

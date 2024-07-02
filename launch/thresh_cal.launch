@@ -9,7 +9,7 @@
     <rosparam file="$(find adaptive_ctrl)/config/threshold_vals.yaml" />
 
     <include file="$(find pylon_camera)/launch/pylon_camera_node.launch"/>
-    <include file="$(find launch_utils)/launch/adjust_framerate.launch"/>
+    <!-- <include file="$(find launch_utils)/launch/adjust_framerate.launch"/> -->
 
     <node name="thresh_cal" pkg="adaptive_ctrl" type="threshold_cal.py" output="$(arg output)"/>
     <node name="sliders" pkg="adaptive_ctrl" type="sliders.py" output="$(arg output)"/>
