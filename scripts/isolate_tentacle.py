@@ -49,7 +49,7 @@ class IsolateTentacle():
         self.live_image = None
         self.bridge = CvBridge()
         self.base_image_found = False
-        self.pub_skeleton = False
+        self.pub_skeleton = True
 
         rospy.wait_for_service("initial_imgproc")
         req = SetBoolRequest()
@@ -82,16 +82,14 @@ class IsolateTentacle():
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
             
-            skeleton[:int(self.insertion_point.y), :int(self.insertion_point.x)] = 0
-            skeleton[:150, :] = 0
-            skeleton[-50:, :] = 0
-            # concatenated_image = np.concatenate((
-            #     self.base_image,
-            #     tent_inserter, 
-            #     skeleton
-            # ), axis=1)
-            # cv2.imshow("Concatenated Image", concatenated_image)
-            # cv2.waitKey(1)
+            skeleton[:int(self.insertion_point.y), :int(self.insertion_point.x*1.4)] = 0
+            concatenated_image = np.concatenate((
+                self.base_image,
+                tent_inserter, 
+                skeleton
+            ), axis=1)
+            cv2.imshow("Concatenated Image", concatenated_image)
+            cv2.waitKey(1)
             if(self.pub_skeleton):
                 self.tent_img_pub.publish(
                     self.bridge.cv2_to_imgmsg(skeleton, "mono8"))

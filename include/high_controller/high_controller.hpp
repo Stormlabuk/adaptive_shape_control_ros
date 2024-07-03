@@ -56,7 +56,7 @@ class HighController {
    private:
     ros::NodeHandle nh_;
     ros::ServiceClient initial_imgproc_, path_client_, precomputation_client_,
-        spin_controller_client_, pub_skeleton_client_;
+        spin_controller_client_, skeleton_init_;
 
     ros::Subscriber insertion_point_sub_, insertion_ori_sub_, goal_sub_;
     ros::Subscriber des_angles_sub_, obv_angles_sub_;

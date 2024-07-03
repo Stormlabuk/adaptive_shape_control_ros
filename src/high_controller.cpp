@@ -64,11 +64,7 @@ void HighController::highLoop() {
     //     return;
     // }
     // recalcPath();
-    if(current_step_ > 0){
-        SetBoolRequest skeleton_req;
-        skeleton_req.data = true;
-        skeleton_init_.call(skeleton_req, std_srvs::SetBoolResponse());        
-    }
+
 
     bool error_bound = (abs(error_.error) < error_lb);
     bool error_dot_bound = (abs(error_.error_dot) < error_dot_lb);
