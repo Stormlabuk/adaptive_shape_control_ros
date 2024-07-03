@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 class ImageProcessor():
     def __init__(self) -> None:
-
+        rospy.init_node('image_processor', anonymous=False)
         # self.img_path_sub = rospy.Subscriber(
         #     "img_path", String, self.image_callback)
         self_live_img_sub = rospy.Subscriber(
@@ -42,7 +42,7 @@ class ImageProcessor():
         self.phantom_pub_srv = rospy.Service("phantom_imgproc", SetBool, self.phantom_image_processing)
         self.publish_maps = True
         self.publish_phantom = True
-        rospy.init_node('image_processor', anonymous=False)
+        
         rospy.spin()
 
     def initial_image_processing(self, req):

@@ -32,6 +32,9 @@ class IsolateTentacle():
         self.hsv_low = rospy.get_param("tentacle_low_p", (28, 144, 82))
         self.hsv_high = rospy.get_param("tentacle_high_p", (151, 255, 156))
         
+        rospy.logwarn("Tentacle HSV low: " + str(self.hsv_low))
+        rospy.logwarn("Tentacle HSV high: " + str(self.hsv_high))
+
         # self.hsv_low = np.array([0,0,0])
         # self.hsv_high = np.array([132,138,255])
         self.mm_pixel = rospy.get_param("mm_pixel", 5)
@@ -62,30 +65,32 @@ class IsolateTentacle():
             image = self.bridge.imgmsg_to_cv2(data, "bgr8")
             image_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
             # Apply some blur
-            image_hsv = cv2.GaussianBlur(image_hsv, (15, 15), 0)
+            # image_hsv = cv2.GaussianBlur(image_hsv, (15, 15), 0)
         except CvBridgeError as e:
             rospy.logerr(e)
         if (self.base_image_found):
 
             tent_inserter = cv2.inRange(image_hsv, self.hsv_low, self.hsv_high)
-            tent_inserter = cv2.erode(tent_inserter, None, iterations=2)
-            tent_inserter = cv2.dilate(tent_inserter, None, iterations=10)
+            tent_inserter_f = tent_inserter
+            tent_inserter = cv2.erode(tent_inserter, None, iterations=4)
+            # tent_inserter = cv2.dilate(tent_inserter, None, iterations=2)
             tent_cnt, _ = cv2.findContours(tent_inserter, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             tent_cnt = sorted(tent_cnt, key=cv2.contourArea, reverse=True)
             tent_inserter = cv2.drawContours(tent_inserter, tent_cnt[:1], -1, 255, -1)
             
             tent_only = cv2.bitwise_xor(tent_inserter, self.base_image)
-            tent_only = cv2.erode(tent_only, None, iterations=10)
+            # tent_only = cv2.erode(tent_only, None, iterations=10)
             # tent_only = cv2.blur(tent_only, (15, 15))
             
 
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
             
-            skeleton[:int(self.insertion_point.y), :int(self.insertion_point.x*1.4)] = 0
+            skeleton[:90, :] = 0
+            skeleton[:int(self.insertion_point.y*1.1), :int(self.insertion_point.x*1.4)] = 0
             concatenated_image = np.concatenate((
-                self.base_image,
-                tent_inserter, 
+                tent_inserter_f,
+                tent_only, 
                 skeleton
             ), axis=1)
             cv2.imshow("Concatenated Image", concatenated_image)

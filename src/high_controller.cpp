@@ -232,7 +232,7 @@ void HighController::goalCallback(
     // ROS_INFO("Received goal");
     goal_ = msg->point;
     recalcPath();
-    // recalcField();
+    recalcField();
 }
 
 void HighController::stepperCallback(const std_msgs::Int32::ConstPtr& msg) {

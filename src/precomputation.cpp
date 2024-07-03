@@ -13,6 +13,8 @@ Precomputation::Precomputation() {
     nh.param<std::vector<float>>("precomputation/magy", magY_, {});
     nh.param<std::vector<float>>("precomputation/magz", magZ_, {});
 
+    baseTransform_ << M_PI, 0, M_PI_2;
+
     preCalcService_ =
         nh.advertiseService("precomputation/calc_initial_field",
                             &Precomputation::calculateField, this);
@@ -67,7 +69,8 @@ bool Precomputation::calculateField(
     MatrixXd LHS = K * Q;
     Vector3d solution = RHS.completeOrthogonalDecomposition().solve(LHS);
 
-    solution = rotateField(solution, inserterOrientation);
+    solution = rotateField(solution, baseTransform_);
+    // solution = rotateField(solution, inserterOrientation);
     // solution = rotateField(solution, Vector3d(0, M_PI_2, 0));
 
     res.success = true;

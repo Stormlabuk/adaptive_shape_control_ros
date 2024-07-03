@@ -19,6 +19,11 @@ class Precomputation {
     ros::ServiceServer preCalcService_;
     ros::Publisher baseFieldPub_;
     ros::NodeHandle nh_;
+    /**
+     * @brief Base transform from world frame to coil frame. ZYX euler angles in rad.
+     * 
+     */
+    Vector3d baseTransform_;
 
    public:
     Precomputation();
