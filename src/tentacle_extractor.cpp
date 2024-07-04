@@ -7,7 +7,7 @@ TentacleExtractor::TentacleExtractor() : it_(nh_) {
     discretise_client = nh_.serviceClient<shapeforming_msgs::DiscretiseCurve>(
         "obv_discretise_curve");
 
-    mm_pixel_ = ros::param::param<int>("mm_pixel", 15);
+    mm_pixel_ = ros::param::param<int>("mm_to_pixel", 15);
     pixel_mm_ = 1.0 / mm_pixel_;
 }
 
@@ -68,18 +68,20 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
         double dy = currPoint.y - firstPoint.y;
         distances.push_back(std::sqrt(dx * dx + dy * dy));
     }
-    double totalDistance = distances.back();
-    
+    double totalDistance = distances.back(); // total distance in px
+
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
     int link_px = link_mm * mm_pixel_;
     int numLinks = std::ceil(totalDistance / link_px) + 1;
-    // ROS_INFO("Total distance: %f. link_px: %f", totalDistance, link_px);
-    // if(totalDistance < link_px){
-    //     // ROS_INFO("Tentacle is too short");
-    //     return;
+    // if (totalDistance != 0) {
+    //     ROS_INFO("Total distance: %f. link_px: %d", totalDistance * pixel_mm_, link_px);
     // }
-    
+    if (totalDistance < link_px) {
+        // ROS_INFO("Tentacle is too short");
+        return;
+    }
+
     if (numLinks > 2) {
         int linksToFind = numLinks - 2;
         req.tentacle.num_points = numLinks;
@@ -103,7 +105,7 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
             req.tentacle.py[i + 1] =
                 points[j - 1].y + ratio * (points[j].y - points[j - 1].y);
         }
-    } else if(numLinks == 2){
+    } else if (numLinks == 2) {
         req.tentacle.num_points = 2;
         req.tentacle.px.resize(2);
         req.tentacle.py.resize(2);

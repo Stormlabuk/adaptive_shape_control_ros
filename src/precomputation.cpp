@@ -13,7 +13,7 @@ Precomputation::Precomputation() {
     nh.param<std::vector<float>>("precomputation/magy", magY_, {});
     nh.param<std::vector<float>>("precomputation/magz", magZ_, {});
 
-    baseTransform_ << M_PI, 0, M_PI_2;
+    baseTransform_ << M_PI_2, 0, M_PI;
 
     preCalcService_ =
         nh.advertiseService("precomputation/calc_initial_field",

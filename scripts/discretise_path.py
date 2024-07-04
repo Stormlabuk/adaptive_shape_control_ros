@@ -12,7 +12,7 @@ class DiscretisePath:
         rospy.init_node('discretise_path', anonymous=False)
         base_planner = "/planner_ros_node/"
 
-        self.mm_pixel = rospy.get_param("~mm_pixel", 5) # 1mm = 5 pixel. Converts mm to pixel
+        self.mm_pixel = rospy.get_param("~mm_to_pixel", 5) # 1mm = 5 pixel. Converts mm to pixel
         self.pixel_mm = 1 / self.mm_pixel
         rospy.Subscriber(base_planner + "path", Path, self.PathCB_)
         rospy.spin()

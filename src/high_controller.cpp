@@ -13,8 +13,8 @@ HighController::HighController() {
     insertion_point_sub_ = nh_.subscribe(
         "insertion_point", 1, &HighController::insertionPointCallback, this);
 
-
-    stepper_sub_ = nh_.subscribe("stepper", 1, &HighController::stepperCallback, this);
+    stepper_sub_ =
+        nh_.subscribe("stepper", 1, &HighController::stepperCallback, this);
 
     goal_sub_ =
         nh_.subscribe("clicked_point", 1, &HighController::goalCallback, this);
@@ -64,7 +64,6 @@ void HighController::highLoop() {
     //     return;
     // }
     // recalcPath();
-
 
     bool error_bound = (abs(error_.error) < error_lb);
     bool error_dot_bound = (abs(error_.error_dot) < error_dot_lb);
@@ -153,11 +152,12 @@ void HighController::recalcField() {
     // 1. Initialise a calcinitialfield service
     shapeforming_msgs::CalcInitialFieldRequest precompReq;
     shapeforming_msgs::CalcInitialFieldResponse precompRes;
-    ROS_INFO("Calculating field");
+    ROS_INFO("Calculating field, joints found: %d, path length in joints : %d",
+     obv_angles_.angles.size(), des_angles_.angles.size());
 
     // 2. Truncate des_angles_ to whatever subslice is suitable
     int joints_found = obv_angles_.angles.size();
-    if (joints_found != 0) {
+    if (joints_found != 0 && des_angles_.angles.size() != 0){
         shapeforming_msgs::rl_angles des_slice, obv_slice;
         des_slice.count = joints_found + 1;
         des_slice.angles =
@@ -205,7 +205,7 @@ void HighController::desAnglesCallback(
     ROS_INFO("Received desired angles");
     des_angles_ = *msg;
     // if (des_angles_.angles.size() != 0) {
-    //     recalcField();
+    recalcField();
     // }
 }
 
@@ -232,7 +232,7 @@ void HighController::goalCallback(
     // ROS_INFO("Received goal");
     goal_ = msg->point;
     recalcPath();
-    recalcField();
+    // recalcField();
 }
 
 void HighController::stepperCallback(const std_msgs::Int32::ConstPtr& msg) {
@@ -240,7 +240,7 @@ void HighController::stepperCallback(const std_msgs::Int32::ConstPtr& msg) {
 }
 
 HighController::~HighController() {
-    if(current_step_ > 0){
+    if (current_step_ > 0) {
         ROS_WARN("Resetting stepper to 0");
         std_msgs::Int32 stepper_msg;
         stepper_msg.data = -current_step_;

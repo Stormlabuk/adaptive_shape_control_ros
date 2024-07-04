@@ -7,7 +7,8 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from std_srvs.srv import SetBool, SetBoolResponse
 from std_msgs.msg import String
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+
 
 class ImageProcessor():
     def __init__(self) -> None:
@@ -23,12 +24,11 @@ class ImageProcessor():
         self.phantom_pub = rospy.Publisher("phantom_img", Image, queue_size=10)
         self.image_pub = rospy.Publisher("image", Image, queue_size=10)
 
-
-
-        self.phantom_low_p = rospy.get_param("phantom_low_p", [0,0,143])
-        self.phantom_high_p = rospy.get_param("phantom_high_p", [180,59,255])
-        self.inserter_low_p = rospy.get_param("inserter_low_p", [28,144,82])
-        self.inserter_high_p = rospy.get_param("inserter_high_p", [151,255,156])
+        self.phantom_low_p = rospy.get_param("phantom_low_p", [0, 0, 143])
+        self.phantom_high_p = rospy.get_param("phantom_high_p", [180, 59, 255])
+        self.inserter_low_p = rospy.get_param("inserter_low_p", [28, 144, 82])
+        self.inserter_high_p = rospy.get_param(
+            "inserter_high_p", [151, 255, 156])
         self.phantom_low_ = np.array(self.phantom_low_p)
         self.phantom_high_ = np.array(self.phantom_high_p)
         self.inserter_low_ = np.array(self.inserter_low_p)
@@ -38,11 +38,13 @@ class ImageProcessor():
         self.cam_offset_x = rospy.get_param("cam_offset_x", 284)
         self.cam_offset_y = rospy.get_param("cam_offset_y", 74)
         self.bridge = CvBridge()
-        self.initial_pubs = rospy.Service("initial_imgproc", SetBool, self.initial_image_processing)
-        self.phantom_pub_srv = rospy.Service("phantom_imgproc", SetBool, self.phantom_image_processing)
+        self.initial_pubs = rospy.Service(
+            "initial_imgproc", SetBool, self.initial_image_processing)
+        self.phantom_pub_srv = rospy.Service(
+            "phantom_imgproc", SetBool, self.phantom_image_processing)
         self.publish_maps = True
         self.publish_phantom = True
-        
+
         rospy.logwarn("Phantom HSV low: " + str(self.phantom_low_p))
         rospy.logwarn("Phantom HSV high: " + str(self.phantom_high_p))
         rospy.logwarn("Inserter HSV low: " + str(self.inserter_low_p))
@@ -52,12 +54,14 @@ class ImageProcessor():
 
     def initial_image_processing(self, req):
         self.publish_maps = req.data
-        res = SetBoolResponse(success=True, message="Initial image processing started")
+        res = SetBoolResponse(
+            success=True, message="Initial image processing started")
         return res
-    
+
     def phantom_image_processing(self, req):
         self.publish_phantom = req.data
-        res = SetBoolResponse(success=True, message="Phantom processing started")
+        res = SetBoolResponse(
+            success=True, message="Phantom processing started")
         return res
 
     def image_callback(self, data):
@@ -70,7 +74,8 @@ class ImageProcessor():
         # convert to hsv
         image_hsv = cv2.cvtColor(image_resize, cv2.COLOR_BGR2HSV)
         phantom = cv2.inRange(image_hsv, self.phantom_low_, self.phantom_high_)
-        inserter = cv2.inRange(image_hsv, self.inserter_low_, self.inserter_high_)
+        inserter = cv2.inRange(
+            image_hsv, self.inserter_low_, self.inserter_high_)
 
         # phantom_blur = cv2.GaussianBlur(phantom, (5, 5), 0)
         phantom_erode = cv2.erode(phantom, None, iterations=2)
@@ -100,7 +105,7 @@ class ImageProcessor():
         bridge = CvBridge()
         try:
             self.image_pub.publish(bridge.cv2_to_imgmsg(image_resize, "bgr8"))
-            if(self.publish_maps):
+            if (self.publish_maps):
                 self.inserter_pub.publish(bridge.cv2_to_imgmsg(
                     inserter, "mono8"))
                 self.phantom_pub.publish(bridge.cv2_to_imgmsg(
@@ -108,7 +113,7 @@ class ImageProcessor():
                 self.base_pub.publish(bridge.cv2_to_imgmsg(
                     base_img, "mono8"))
                 self.publish_maps = False
-            if(self.publish_phantom):
+            if (self.publish_phantom):
                 self.phantom_pub.publish(bridge.cv2_to_imgmsg(
                     phantom, "mono8"))
                 self.publish_phantom = False
