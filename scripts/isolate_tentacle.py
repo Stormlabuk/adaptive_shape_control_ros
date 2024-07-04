@@ -82,14 +82,14 @@ class IsolateTentacle():
             tent_inserter_f = tent_inserter
 
             tent_only = cv2.bitwise_and(tent_inserter, cv2.bitwise_not(self.base_image))
-            tent_only = cv2.erode(tent_only, None, iterations=3)
+            tent_only = cv2.erode(tent_only, None, iterations=5)
             # tent_only = cv2.blur(tent_only, (15, 15))
             
 
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
             
-            # skeleton[:90, :] = 0
+            skeleton[:90, :] = 0
             # skeleton[:int(self.insertion_point.y*1.1), :int(self.insertion_point.x*1.4)] = 0
             concatenated_image = np.concatenate((
                 cv2.resize(
