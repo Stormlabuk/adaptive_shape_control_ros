@@ -71,27 +71,33 @@ class IsolateTentacle():
         if (self.base_image_found):
 
             tent_inserter = cv2.inRange(image_hsv, self.hsv_low, self.hsv_high)
-            tent_inserter_f = tent_inserter
-            tent_inserter = cv2.erode(tent_inserter, None, iterations=4)
-            # tent_inserter = cv2.dilate(tent_inserter, None, iterations=2)
-            tent_cnt, _ = cv2.findContours(tent_inserter, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            tent_inserter = cv2.erode(tent_inserter, None, iterations=1)
+            tent_inserter = cv2.dilate(tent_inserter, None, iterations=6)
+            tent_cnt, _ = cv2.findContours(tent_inserter, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             tent_cnt = sorted(tent_cnt, key=cv2.contourArea, reverse=True)
-            tent_inserter = cv2.drawContours(tent_inserter, tent_cnt[:1], -1, 255, -1)
-            
-            tent_only = cv2.bitwise_xor(tent_inserter, self.base_image)
-            # tent_only = cv2.erode(tent_only, None, iterations=10)
+            tent_dsp = np.zeros_like(tent_inserter)
+            tent_inserter = cv2.drawContours(tent_dsp, tent_cnt[:1], -1, 255, -1)
+            # tent_inserter = cv2.dilate(tent_inserter, 
+            #                           None, iterations=1)
+            tent_inserter_f = tent_inserter
+
+            tent_only = cv2.bitwise_and(tent_inserter, cv2.bitwise_not(self.base_image))
+            tent_only = cv2.erode(tent_only, None, iterations=3)
             # tent_only = cv2.blur(tent_only, (15, 15))
             
 
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
             
-            skeleton[:90, :] = 0
-            skeleton[:int(self.insertion_point.y*1.1), :int(self.insertion_point.x*1.4)] = 0
+            # skeleton[:90, :] = 0
+            # skeleton[:int(self.insertion_point.y*1.1), :int(self.insertion_point.x*1.4)] = 0
             concatenated_image = np.concatenate((
-                tent_inserter_f,
-                tent_only, 
-                skeleton
+                cv2.resize(
+                    self.base_image, (600, 600)),
+                cv2.resize(
+                    tent_inserter_f, (600, 600)), 
+                cv2.resize(
+                    tent_only, (600,600))
             ), axis=1)
             cv2.imshow("Concatenated Image", concatenated_image)
             cv2.waitKey(1)
@@ -104,6 +110,9 @@ class IsolateTentacle():
     def base_image_callback(self, data):
         self.base_image = self.bridge.imgmsg_to_cv2(data, "mono8")
         self.base_image_found = True
+        self.base_image = cv2.dilate(self.base_image, 
+                                     None, iterations=2)
+
 
     def insertion_point_callback(self, data):
         self.insertion_point = data

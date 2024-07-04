@@ -43,6 +43,11 @@ class ImageProcessor():
         self.publish_maps = True
         self.publish_phantom = True
         
+        rospy.logwarn("Phantom HSV low: " + str(self.phantom_low_p))
+        rospy.logwarn("Phantom HSV high: " + str(self.phantom_high_p))
+        rospy.logwarn("Inserter HSV low: " + str(self.inserter_low_p))
+        rospy.logwarn("Inserter HSV high: " + str(self.inserter_high_p))
+
         rospy.spin()
 
     def initial_image_processing(self, req):
@@ -68,8 +73,8 @@ class ImageProcessor():
         inserter = cv2.inRange(image_hsv, self.inserter_low_, self.inserter_high_)
 
         # phantom_blur = cv2.GaussianBlur(phantom, (5, 5), 0)
-        phantom_erode = cv2.erode(phantom, None, iterations=1)
-        phantom_erode = cv2.dilate(phantom_erode, None, iterations=1)
+        phantom_erode = cv2.erode(phantom, None, iterations=2)
+        phantom_erode = cv2.dilate(phantom_erode, None, iterations=3)
         # 4. find contours
         ph_contours, _ = cv2.findContours(
             phantom_erode, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -78,7 +83,7 @@ class ImageProcessor():
         disp = np.zeros_like(phantom)
         cv2.drawContours(disp, ph_contours[:3], -1, 255, -1)
         phantom = disp
-        
+
         inserter_erode = cv2.erode(inserter, None, iterations=1)
         inserter_erode = cv2.dilate(inserter_erode, None, iterations=6)
         # 4. find contours
@@ -87,7 +92,7 @@ class ImageProcessor():
         # 5. sort contours by surface area
         in_contours = sorted(in_contours, key=cv2.contourArea, reverse=True)
         disp = np.zeros_like(inserter)
-        cv2.drawContours(disp, in_contours[:3], -1, 255, -1)
+        cv2.drawContours(disp, in_contours[:1], -1, 255, -1)
         inserter = disp
 
         base_img = cv2.add(inserter, phantom)

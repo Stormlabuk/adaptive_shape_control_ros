@@ -11,7 +11,7 @@ import tf2_ros
 
 class GridProcessor:
     def __init__(self) -> None:
-
+        rospy.init_node('grid_processor', anonymous=False)
         self.phantom_sub = rospy.Subscriber('/phantom_img', Image, self.phantom_callback)
         self.base_sub = rospy.Subscriber('/base_img', Image, self.base_callback)
 
@@ -24,7 +24,6 @@ class GridProcessor:
         self.phantom = Image()
         self.base = Image()
         self.bridge = CvBridge()
-        rospy.init_node('grid_processor', anonymous=False)
         rospy.spin()
 
     def phantom_callback(self, msg):
