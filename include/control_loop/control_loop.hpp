@@ -3,7 +3,7 @@
 #include <shapeforming_msgs/error.h>
 #include <shapeforming_msgs/rl_angles.h>
 #include <std_srvs/SetBool.h>
-
+#include <std_msgs/Bool.h>
 #include <eigen3/Eigen/Core>
 
 class ControlNode {
@@ -11,6 +11,7 @@ class ControlNode {
     ros::NodeHandle nh_;
     ros::Subscriber desAnglesSub_, obvAnglesSub_, baseFieldSub_, errorSub_;
     ros::Publisher errorPub_, adjustedField_;
+    ros::Publisher spinningPub_;
     ros::ServiceServer spin_controller_srv_;
 
     ros::Timer calcError_;
@@ -22,6 +23,7 @@ class ControlNode {
 
     int desCount_, obvCount_;
     float error_ = 0, error_prev_ = 0, error_dot_ = 0;
+    bool controller_spinning_ = false;
 
    public:
     ControlNode();

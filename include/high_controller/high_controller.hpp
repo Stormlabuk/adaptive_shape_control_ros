@@ -6,8 +6,12 @@
 #include <iostream>
 #include <vector>
 
+// eigen includes
+#include <eigen3/Eigen/Dense>
+
 // ros messages
 #include <std_msgs/Int32.h>
+#include <std_msgs/Bool.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/Vector3.h>
 #include <shapeforming_msgs/rl_angles.h>
@@ -31,6 +35,8 @@
  *      7. Repeat when controller is done
  */
 
+using namespace Eigen;
+
 class HighController {
    public:
     HighController();
@@ -42,7 +48,7 @@ class HighController {
     void insertionPointCallback(const geometry_msgs::Point::ConstPtr& msg);
     void goalCallback(const geometry_msgs::PointStamped::ConstPtr& msg);
     void errorCallback(const shapeforming_msgs::error::ConstPtr& msg);
-    void stepperCallback(const std_msgs::Int32::ConstPtr& msg);
+    void controllerSpinningCallback(const std_msgs::Bool::ConstPtr& msg);
 
     void highLoop();
     void reinitMap();
@@ -63,9 +69,12 @@ class HighController {
     ros::Subscriber path_sub_;
     ros::Subscriber error_sub_;
     ros::Subscriber stepper_sub_;
+    ros::Subscriber controller_spinning_sub_;
+
 
     ros::Publisher des_trunc_, obv_trunc_;
     ros::Publisher inserter_pub_;
+    ros::Publisher field_pub_;
 
     geometry_msgs::Point goal_ = geometry_msgs::Point(),
                          insertion_point_ = geometry_msgs::Point();
@@ -73,8 +82,11 @@ class HighController {
 
     shapeforming_msgs::rl_angles des_angles_, obv_angles_;
     shapeforming_msgs::error error_;
-    int current_step_ = 0;
+    std_srvs::SetBoolRequest spinReq_;
 
+    std::vector<Vector3d> fields_;
+    bool controllerSpinning, inserting = false, targetReached = false;
+    int obvJointNo_, targetJointNo_;
 };
 
 int main(int argc, char* argv[]);

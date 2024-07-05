@@ -18,6 +18,8 @@ ControlNode::ControlNode() {
     calcError_.stop();
     spin_controller_srv_ = nh_.advertiseService(
         "spin_controller", &ControlNode::spinController, this);
+
+    spinningPub_ = nh_.advertise<std_msgs::Bool>("controller/spinning", 1);
 }
 
 bool ControlNode::spinController(std_srvs::SetBool::Request& req,
@@ -26,10 +28,12 @@ bool ControlNode::spinController(std_srvs::SetBool::Request& req,
         calcError_.start();
         res.success = true;
         res.message = "Controller started";
+        controller_spinning_ = true;
     } else {
         calcError_.stop();
         res.success = true;
         res.message = "Controller stopped";
+        controller_spinning_ = false;
     }
     return res.success;
 }
@@ -83,6 +87,7 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
     error_msg.error_dot = error_dot_;
     error_prev_ = error_;
     errorPub_.publish(error_msg);
+    spinningPub_.publish(controller_spinning_);
     adjustField();
 }
 
