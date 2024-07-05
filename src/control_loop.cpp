@@ -35,6 +35,8 @@ bool ControlNode::spinController(std_srvs::SetBool::Request& req,
         res.message = "Controller stopped";
         controller_spinning_ = false;
     }
+    spinning_msg_.data = controller_spinning_;
+
     return res.success;
 }
 
@@ -87,7 +89,7 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
     error_msg.error_dot = error_dot_;
     error_prev_ = error_;
     errorPub_.publish(error_msg);
-    spinningPub_.publish(controller_spinning_);
+    spinningPub_.publish(spinning_msg_);
     adjustField();
 }
 

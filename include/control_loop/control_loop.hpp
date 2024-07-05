@@ -21,6 +21,8 @@ class ControlNode {
     Eigen::Vector3d held_field;
     Eigen::Vector3d desAngles_, obvAngles_;
 
+   std_msgs::Bool spinning_msg_;
+
     int desCount_, obvCount_;
     float error_ = 0, error_prev_ = 0, error_dot_ = 0;
     bool controller_spinning_ = false;

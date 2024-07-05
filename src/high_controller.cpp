@@ -323,6 +323,5 @@ int main(int argc, char* argv[]) {
         highController.highLoop();
         ros::spinOnce();
     }
-    highController.~HighController();
     return 0;
 }

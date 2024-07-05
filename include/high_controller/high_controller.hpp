@@ -40,7 +40,6 @@ using namespace Eigen;
 class HighController {
    public:
     HighController();
-    ~HighController();
 
     void desAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg);
     void obvAnglesCallback(const shapeforming_msgs::rl_angles::ConstPtr& msg);
