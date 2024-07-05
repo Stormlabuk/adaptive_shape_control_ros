@@ -84,7 +84,7 @@ class HighController {
     std_srvs::SetBoolRequest spinReq_;
 
     std::vector<Vector3d> fields_;
-    bool controllerSpinning, inserting = false, targetReached = false;
+    bool controllerSpinning = false, inserting = false, targetReached = false;
     int obvJointNo_, targetJointNo_;
 };
 
