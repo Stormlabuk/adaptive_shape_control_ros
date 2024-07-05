@@ -66,7 +66,7 @@ void HighController::highLoop() {
         if(inserting){
             std_msgs::Int32 stepper_msg;
             stepper_msg.data = 1;
-            inserter_pub_.publish(stepper_msg);
+            // inserter_pub_.publish(stepper_msg);
             if (obvJointNo_ == targetJointNo_) {
                 inserting = false;
                 targetReached = true;
