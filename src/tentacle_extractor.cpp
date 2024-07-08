@@ -73,7 +73,7 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
     int link_px = link_mm * mm_pixel_;
-    int numLinks = std::ceil(totalDistance / link_px) + 1;
+    int numLinks = std::ceil(totalDistance / link_px);
     // if (totalDistance != 0) {
     //     ROS_INFO("Total distance: %f. link_px: %d", totalDistance * pixel_mm_, link_px);
     // }
@@ -82,8 +82,8 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
         return;
     }
 
-    if (numLinks > 2) {
-        int linksToFind = numLinks - 2;
+    if (numLinks > 1) {
+        int linksToFind = numLinks - 1;
         req.tentacle.num_points = numLinks;
         req.tentacle.px.resize(numLinks);
         req.tentacle.py.resize(numLinks);
@@ -105,7 +105,7 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
             req.tentacle.py[i + 1] =
                 points[j - 1].y + ratio * (points[j].y - points[j - 1].y);
         }
-    } else if (numLinks == 2) {
+    } else if (numLinks == 1) {
         req.tentacle.num_points = 2;
         req.tentacle.px.resize(2);
         req.tentacle.py.resize(2);
