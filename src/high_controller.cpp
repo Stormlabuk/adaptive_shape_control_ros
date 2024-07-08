@@ -62,56 +62,62 @@ HighController::HighController() {
 
 void HighController::highLoop() {
     if (!controllerSpinning) {
-
-        if(inserting){
+        if(des_angles_.angles.size() == 0){
+            return;
+        }
+        
+        if (inserting) {
             std_msgs::Int32 stepper_msg;
             stepper_msg.data = 1;
             // inserter_pub_.publish(stepper_msg);
-            if (obvJointNo_ == targetJointNo_) {
+            // ROS_INFO("Inserting. Obv joints: %d, Target joints: %d",
+            //          obv_angles_.angles.size(), targetJointNo_);
+            if (obv_angles_.angles.size() == targetJointNo_) {
                 inserting = false;
                 targetReached = true;
+                ROS_INFO("Target insertion length reached");
                 return;
             }
             return;
         }
 
-        if(!inserting && !targetReached){
-            obvJointNo_ = obv_angles_.count;
+        if (!inserting && !targetReached) {
+            obvJointNo_ = obv_angles_.angles.size();
             targetJointNo_ = obvJointNo_ + 1 < des_angles_.count
-                                ? obvJointNo_ + 1
-                                : des_angles_.count;
+                                 ? obvJointNo_ + 1
+                                 : des_angles_.count;
             inserting = true;
             return;
         }
 
-        // int obvJointNo = obv_angles_.count;
-        // int targetJointNo = obvJointNo + 1 < des_angles_.count
-        //                         ? obvJointNo + 1
-        //                         : des_angles_.count;
+        if (fieldCalculated) {
+            obvJointNo_ = obv_angles_.angles.size();
+            Vector3d currField = fields_.at(obvJointNo_-1);
+            ros_coils::magField fieldMsg;
+            fieldMsg.bx = currField.x();
+            fieldMsg.by = currField.y();
+            fieldMsg.bz = currField.z();
+            ROS_INFO("Publishing field: %f, %f, %f", fieldMsg.bx, fieldMsg.by,
+                     fieldMsg.bz);
 
-        Vector3d currField = fields_[obvJointNo_ - 2];
-        ros_coils::magField fieldMsg;
-        fieldMsg.bx = currField.x();
-        fieldMsg.by = currField.y();
-        fieldMsg.bz = currField.z();
 
-        shapeforming_msgs::rl_angles obv_slice = obv_angles_;
-        shapeforming_msgs::rl_angles des_slice;
-        des_slice.angles =
-            std::vector<float>(des_angles_.angles.begin(),
-                               des_angles_.angles.begin() + obvJointNo_);
-        des_slice.count = obvJointNo_;
-        des_trunc_.publish(des_slice);
-        obv_trunc_.publish(obv_slice);
-        field_pub_.publish(fieldMsg);
+            shapeforming_msgs::rl_angles obv_slice = obv_angles_;
+            shapeforming_msgs::rl_angles des_slice;
+            des_slice.angles =
+                std::vector<float>(des_angles_.angles.begin(),
+                                   des_angles_.angles.begin() + obvJointNo_);
+            des_slice.count = obvJointNo_;
+            des_trunc_.publish(des_slice);
+            obv_trunc_.publish(obv_slice);
+            field_pub_.publish(fieldMsg);
 
-        controllerSpinning = true;
-        spinController(true);
-
-        //when controller is done
-        // controllerSpinning = false;
-        // spinController(controllerSpinning);
-        // targetReached = false;
+            controllerSpinning = true;
+            spinController(true);
+        }
+        // when controller is done
+        //  controllerSpinning = false;
+        //  spinController(controllerSpinning);
+        //  targetReached = false;
     }
     return;
 }
@@ -181,39 +187,19 @@ void HighController::recalcField() {
     // 1. Initialise a calcinitialfield service
     shapeforming_msgs::CalcInitialFieldRequest precompReq;
     shapeforming_msgs::CalcInitialFieldResponse precompRes;
-
     ROS_INFO("Recived a path made of %d joints. Will calculate %d fields.",
-             des_angles_.count, obv_angles_.count - 1);
+             des_angles_.count, des_angles_.count - 1);
+    
+    for(int i = 0; i < des_angles_.angles.size() ; i++){
+        ROS_INFO("Angle %d: %f", i, des_angles_.angles[i]);
+    }
 
-    // say our path is 5 joints
-    // that means 4 links
-    // and 4 fields
-
-    // des_angles_.count = 5
-    // des_angles_.angles = [10, 20, 30, 40, 50]
-
-    // for i < des_angles_.count
-
-    // i = 0
-    // des_slice.angles = des_angles[begin,begin+0] [10]
-
-    // i = 1
-    // des_slice.angles = des_angles[begin,begin+1] [10, 20]
-
-    // i = 2
-    // des_slice.angles = des_angles[begin,begin+2] [10, 20, 30]
-
-    // i = 3
-    // des_slice.angles = des_angles[begin,begin+3] [10, 20, 30, 40]
-
-    // i = 4
-    // des_slice.angles = des_angles[begin,begin+4] [10, 20, 30, 40, 50]
-
-    for (int i = 0; i < des_angles_.count; i++) {
+    for (int i = 0; i < des_angles_.angles.size(); i++) {
         shapeforming_msgs::rl_angles des_slice;
         des_slice.angles = std::vector<float>(
             des_angles_.angles.begin(), des_angles_.angles.begin() + i + 1);
-        des_slice.count = i + 1;
+        des_slice.count = i + 2;
+        ROS_INFO("Calculating field for %d joints", i + 1);
         precompReq.tentacle = des_slice;
         precompReq.orientation = insertion_ori_;
         precompReq.tentacle.header.stamp = ros::Time::now();
@@ -227,6 +213,7 @@ void HighController::recalcField() {
         fields_.push_back(Vector3d(precompRes.field.bx, precompRes.field.by,
                                    precompRes.field.bz));
     }
+    fieldCalculated = true;
 
     // ROS_INFO("Calculating field, joints found: %d, path length in joints :
     // %d",

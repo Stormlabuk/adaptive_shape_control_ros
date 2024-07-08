@@ -46,7 +46,18 @@ class DiscretisingNode:
             self.visualiseAngles(np.column_stack((x, y)), angles)
             return res
         else:
+            self.clearMarkers()
             return DiscretiseCurveResponse([], False)
+
+
+    def clearMarkers(self):
+        """
+        Clears all markers from RViz.
+        """
+        # rospy.loginfo("Clearing markers")
+        marker = Marker()
+        marker = self.populateMarker(marker, [], self.marker_color, 0)
+        self.marker_pub.publish(marker)
 
     def populateMarker(self, marker, points, color, a):
         """
@@ -64,6 +75,9 @@ class DiscretisingNode:
         marker.header.frame_id = "map"
         marker.header.stamp = rospy.Time.now()
         marker.type = Marker.POINTS
+        if(len(points) == 0):
+            marker.action = Marker.DELETE
+            return marker
         marker.action = Marker.ADD
         # marker.pose.orientation.x = 0
         # marker.pose.orientation.y = 0

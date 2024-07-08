@@ -10,12 +10,12 @@
 #include <eigen3/Eigen/Dense>
 
 // ros messages
-#include <std_msgs/Int32.h>
-#include <std_msgs/Bool.h>
 #include <geometry_msgs/PointStamped.h>
 #include <geometry_msgs/Vector3.h>
-#include <shapeforming_msgs/rl_angles.h>
 #include <shapeforming_msgs/error.h>
+#include <shapeforming_msgs/rl_angles.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/Int32.h>
 
 // ros services
 #include <heuristic_planners/GetPath.h>
@@ -70,7 +70,6 @@ class HighController {
     ros::Subscriber stepper_sub_;
     ros::Subscriber controller_spinning_sub_;
 
-
     ros::Publisher des_trunc_, obv_trunc_;
     ros::Publisher inserter_pub_;
     ros::Publisher field_pub_;
@@ -84,7 +83,8 @@ class HighController {
     std_srvs::SetBoolRequest spinReq_;
 
     std::vector<Vector3d> fields_;
-    bool controllerSpinning = false, inserting = false, targetReached = false;
+    bool controllerSpinning = false, inserting = false, targetReached = false,
+         fieldCalculated = false;
     int obvJointNo_, targetJointNo_;
 };
 
