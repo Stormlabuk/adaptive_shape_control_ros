@@ -6,7 +6,7 @@ Precomputation::Precomputation() {
     nh.param<float>("precomputation/len", len_, 10e-3);
     nh.param<float>("precomputation/d", d_, 2e-3);
     nh.param<float>("precomputation/v", v_, 0.43);
-    ROS_INFO("Init values: E_: %d_, len_: %f, d_: %f, v_: %f", E_, len_, d_,
+    ROS_INFO("PR:Init values: E_: %d_, len_: %f, d_: %f, v_: %f", E_, len_, d_,
              v_);
 
     nh.param<std::vector<float>>("precomputation/magx", magX_, {});
@@ -35,8 +35,8 @@ bool Precomputation::calculateField(
 
     desiredAngles_ = tentacle.angles;
     obvJointNo_ = tentacle.count;
-    ROS_INFO("Received desired angles. Num: %d", obvJointNo_);
-    ROS_INFO("Initialising structs");
+    ROS_INFO("PR:Received desired angles. Num: %d", obvJointNo_);
+    ROS_INFO("PR:Initialising structs");
     try {
         if (obvJointNo_ < 2) {
             throw std::runtime_error(
@@ -49,7 +49,7 @@ bool Precomputation::calculateField(
     std::vector<Link> links_(obvJointNo_);
     populateStructs(joints_, links_);
 
-    ROS_INFO("Calculating initial field");
+    ROS_INFO("PR:Calculating initial field");
     MatrixXd K, J, S, Q;
     // 1. Evaluate stiffness matrix K
     K = evaluateStiffnessMatrix(links_);
@@ -82,7 +82,7 @@ bool Precomputation::calculateField(
 
     ros_coils::magField field;
     field = res.field;
-    ROS_INFO("Field: %f, %f, %f", field.bx, field.by, field.bz);
+    ROS_INFO("PR:Field: %f, %f, %f", field.bx, field.by, field.bz);
 
     baseFieldPub_.publish(field);
 
@@ -91,7 +91,7 @@ bool Precomputation::calculateField(
     // MatrixXd RHS2 = Jt * S * solution;
     // MatrixXd Q2 = LHS2.completeOrthogonalDecomposition().solve(RHS2);
     // for (int i = 0; i < obvJointNo_; i++) {
-    //     ROS_INFO("Joint %d: q1: %f, q2: %f, q3: %f", i, Q2(3 * i, 0) * 180 /
+    //     ROS_INFO("PR:Joint %d: q1: %f, q2: %f, q3: %f", i, Q2(3 * i, 0) * 180 /
     //     M_PI,
     //              Q2(3 * i + 1, 0) * 180 / M_PI, Q2(3 * i + 2, 0));
     // }
@@ -150,20 +150,20 @@ void Precomputation::populateStructs(std::vector<Joint> &joints_,
 
     // for (auto i : joints_) {
     //     if (i.nextIndex != -1) {
-    //         ROS_INFO("Joint %d has next joint, it is joint %d", i.index,
+    //         ROS_INFO("PR:Joint %d has next joint, it is joint %d", i.index,
     //                  i.nextIndex);
     //     } else {
-    //         ROS_INFO("Joint %d has no next joint", i.index);
+    //         ROS_INFO("PR:Joint %d has no next joint", i.index);
     //     }
     //     if (i.prevIndex != -1) {
-    //         ROS_INFO("Joint %d has prev joint. It is joint %d", i.index,
+    //         ROS_INFO("PR:Joint %d has prev joint. It is joint %d", i.index,
     //                  i.prevIndex);
     //     } else {
-    //         ROS_INFO("Joint %d has no prev joint", i.index);
+    //         ROS_INFO("PR:Joint %d has no prev joint", i.index);
     //     }
     // }
 
-    ROS_INFO("Populated RL structs");
+    ROS_INFO("PR:Populated RL structs");
     return;
 }
 
@@ -296,7 +296,7 @@ MatrixXd Precomputation::stackedDeformation(std::vector<Joint> &joints_) {
     MatrixXd Q = MatrixXd::Zero(3 * obvJointNo_, 1);
     for (int i = 0; i < obvJointNo_; i++) {
         Q(seq(3 * i, 2 + i * 3), 0) = joints_[i].q;
-        // ROS_INFO("Stacking deformation for joint %d", i);
+        // ROS_INFO("PR:Stacking deformation for joint %d", i);
     }
     return Q;
 }

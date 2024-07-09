@@ -17,7 +17,7 @@ ControlNode::ControlNode() {
         nh_.createTimer(ros::Duration(4), &ControlNode::ComputeError, this);
     calcError_.stop();
     spin_controller_srv_ = nh_.advertiseService(
-        "spin_controller", &ControlNode::spinController, this);
+        "/control_node/spin_controller", &ControlNode::spinController, this);
 
     spinningPub_ = nh_.advertise<std_msgs::Bool>("controller/spinning", 1);
 }
@@ -42,15 +42,17 @@ bool ControlNode::spinController(std_srvs::SetBool::Request& req,
 
 void ControlNode::desAnglesCallback(
     const shapeforming_msgs::rl_angles::ConstPtr& msg) {
-    desAngles_ =
-        Eigen::Vector3d(msg->angles[0], msg->angles[1], msg->angles[2]);
+    for (auto i : msg->angles) {
+        desAngles_.push_back(Eigen::Vector3d(0, i, 0));
+    }
     desCount_ = msg->count;
 }
 
 void ControlNode::obvAnglesCallback(
     const shapeforming_msgs::rl_angles::ConstPtr& msg) {
-    obvAngles_ =
-        Eigen::Vector3d(msg->angles[0], msg->angles[1], msg->angles[2]);
+    for (auto i : msg->angles) {
+        obvAngles_.push_back(Eigen::Vector3d(0, i, 0));
+    }
     obvCount_ = msg->count;
 }
 
@@ -62,6 +64,15 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
     shapeforming_msgs::error error_msg;
     error_msg.header.stamp = ros::Time::now();
 
+    ROS_INFO("CL: Computing the error. Desired Angles:");
+    for (auto i : desAngles_) {
+        ROS_INFO("%f ", i);
+    }
+    ROS_INFO("Observed Angles:");
+    for (auto i : obvAngles_) {
+        ROS_INFO("%f ", i);
+    }
+
     if (desCount_ != obvCount_) {
         ROS_WARN("Desired and observed angles are not synchronized");
         return;
@@ -70,19 +81,18 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
         ROS_WARN("Desired or observed angles are not received");
         return;
     }
-    ROS_INFO("Desired and observed angles are received, proceeding with loop");
-    ROS_INFO("Desired angles:\n%f %f %f\nObserved angles:\n%f %f %f",
-             desAngles_[0], desAngles_[1], desAngles_[2], obvAngles_[0],
-             obvAngles_[1], obvAngles_[2]);
-    Eigen::Vector3d diff;
-    diff[0] = obvAngles_[0] - desAngles_[0];
-    diff[1] = obvAngles_[1] - desAngles_[1];
-    diff[2] = obvAngles_[2] - desAngles_[2];
-    ROS_INFO("Difference in angles:\n%f %f %f", diff[0], diff[1], diff[2]);
-    error_ = diff.norm();
-    for (int i = 0; i < diff.size(); i++) {
-        error_ += diff[i] * (i + 1);
+    ROS_INFO(
+        "CL:Desired and observed angles are received, proceeding with loop");
+
+    std::vector<Eigen::Vector3d> diff;
+    for (int i = 0; i < desAngles_.size(); i++) {
+        diff[i] = (obvAngles_[i] - desAngles_[i]) * (i + 1);
     }
+    Eigen::Vector3d diffCollapsed;
+    for (auto i : diff) {
+        diffCollapsed += i;
+    }
+    error_ = diffCollapsed.norm();
 
     error_dot_ = error_ - error_prev_;
     error_msg.error = error_;

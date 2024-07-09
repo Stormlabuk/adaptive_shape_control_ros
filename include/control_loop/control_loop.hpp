@@ -19,7 +19,7 @@ class ControlNode {
     Eigen::Vector3d baseField_ = Eigen::Vector3d::Zero(),
                     adjField_ = Eigen::Vector3d::Zero();
     Eigen::Vector3d held_field;
-    Eigen::Vector3d desAngles_, obvAngles_;
+    std::vector<Eigen::Vector3d> desAngles_, obvAngles_;
 
    std_msgs::Bool spinning_msg_;
 

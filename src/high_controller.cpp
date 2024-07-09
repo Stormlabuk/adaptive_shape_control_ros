@@ -70,12 +70,12 @@ void HighController::highLoop() {
             std_msgs::Int32 stepper_msg;
             stepper_msg.data = 1;
             // inserter_pub_.publish(stepper_msg);
-            // ROS_INFO("Inserting. Obv joints: %d, Target joints: %d",
+            // ROS_INFO("HC:Inserting. Obv joints: %d, Target joints: %d",
             //          obv_angles_.angles.size(), targetJointNo_);
             if (obv_angles_.angles.size() == targetJointNo_) {
                 inserting = false;
                 targetReached = true;
-                ROS_INFO("Target insertion length reached");
+                ROS_INFO("HC: Target insertion length reached");
                 return;
             }
             return;
@@ -97,9 +97,8 @@ void HighController::highLoop() {
             fieldMsg.bx = currField.x();
             fieldMsg.by = currField.y();
             fieldMsg.bz = currField.z();
-            ROS_INFO("Publishing field: %f, %f, %f", fieldMsg.bx, fieldMsg.by,
+            ROS_INFO("HC:Publishing field: %f, %f, %f", fieldMsg.bx, fieldMsg.by,
                      fieldMsg.bz);
-
 
             shapeforming_msgs::rl_angles obv_slice = obv_angles_;
             shapeforming_msgs::rl_angles des_slice;
@@ -161,8 +160,8 @@ void HighController::recalcPath() {
         return;
     }
     goal_.z = 0;
-    // ROS_INFO("Given insertion point: %f, %f, %f", insertion_point_.x,
-    // insertion_point_.y, insertion_point_.z); ROS_INFO("Given goal: %f, %f,
+    // ROS_INFO("HC:Given insertion point: %f, %f, %f", insertion_point_.x,
+    // insertion_point_.y, insertion_point_.z); ROS_INFO("HC:Given goal: %f, %f,
     // %f", goal_.x, goal_.y, goal_.z);
 
     pathReq.start = insertion_point_;
@@ -187,11 +186,11 @@ void HighController::recalcField() {
     // 1. Initialise a calcinitialfield service
     shapeforming_msgs::CalcInitialFieldRequest precompReq;
     shapeforming_msgs::CalcInitialFieldResponse precompRes;
-    ROS_INFO("Recived a path made of %d joints. Will calculate %d fields.",
+    ROS_INFO("HC:Recived a path made of %d joints. Will calculate %d fields.",
              des_angles_.count, des_angles_.count - 1);
     
     for(int i = 0; i < des_angles_.angles.size() ; i++){
-        ROS_INFO("Angle %d: %f", i, des_angles_.angles[i]);
+        ROS_INFO("HC:Angle %d: %f", i, des_angles_.angles[i]);
     }
 
     for (int i = 0; i < des_angles_.angles.size(); i++) {
@@ -199,7 +198,7 @@ void HighController::recalcField() {
         des_slice.angles = std::vector<float>(
             des_angles_.angles.begin(), des_angles_.angles.begin() + i + 1);
         des_slice.count = i + 2;
-        ROS_INFO("Calculating field for %d joints", i + 1);
+        ROS_INFO("HC:Calculating field for %d joints", i + 1);
         precompReq.tentacle = des_slice;
         precompReq.orientation = insertion_ori_;
         precompReq.tentacle.header.stamp = ros::Time::now();
@@ -215,7 +214,7 @@ void HighController::recalcField() {
     }
     fieldCalculated = true;
 
-    // ROS_INFO("Calculating field, joints found: %d, path length in joints :
+    // ROS_INFO("HC:Calculating field, joints found: %d, path length in joints :
     // %d",
     //  obv_angles_.angles.size(), des_angles_.angles.size());
 
@@ -240,7 +239,7 @@ void HighController::recalcField() {
     //         ROS_ERROR("Failed to call precomputation service");
     //         return;
     //     }
-    //     // ROS_INFO("Truncated angles and recalculated field");
+    //     // ROS_INFO("HC:Truncated angles and recalculated field");
     //     des_trunc_.publish(des_slice);
     //     obv_trunc_.publish(obv_slice);
     // } else
@@ -250,8 +249,11 @@ void HighController::recalcField() {
 void HighController::spinController(bool spin) {
     std_srvs::SetBoolResponse spinRes;
     spinReq_.data = spin;
+    spin_controller_client_.waitForExistence();
     try {
         spin_controller_client_.call(spinReq_, spinRes);
+        ROS_INFO("HC:Called spin_controller service. Response: %s",
+                 spinRes.message.c_str());
     } catch (const ros::Exception& e) {
         ROS_ERROR("Failed to call spin_controller service, error %s", e.what());
     }
@@ -259,13 +261,13 @@ void HighController::spinController(bool spin) {
 
 void HighController::errorCallback(
     const shapeforming_msgs::error::ConstPtr& msg) {
-    ROS_INFO("Received error values");
+    ROS_INFO("HC:Received error values");
     error_ = *msg;
 }
 
 void HighController::desAnglesCallback(
     const shapeforming_msgs::rl_angles::ConstPtr& msg) {
-    ROS_INFO("Received desired angles");
+    ROS_INFO("HC:Received desired angles");
     des_angles_ = *msg;
     if (des_angles_.angles.size() != 0) {
         recalcField();
@@ -274,25 +276,25 @@ void HighController::desAnglesCallback(
 
 void HighController::obvAnglesCallback(
     const shapeforming_msgs::rl_angles::ConstPtr& msg) {
-    // ROS_INFO("Received observed angles");
+    // ROS_INFO("HC:Received observed angles");
     obv_angles_ = *msg;
 }
 
 void HighController::insertionOriCallback(
     const geometry_msgs::Vector3::ConstPtr& msg) {
-    // ROS_INFO("Received insertion orientation");
+    // ROS_INFO("HC:Received insertion orientation");
     insertion_ori_ = *msg;
 }
 
 void HighController::insertionPointCallback(
     const geometry_msgs::Point::ConstPtr& msg) {
-    // ROS_INFO("Received insertion point");
+    // ROS_INFO("HC:Received insertion point");
     insertion_point_ = *msg;
 }
 
 void HighController::goalCallback(
     const geometry_msgs::PointStamped::ConstPtr& msg) {
-    // ROS_INFO("Received goal");
+    // ROS_INFO("HC:Received goal");
     goal_ = msg->point;
     recalcPath();
     // recalcField();
