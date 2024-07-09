@@ -101,6 +101,7 @@ void HighController::highLoop() {
                      fieldMsg.bz);
 
             shapeforming_msgs::rl_angles obv_slice = obv_angles_;
+            obv_slice.count--;
             shapeforming_msgs::rl_angles des_slice;
             des_slice.angles =
                 std::vector<float>(des_angles_.angles.begin(),

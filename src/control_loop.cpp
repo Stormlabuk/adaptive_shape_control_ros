@@ -66,15 +66,16 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
 
     ROS_INFO("CL: Computing the error. Desired Angles:");
     for (auto i : desAngles_) {
-        ROS_INFO("%f ", i);
+        ROS_INFO("%f, %f, %f ", i.x(), i.y(), i.z());
     }
     ROS_INFO("Observed Angles:");
     for (auto i : obvAngles_) {
-        ROS_INFO("%f ", i);
+        ROS_INFO("%f, %f, %f ", i.x(), i.y(), i.z());
     }
 
     if (desCount_ != obvCount_) {
-        ROS_WARN("Desired and observed angles are not synchronized");
+        ROS_WARN("Desired count %d and observed count %d are not synchronized",
+                 desCount_, obvCount_);
         return;
     }
     if (desCount_ == 0 || obvCount_ == 0) {
@@ -84,14 +85,18 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
     ROS_INFO(
         "CL:Desired and observed angles are received, proceeding with loop");
 
-    std::vector<Eigen::Vector3d> diff;
+    std::vector<Eigen::Vector3d> diff(desAngles_.size());
     for (int i = 0; i < desAngles_.size(); i++) {
         diff[i] = (obvAngles_[i] - desAngles_[i]) * (i + 1);
+            // Eigen::Vector3d((obvAngles_[i].x() - desAngles_[i].x()) * (i + 1),
+            //                 (obvAngles_[i].y() - desAngles_[i].y()) * (i + 1),
+            //                 (obvAngles_[i].z() - desAngles_[i].z()) * (i + 1));
     }
-    Eigen::Vector3d diffCollapsed;
-    for (auto i : diff) {
-        diffCollapsed += i;
+    Eigen::Vector3d diffCollapsed = Eigen::Vector3d::Zero();
+    for(int i = 0; i < diff.size(); i++) {
+        diffCollapsed += diff[i];
     }
+
     error_ = diffCollapsed.norm();
 
     error_dot_ = error_ - error_prev_;

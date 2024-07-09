@@ -1,0 +1,12 @@
+<launch>
+    <arg name="output" default="screen"/>
+    
+    <rosparam param="cam_width">1088</rosparam>
+    <rosparam param="cam_height">996</rosparam>
+    <rosparam param="cam_offset_x">416</rosparam>
+    <rosparam param="cam_offset_y">130</rosparam>
+
+    <include file="$(find ros_coils)/launch/6psu_field.launch"/>
+
+
+</launch>
