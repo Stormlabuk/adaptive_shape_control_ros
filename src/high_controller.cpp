@@ -118,6 +118,10 @@ void HighController::highLoop() {
         //  controllerSpinning = false;
         //  spinController(controllerSpinning);
         //  targetReached = false;
+    } else {
+        shapeforming_msgs::rl_angles obv_slice = obv_angles_;
+        obv_slice.count--;
+        obv_trunc_.publish(obv_slice);
     }
     return;
 }
