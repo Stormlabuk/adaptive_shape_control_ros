@@ -26,8 +26,8 @@ HighController::HighController() {
     field_pub_ = nh_.advertise<ros_coils::magField>("base_field", 1);
 
     // ros parameters
-    nh_.param<double>("error_lb", error_lb, 0);
-    nh_.param<double>("error_dot__lb", error_dot_lb, 0);
+    nh_.param<double>("error_lb", error_lb, 10);
+    nh_.param<double>("error_dot__lb", error_dot_lb, 10);
 
     // ros service clients
     initial_imgproc_ = nh_.serviceClient<std_srvs::SetBool>("initial_imgproc");
@@ -46,6 +46,9 @@ HighController::HighController() {
         nh_.subscribe("controller/spinning", 1,
                       &HighController::controllerSpinningCallback, this);
 
+    error_.error = 999;
+    error_.error_dot = 999;
+
     reinitMap();
     // recalcPath();
     // recalcField();
@@ -62,6 +65,10 @@ HighController::HighController() {
 
 void HighController::highLoop() {
     if (!controllerSpinning) {
+        if(solved){
+            ROS_INFO("Success! Stopping controller");
+            return;
+        }
         if(des_angles_.angles.size() == 0){
             return;
         }
@@ -119,6 +126,13 @@ void HighController::highLoop() {
         //  spinController(controllerSpinning);
         //  targetReached = false;
     } else {
+        if(firstError && error_.error < error_lb){
+            ROS_INFO("HC:Error is below threshold. Stopping controller");
+            controllerSpinning = false;
+            spinController(false);
+            firstError = false;
+            solved = true;
+        }
         shapeforming_msgs::rl_angles obv_slice = obv_angles_;
         obv_slice.count--;
         obv_trunc_.publish(obv_slice);
@@ -266,8 +280,9 @@ void HighController::spinController(bool spin) {
 
 void HighController::errorCallback(
     const shapeforming_msgs::error::ConstPtr& msg) {
-    ROS_INFO("HC:Received error values");
+    // ROS_INFO("HC:Received error values");
     error_ = *msg;
+    if(!firstError) firstError = true;
 }
 
 void HighController::desAnglesCallback(
@@ -276,6 +291,7 @@ void HighController::desAnglesCallback(
     des_angles_ = *msg;
     if (des_angles_.angles.size() != 0) {
         recalcField();
+        solved = false;
     }
 }
 
@@ -313,9 +329,11 @@ void HighController::controllerSpinningCallback(
 int main(int argc, char* argv[]) {
     ros::init(argc, argv, "high_controller_node");
     HighController highController;
+    ros::Rate hcrate(2);
     while (ros::ok()) {
         highController.highLoop();
         ros::spinOnce();
+        hcrate.sleep();
     }
     return 0;
 }

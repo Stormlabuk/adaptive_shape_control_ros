@@ -34,6 +34,7 @@ bool ControlNode::spinController(std_srvs::SetBool::Request& req,
         res.success = true;
         res.message = "Controller stopped";
         controller_spinning_ = false;
+        adjField_ = Eigen::Vector3d::Zero();
     }
     spinning_msg_.data = controller_spinning_;
 
@@ -50,6 +51,7 @@ void ControlNode::desAnglesCallback(
 
 void ControlNode::obvAnglesCallback(
     const shapeforming_msgs::rl_angles::ConstPtr& msg) {
+    obvAngles_.clear();
     for (auto i : msg->angles) {
         obvAngles_.push_back(Eigen::Vector3d(0, i, 0));
     }
@@ -64,14 +66,14 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
     shapeforming_msgs::error error_msg;
     error_msg.header.stamp = ros::Time::now();
 
-    ROS_INFO("CL: Computing the error. Desired Angles:");
-    for (auto i : desAngles_) {
-        ROS_INFO("%f, %f, %f ", i.x(), i.y(), i.z());
-    }
-    ROS_INFO("Observed Angles:");
-    for (auto i : obvAngles_) {
-        ROS_INFO("%f, %f, %f ", i.x(), i.y(), i.z());
-    }
+    // ROS_INFO("CL: Computing the error. Desired Angles:");
+    // for (auto i : desAngles_) {
+    //     ROS_INFO("%f, %f, %f ", i.x(), i.y(), i.z());
+    // }
+    // ROS_INFO("Observed Angles:");
+    // for (auto i : obvAngles_) {
+    //     ROS_INFO("%f, %f, %f ", i.x(), i.y(), i.z());
+    // }
 
     if (desCount_ != obvCount_) {
         ROS_WARN("Desired count %d and observed count %d are not synchronized",
@@ -111,7 +113,7 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
 void ControlNode::adjustField() {
     if (baseField_.norm() != 0) {
         if (error_dot_ == 0) {
-            error_dot_ = 0.1;
+            error_dot_ = 1;
         }
         error_dot_ = abs(error_dot_);
         if (adjField_.norm() == 0) {
@@ -124,14 +126,20 @@ void ControlNode::adjustField() {
         // "Overall adjustment would be " << 0.1 * error_ / error_dot_  << "%"
         // << std::endl; std::cout << "Normalised field\n" << adjField_ /
         // adjField_.norm() << std::endl;
-        adjField_ = adjField_ +
-                    0.1 * error_ / error_dot_ * adjField_ / adjField_.norm();
+        Eigen::Vector3d adjustment = 0.01 * error_ / error_dot_ * adjField_ / adjField_.norm();
+        adjField_ += adjustment;
+
+        ROS_INFO("CL: Base field: %f, %f, %f", baseField_[0], baseField_[1],
+                 baseField_[2]);
+        ROS_INFO("CL: Adjusted field: %f, %f, %f", adjField_[0], adjField_[1],
+                 adjField_[2]);
 
         ros_coils::magField field_msg;
         field_msg.header.stamp = ros::Time::now();
         field_msg.bx = adjField_[0];
         field_msg.by = adjField_[1];
-        field_msg.bz = adjField_[2];
+        // field_msg.bz = adjField_[2];
+        field_msg.bz = -5;
         adjustedField_.publish(field_msg);
     } else {
         ROS_WARN("Base field is not received");
