@@ -11,7 +11,7 @@ ControlNode::ControlNode() {
         "precomputation/baseField", 1, &ControlNode::baseFieldCallback, this);
 
     errorPub_ = nh_.advertise<shapeforming_msgs::error>("error", 1);
-    adjustedField_ = nh_.advertise<ros_coils::magField>("adjusted_field", 1);
+    adjustedField_ = nh_.advertise<ros_coils::magField>("field", 1);
 
     calcError_ =
         nh_.createTimer(ros::Duration(4), &ControlNode::ComputeError, this);
@@ -136,7 +136,7 @@ void ControlNode::adjustField() {
 
         ros_coils::magField field_msg;
         field_msg.header.stamp = ros::Time::now();
-        field_msg.bx = adjField_[0];
+        field_msg.bx = adjField_[0] * -1;
         field_msg.by = adjField_[1];
         // field_msg.bz = adjField_[2];
         field_msg.bz = -5;

@@ -130,4 +130,7 @@ class IsolateTentacle():
 if __name__ == "__main__":
     rospy.init_node('isolate_tentacle', anonymous=False)
     isolate_tentacle = IsolateTentacle()
-    rospy.spin()
+    
+    while(rospy.is_shutdown()):
+        rospy.Rate(2).sleep()    
+        rospy.spin()

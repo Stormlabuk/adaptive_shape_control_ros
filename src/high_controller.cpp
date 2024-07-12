@@ -65,13 +65,26 @@ HighController::HighController() {
 
 void HighController::highLoop() {
     if (!controllerSpinning) {
-        if(solved){
-            ROS_INFO("Success! Stopping controller");
-            return;
-        }
         if(des_angles_.angles.size() == 0){
             return;
         }
+
+        if(solved){
+            ROS_INFO("HC: Success! Moving onto next target, if available");
+            obvJointNo_ = obv_angles_.angles.size();
+
+            if(obvJointNo_ > des_angles_.angles.size()){
+                ROS_INFO("HC:No more targets to reach. Waiting for new target");
+                return;
+            } else {
+                ROS_INFO("HC:New target to reach. Inserting");
+                targetJointNo_++;
+                inserting = true;
+                solved = false;
+            }
+            return;
+        }
+
         
         if (inserting) {
             std_msgs::Int32 stepper_msg;
@@ -89,15 +102,11 @@ void HighController::highLoop() {
         }
 
         if (!inserting && !targetReached) {
-            obvJointNo_ = obv_angles_.angles.size();
-            targetJointNo_ = obvJointNo_ + 1 < des_angles_.count
-                                 ? obvJointNo_ + 1
-                                 : des_angles_.count;
             inserting = true;
             return;
         }
 
-        if (fieldCalculated) {
+        if (fieldCalculated && targetReached) {
             obvJointNo_ = obv_angles_.angles.size();
             Vector3d currField = fields_.at(obvJointNo_-1);
             ros_coils::magField fieldMsg;
@@ -232,37 +241,6 @@ void HighController::recalcField() {
                                    precompRes.field.bz));
     }
     fieldCalculated = true;
-
-    // ROS_INFO("HC:Calculating field, joints found: %d, path length in joints :
-    // %d",
-    //  obv_angles_.angles.size(), des_angles_.angles.size());
-
-    // // 2. Truncate des_angles_ to whatever subslice is suitable
-    // int joints_found = obv_angles_.angles.size();
-    // if (joints_found != 0 && des_angles_.angles.size() != 0){
-    //     shapeforming_msgs::rl_angles des_slice, obv_slice;
-    //     des_slice.count = joints_found + 1;
-    //     des_slice.angles =
-    //         std::vector<float>(des_angles_.angles.begin(),
-    //                            des_angles_.angles.begin() + joints_found);
-    //     obv_slice.count = des_slice.count;
-    //     obv_slice.angles =
-    //         std::vector<float>(obv_angles_.angles.begin(),
-    //                            obv_angles_.angles.begin() + joints_found);
-    //     precompReq.tentacle.header.stamp = ros::Time::now();
-    //     precompReq.tentacle = des_slice;
-    //     precompReq.orientation = insertion_ori_;
-    //     precomputation_client_.waitForExistence();
-    //     precomputation_client_.call(precompReq, precompRes);
-    //     if (!precompRes.success) {
-    //         ROS_ERROR("Failed to call precomputation service");
-    //         return;
-    //     }
-    //     // ROS_INFO("HC:Truncated angles and recalculated field");
-    //     des_trunc_.publish(des_slice);
-    //     obv_trunc_.publish(obv_slice);
-    // } else
-    //     return;
 }
 
 void HighController::spinController(bool spin) {
@@ -291,7 +269,6 @@ void HighController::desAnglesCallback(
     des_angles_ = *msg;
     if (des_angles_.angles.size() != 0) {
         recalcField();
-        solved = false;
     }
 }
 

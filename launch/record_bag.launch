@@ -1,0 +1,7 @@
+<launch>
+    <arg name="output" default="screen"/>
+    <arg name="write_bag" default="true"/>
+    <node name="bag_recorder" pkg="rosbag" type="record" args=" -o 
+    /home/vittorio/ros_ws/src/adaptive_ctrl/bags/massive_field_change
+    \error \field \base_field \obv_trunc \des_trunc \des_angles" if="$(arg write_bag)"/>
+</launch>

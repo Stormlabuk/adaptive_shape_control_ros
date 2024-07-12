@@ -1,6 +1,7 @@
 <launch>
     <arg name="output" default="screen"/>
-    
+    <arg name="write_bag" default="false"/>
+
     <rosparam param="mm_to_pixel">8</rosparam>
 
     <rosparam file="$(find adaptive_ctrl)/config/threshold_vals.yaml" />
@@ -37,4 +38,6 @@
     <include file="$(find ring_ctrl)/launch/stepper.launch"/>
 
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_v2.rviz"/>
+
+    <!-- <node name="bag_recorder" pkg="rosbag" type="record" args="-a -o src/adaptive_ctrl/bags/ \error \field \base_field \obv_trunc \des_trunc" if="$(arg write_bag)"/> -->
 </launch>

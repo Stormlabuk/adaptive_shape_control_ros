@@ -50,7 +50,8 @@ class ImageProcessor():
         rospy.logwarn("Inserter HSV low: " + str(self.inserter_low_p))
         rospy.logwarn("Inserter HSV high: " + str(self.inserter_high_p))
 
-        rospy.spin()
+        while(not rospy.is_shutdown()):
+            rospy.spin()
 
     def initial_image_processing(self, req):
         self.publish_maps = req.data
