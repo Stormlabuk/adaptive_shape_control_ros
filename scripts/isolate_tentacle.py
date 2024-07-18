@@ -3,7 +3,8 @@ import rospy
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage.morphology import skeletonize
+from skimage.morphology import skeletonize, remove_small_objects
+from plantcv import plantcv as pcv
 from sensor_msgs.msg import Image
 from std_srvs.srv import SetBool, SetBoolResponse, SetBoolRequest
 from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveRequest, DiscretiseCurveResponse
@@ -72,8 +73,13 @@ class IsolateTentacle():
         if (self.base_image_found):
 
             tent_inserter = cv2.inRange(image_hsv, self.hsv_low, self.hsv_high)
+            tent_inserter = cv2.GaussianBlur(tent_inserter, (3, 3), 0)
             tent_inserter = cv2.erode(tent_inserter, None, iterations=1)
             tent_inserter = cv2.dilate(tent_inserter, None, iterations=6)
+
+            kernel = np.ones((5, 5), np.uint8)
+            # closing = cv2.morphologyEx(tent_inserter, cv2.MORPH_CLOSE, kernel)
+            # opening = cv2.morphologyEx(closing, cv2.MORPH_OPEN, kernel)
             tent_cnt, _ = cv2.findContours(
                 tent_inserter, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             tent_cnt = sorted(tent_cnt, key=cv2.contourArea, reverse=True)
@@ -82,31 +88,46 @@ class IsolateTentacle():
                 tent_dsp, tent_cnt[:1], -1, 255, -1)
             # tent_inserter = cv2.dilate(tent_inserter,
             #                           None, iterations=1)
-            # tent_inserter_f = tent_inserter
+            tent_inserter_f = tent_dsp
 
             tent_only = cv2.bitwise_and(
-                tent_inserter, cv2.bitwise_not(self.base_image))
-            tent_only = cv2.erode(tent_only, None, iterations=5)
-            # tent_only = cv2.blur(tent_only, (15, 15))
+                tent_dsp, cv2.bitwise_not(self.base_image))
+            tent_only = cv2.morphologyEx(tent_only, cv2.MORPH_CLOSE, kernel)
+            tent_only = cv2.morphologyEx(tent_only, cv2.MORPH_OPEN, kernel)
+            # tent_only = cv2.blur(tent_only, (5, 5))
 
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
 
             skeleton[0:int(self.insertion_point.y),
                      0:int(self.insertion_point.x)] = 0
-            # concatenated_image = np.concatenate((
-            #     cv2.resize(
-            #         self.base_image, (600, 600)),
-            #     cv2.resize(
-            #         tent_inserter_f, (600, 600)),
-            #     cv2.resize(
-            #         tent_only, (600, 600))
-            # ), axis=1)
-            # cv2.imshow("Concatenated Image", concatenated_image)
-            # cv2.waitKey(1)
-            if (self.pub_skeleton):
-                self.tent_img_pub.publish(
-                    self.bridge.cv2_to_imgmsg(skeleton, "mono8"))
+
+            skeleton_clean, _, seg_obj = pcv.morphology.prune(
+                skeleton, size=20)
+
+            # To find the longest object in segmented_obj:
+            # Initialize maximum length and corresponding object
+            max_length = 0
+            longest_obj = None
+
+            if len(seg_obj) != 0:
+                # Analyze each object to find the longest one
+                for obj in seg_obj:
+                    # Calculate the distance of each object (assuming segmented_obj are the contours)
+                    length = cv2.arcLength(obj, closed=False)
+                    if length > max_length:
+                        max_length = length
+                        longest_obj = obj
+                if(max_length > 0):
+                    # Draw the longest object
+                    timg = np.zeros_like(skeleton_clean)
+                    cv2.drawContours(timg, [longest_obj], -1, 255, -1)
+                    # cv2.imshow("Longest Object", timg)
+                    # cv2.waitKey(1)
+
+                    if (self.pub_skeleton):
+                        self.tent_img_pub.publish(
+                            self.bridge.cv2_to_imgmsg(timg, "mono8"))
         else:
             rospy.logwarn("Base image not found")
 
@@ -130,7 +151,6 @@ class IsolateTentacle():
 if __name__ == "__main__":
     rospy.init_node('isolate_tentacle', anonymous=False)
     isolate_tentacle = IsolateTentacle()
-    
-    while(rospy.is_shutdown()):
-        rospy.Rate(2).sleep()    
+
+    while (not rospy.is_shutdown()):
         rospy.spin()

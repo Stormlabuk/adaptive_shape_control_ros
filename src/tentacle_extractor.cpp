@@ -63,21 +63,27 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
     std::vector<double> distances;
     distances.push_back(0.0);
     for (int i = 1; i < points.size(); i++) {
-        cv::Point2i firstPoint = points[0];
+        cv::Point2i firstPoint = points[i-1];
         cv::Point2i currPoint = points[i];
         double dx = currPoint.x - firstPoint.x;
         double dy = currPoint.y - firstPoint.y;
         distances.push_back(std::sqrt(dx * dx + dy * dy));
     }
-    double totalDistance = distances.back();  // total distance in px
+    std::vector<double> distances_cumulative;
+    distances_cumulative.push_back(0.0);
+    for (int i = 1; i < distances.size(); i++) {
+        distances_cumulative.push_back(distances_cumulative[i - 1] + distances[i]);
+    }
+
+    double totalDistance = distances_cumulative.back();
 
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
     int link_px = link_mm * mm_pixel_;
     int numLinks = std::ceil(totalDistance / link_px);
     // if (totalDistance != 0) {
-    //     ROS_INFO("Total distance: %f. link_px: %d", totalDistance *
-    //     pixel_mm_, link_px);
+    //     ROS_INFO("Total distance old method %f. Total distance new method: %f", distances.back() *
+    //     pixel_mm_, totalDistance * pixel_mm_);
     // }
     if (totalDistance < link_px) {
         // ROS_INFO("Tentacle is too short");
@@ -107,11 +113,11 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
         for (int i = 0; i < linksToFind; i++) {
             double targetDistance = (i + 1) * link_px;
             int j = 0;
-            while (distances[j] < targetDistance) {
+            while (distances_cumulative[j] < targetDistance) {
                 j++;
             }
-            double ratio = (targetDistance - distances[j - 1]) /
-                           (distances[j] - distances[j - 1]);
+            double ratio = (targetDistance - distances_cumulative[j - 1]) /
+                           (distances_cumulative[j] - distances_cumulative[j - 1]);
             req.tentacle.px[i + 1] =
                 points[j - 1].x + ratio * (points[j].x - points[j - 1].x);
             req.tentacle.py[i + 1] =

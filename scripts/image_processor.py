@@ -78,8 +78,8 @@ class ImageProcessor():
         inserter = cv2.inRange(
             image_hsv, self.inserter_low_, self.inserter_high_)
 
-        # phantom_blur = cv2.GaussianBlur(phantom, (5, 5), 0)
-        phantom_erode = cv2.erode(phantom, None, iterations=2)
+        phantom_blur = cv2.GaussianBlur(phantom, (5, 5), 0)
+        phantom_erode = cv2.erode(phantom_blur, None, iterations=2)
         phantom_erode = cv2.dilate(phantom_erode, None, iterations=3)
         # 4. find contours
         ph_contours, _ = cv2.findContours(
@@ -90,6 +90,7 @@ class ImageProcessor():
         cv2.drawContours(disp, ph_contours[:3], -1, 255, -1)
         phantom = disp
 
+        inserter = cv2.GaussianBlur(inserter, (3, 3), 0)
         inserter_erode = cv2.erode(inserter, None, iterations=1)
         inserter_erode = cv2.dilate(inserter_erode, None, iterations=6)
         # 4. find contours

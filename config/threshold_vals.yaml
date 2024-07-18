@@ -1,29 +1,29 @@
 phantom_low_p:
-  - 4
+  - 34
   - 0
-  - 77
+  - 103
 
 phantom_high_p:
-  - 180
-  - 134
+  - 129
+  - 123
   - 255
 
 inserter_low_p:
-  - 39
-  - 0
+  - 85
+  - 85
   - 0
 
 inserter_high_p:
-  - 150
+  - 105
   - 255
-  - 97
+  - 100
 
 tentacle_low_p:
-  - 39
-  - 0
+  - 85
+  - 85
   - 0
   
 tentacle_high_p:
-  - 150
+  - 105
   - 255
-  - 97
+  - 100

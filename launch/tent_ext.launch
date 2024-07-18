@@ -1,15 +1,27 @@
 <launch>
     <arg name="output" default="screen"/>
+    <arg name="write_bag" default="false"/>
 
-    <node name="image_fetcher" pkg="adaptive_ctrl" type="image_fetcher.py" output="$(arg output)"/>
+    <rosparam param="mm_to_pixel">8</rosparam>
+
+    <rosparam file="$(find adaptive_ctrl)/config/threshold_vals.yaml" />
+
+    <rosparam param="cam_width">1088</rosparam>
+    <rosparam param="cam_height">996</rosparam>
+    <rosparam param="cam_offset_x">416</rosparam>
+    <rosparam param="cam_offset_y">130</rosparam>
+
+    <rosparam file="$(find adaptive_ctrl)/config/threshold_vals.yaml" />
     <node name="image_processsor" pkg="adaptive_ctrl" type="image_processor.py" output="$(arg output)"/>
 
     <node name="cline_to_angle" pkg="adaptive_ctrl" type="discretising_node.py" output="$(arg output)">
         <param name="angle_pub_type" value="obv_"/>
     </node>
+    <node name="isolate_tentacle" pkg="adaptive_ctrl" type="isolate_tentacle.py" output="$(arg output)"/>
 
     <node name="tentacle_extractor" pkg="adaptive_ctrl" type="tentacle_extractor" output="$(arg output)"/>
     <node name="process_costmap" pkg="adaptive_ctrl" type="process_costmap.py" output="$(arg output)"/>
+    <include file="$(find ring_ctrl)/launch/stepper.launch"/>
 
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find adaptive_ctrl)/rviz/occ_map_v2.rviz"/>
 </launch>
