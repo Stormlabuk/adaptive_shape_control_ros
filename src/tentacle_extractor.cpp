@@ -63,7 +63,7 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
     std::vector<double> distances;
     distances.push_back(0.0);
     for (int i = 1; i < points.size(); i++) {
-        cv::Point2i firstPoint = points[i-1];
+        cv::Point2i firstPoint = points[i - 1];
         cv::Point2i currPoint = points[i];
         double dx = currPoint.x - firstPoint.x;
         double dy = currPoint.y - firstPoint.y;
@@ -72,7 +72,8 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
     std::vector<double> distances_cumulative;
     distances_cumulative.push_back(0.0);
     for (int i = 1; i < distances.size(); i++) {
-        distances_cumulative.push_back(distances_cumulative[i - 1] + distances[i]);
+        distances_cumulative.push_back(distances_cumulative[i - 1] +
+                                       distances[i]);
     }
 
     double totalDistance = distances_cumulative.back();
@@ -82,8 +83,8 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
     int link_px = link_mm * mm_pixel_;
     int numLinks = std::ceil(totalDistance / link_px);
     // if (totalDistance != 0) {
-    //     ROS_INFO("Total distance old method %f. Total distance new method: %f", distances.back() *
-    //     pixel_mm_, totalDistance * pixel_mm_);
+    //     ROS_INFO("Total distance old method %f. Total distance new method:
+    //     %f", distances.back() * pixel_mm_, totalDistance * pixel_mm_);
     // }
     if (totalDistance < link_px) {
         // ROS_INFO("Tentacle is too short");
@@ -116,8 +117,9 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
             while (distances_cumulative[j] < targetDistance) {
                 j++;
             }
-            double ratio = (targetDistance - distances_cumulative[j - 1]) /
-                           (distances_cumulative[j] - distances_cumulative[j - 1]);
+            double ratio =
+                (targetDistance - distances_cumulative[j - 1]) /
+                (distances_cumulative[j] - distances_cumulative[j - 1]);
             req.tentacle.px[i + 1] =
                 points[j - 1].x + ratio * (points[j].x - points[j - 1].x);
             req.tentacle.py[i + 1] =
@@ -153,6 +155,7 @@ int main(int argc, char* argv[]) {
     TentacleExtractor tentacle_extractor;
     while (ros::ok()) {
         ros::spinOnce();
+        ros::Rate(10).sleep();
     }
 
     return 0;

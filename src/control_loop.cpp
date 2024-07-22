@@ -59,7 +59,7 @@ void ControlNode::obvAnglesCallback(
 }
 
 void ControlNode::baseFieldCallback(const ros_coils::magField::ConstPtr& msg) {
-    baseField_ = Eigen::Vector3d(msg->bx, msg->by, msg->bz);
+    baseField_ = Eigen::Vector3d(msg->bx, msg->by, msg->bz) * 10;
 }
 
 void ControlNode::ComputeError(const ros::TimerEvent&) {

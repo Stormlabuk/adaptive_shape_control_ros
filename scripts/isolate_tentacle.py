@@ -88,7 +88,6 @@ class IsolateTentacle():
                 tent_dsp, tent_cnt[:1], -1, 255, -1)
             # tent_inserter = cv2.dilate(tent_inserter,
             #                           None, iterations=1)
-            tent_inserter_f = tent_dsp
 
             tent_only = cv2.bitwise_and(
                 tent_dsp, cv2.bitwise_not(self.base_image))
@@ -102,8 +101,16 @@ class IsolateTentacle():
             skeleton[0:int(self.insertion_point.y),
                      0:int(self.insertion_point.x)] = 0
 
-            skeleton_clean, _, seg_obj = pcv.morphology.prune(
-                skeleton, size=20)
+            skeleton_clean, seg_img, seg_obj = pcv.morphology.prune(
+                skeleton, size=40)
+
+            concat = np.concatenate((
+                cv2.cvtColor( tent_only, cv2.COLOR_GRAY2BGR), 
+                cv2.cvtColor( skeleton_clean , cv2.COLOR_GRAY2BGR),
+                seg_img
+            ), axis=1)
+            cv2.imshow("Tentacle", concat)
+            cv2.waitKey(1)
 
             # To find the longest object in segmented_obj:
             # Initialize maximum length and corresponding object
@@ -112,22 +119,37 @@ class IsolateTentacle():
 
             if len(seg_obj) != 0:
                 # Analyze each object to find the longest one
-                for obj in seg_obj:
-                    # Calculate the distance of each object (assuming segmented_obj are the contours)
-                    length = cv2.arcLength(obj, closed=False)
-                    if length > max_length:
-                        max_length = length
-                        longest_obj = obj
-                if(max_length > 0):
-                    # Draw the longest object
-                    timg = np.zeros_like(skeleton_clean)
-                    cv2.drawContours(timg, [longest_obj], -1, 255, -1)
-                    # cv2.imshow("Longest Object", timg)
-                    # cv2.waitKey(1)
+                # for obj in seg_obj:
+                def get_length(obj):
+                    return cv2.arcLength(obj, closed=False)
+                seg_obj = sorted(seg_obj, key=get_length, reverse=True)
+                longest_obj = seg_obj[:2]
+                # for idx, obj in enumerate(seg_obj):
+                #     # Calculate the distance of each object (assuming segmented_obj are the contours)
+                #     length = cv2.arcLength(obj, closed=False)
+                #     if length > max_length:
+                #         max_length = length
+                #         longest_obj = obj
+                #     rospy.loginfo(f"Object {idx} has length {length}")
+                # rospy.loginfo(f"Longest object has length {max_length}")
+                # rospy.loginfo("---------------------------------")                
 
-                    if (self.pub_skeleton):
-                        self.tent_img_pub.publish(
-                            self.bridge.cv2_to_imgmsg(timg, "mono8"))
+                for idx, obj in enumerate(seg_obj):
+                    length = cv2.arcLength(obj, closed=False)
+                    rospy.loginfo(f"object {idx} has length {length}")
+
+                # Draw the longest object
+                timg = np.zeros_like(skeleton_clean)
+                cv2.drawContours(timg, longest_obj, -1, 255, -1)
+                # disp = np.concatenate((
+                #     cv2.cvtColor(timg, cv2.COLOR_GRAY2BGR),
+                #     seg_img), axis=1)
+                # cv2.imshow("Longest Object", disp)
+                # cv2.waitKey(1)
+
+                if (self.pub_skeleton):
+                    self.tent_img_pub.publish(
+                        self.bridge.cv2_to_imgmsg(timg, "mono8"))
         else:
             rospy.logwarn("Base image not found")
 
