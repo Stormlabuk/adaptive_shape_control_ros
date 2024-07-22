@@ -60,6 +60,7 @@ void ControlNode::obvAnglesCallback(
 
 void ControlNode::baseFieldCallback(const ros_coils::magField::ConstPtr& msg) {
     baseField_ = Eigen::Vector3d(msg->bx, msg->by, msg->bz) * 10;
+    adjustedField_.publish(*msg);
 }
 
 void ControlNode::ComputeError(const ros::TimerEvent&) {
@@ -136,10 +137,10 @@ void ControlNode::adjustField() {
 
         ros_coils::magField field_msg;
         field_msg.header.stamp = ros::Time::now();
-        field_msg.bx = adjField_[0] * -1;
+        field_msg.bx = adjField_[0];
         field_msg.by = adjField_[1];
         // field_msg.bz = adjField_[2];
-        field_msg.bz = -5;
+        field_msg.bz = 6;
         adjustedField_.publish(field_msg);
     } else {
         ROS_WARN("Base field is not received");

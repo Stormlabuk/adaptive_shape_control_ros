@@ -2,18 +2,20 @@
 
 Precomputation::Precomputation() {
     ros::NodeHandle nh;
-    nh.param<int>("precomputation/E", E_, 100e3);
-    nh.param<float>("precomputation/len", len_, 10e-3);
-    nh.param<float>("precomputation/d", d_, 2e-3);
-    nh.param<float>("precomputation/v", v_, 0.43);
-    ROS_INFO("PR:Init values: E_: %d_, len_: %f, d_: %f, v_: %f", E_, len_, d_,
+    nh.param<int>("/precomputation/E", E_, 100e3);
+    nh.param<float>("/precomputation/len", len_, 10e-3);
+    nh.param<float>("/precomputation/d", d_, 2e-3);
+    nh.param<float>("/precomputation/v", v_, 0.43);
+    ROS_INFO("PR:Init values: E_: %d, len_: %f, d_: %f, v_: %f", E_, len_, d_,
              v_);
 
     nh.param<std::vector<float>>("precomputation/magx", magX_, {});
     nh.param<std::vector<float>>("precomputation/magy", magY_, {});
     nh.param<std::vector<float>>("precomputation/magz", magZ_, {});
 
-    baseTransform_ << M_PI_2, 0, M_PI;
+    baseTransform_ << -M_PI_2, 0, M_PI;
+    // baseTransform_ << 0, M_PI / 4, M_PI * 3 /4; 
+    // baseTransform_ << 0, 0, 0;
 
     preCalcService_ =
         nh.advertiseService("precomputation/calc_initial_field",
@@ -68,7 +70,7 @@ bool Precomputation::calculateField(
     MatrixXd RHS = Jt * S;
     MatrixXd LHS = K * Q;
     Vector3d solution = RHS.completeOrthogonalDecomposition().solve(LHS);
-
+    ROS_INFO("PR:Solution: %f, %f, %f", solution(0), solution(1), solution(2));
     solution = rotateField(solution, baseTransform_);
     // solution = rotateField(solution, inserterOrientation);
     // solution = rotateField(solution, Vector3d(0, M_PI_2, 0));

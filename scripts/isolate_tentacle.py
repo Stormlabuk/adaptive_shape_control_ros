@@ -3,13 +3,12 @@ import rospy
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage.morphology import skeletonize, remove_small_objects
+from skimage.morphology import skeletonize
 from plantcv import plantcv as pcv
 from sensor_msgs.msg import Image
 from std_srvs.srv import SetBool, SetBoolResponse, SetBoolRequest
-from shapeforming_msgs.srv import DiscretiseCurve, DiscretiseCurveRequest, DiscretiseCurveResponse
 from cv_bridge import CvBridge, CvBridgeError
-from geometry_msgs.msg import Point, Vector3
+from geometry_msgs.msg import Point
 
 
 class IsolateTentacle():
@@ -21,9 +20,6 @@ class IsolateTentacle():
         self.imgproc_call = rospy.ServiceProxy("initial_imgproc", SetBool)
         self.skel_pub_flag = rospy.Service(
             "publish_skeleton", SetBool, self.skel_pub_callback)
-
-        self.discretise_call = rospy.ServiceProxy(
-            "obv_discretise_curve", DiscretiseCurve)
 
         self.tent_img_pub = rospy.Publisher(
             "tentacle_img", Image, queue_size=10)
@@ -104,18 +100,16 @@ class IsolateTentacle():
             skeleton_clean, seg_img, seg_obj = pcv.morphology.prune(
                 skeleton, size=40)
 
-            concat = np.concatenate((
-                cv2.cvtColor( tent_only, cv2.COLOR_GRAY2BGR), 
-                cv2.cvtColor( skeleton_clean , cv2.COLOR_GRAY2BGR),
-                seg_img
-            ), axis=1)
-            cv2.imshow("Tentacle", concat)
-            cv2.waitKey(1)
+            ## Debugging
+            # concat = np.concatenate((
+            #     cv2.cvtColor( tent_only, cv2.COLOR_GRAY2BGR), 
+            #     cv2.cvtColor( skeleton_clean , cv2.COLOR_GRAY2BGR),
+            #     seg_img
+            # ), axis=1)
+            # cv2.imshow("Tentacle", concat)
+            # cv2.waitKey(1)
 
-            # To find the longest object in segmented_obj:
-            # Initialize maximum length and corresponding object
-            max_length = 0
-            longest_obj = None
+            tent_obj = None
 
             if len(seg_obj) != 0:
                 # Analyze each object to find the longest one
@@ -123,24 +117,11 @@ class IsolateTentacle():
                 def get_length(obj):
                     return cv2.arcLength(obj, closed=False)
                 seg_obj = sorted(seg_obj, key=get_length, reverse=True)
-                longest_obj = seg_obj[:2]
-                # for idx, obj in enumerate(seg_obj):
-                #     # Calculate the distance of each object (assuming segmented_obj are the contours)
-                #     length = cv2.arcLength(obj, closed=False)
-                #     if length > max_length:
-                #         max_length = length
-                #         longest_obj = obj
-                #     rospy.loginfo(f"Object {idx} has length {length}")
-                # rospy.loginfo(f"Longest object has length {max_length}")
-                # rospy.loginfo("---------------------------------")                
-
-                for idx, obj in enumerate(seg_obj):
-                    length = cv2.arcLength(obj, closed=False)
-                    rospy.loginfo(f"object {idx} has length {length}")
+                tent_obj = seg_obj[:2]
 
                 # Draw the longest object
                 timg = np.zeros_like(skeleton_clean)
-                cv2.drawContours(timg, longest_obj, -1, 255, -1)
+                cv2.drawContours(timg, tent_obj, -1, 255, -1)
                 # disp = np.concatenate((
                 #     cv2.cvtColor(timg, cv2.COLOR_GRAY2BGR),
                 #     seg_img), axis=1)
