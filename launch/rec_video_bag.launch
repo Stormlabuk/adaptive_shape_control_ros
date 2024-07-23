@@ -4,4 +4,5 @@
     <node name="bag_recorder" pkg="rosbag" type="record" args=" -o 
     /home/vittorio/ros_ws/src/adaptive_ctrl/bags/massive_field_change
     \error \field \base_field \obv_trunc \des_trunc \des_angles" if="$(arg write_bag)"/>
+    <include file="$(find launch_utils)/launch/record_video.launch"/>
 </launch>

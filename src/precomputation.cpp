@@ -9,11 +9,11 @@ Precomputation::Precomputation() {
     ROS_INFO("PR:Init values: E_: %d, len_: %f, d_: %f, v_: %f", E_, len_, d_,
              v_);
 
-    nh.param<std::vector<float>>("precomputation/magx", magX_, {});
-    nh.param<std::vector<float>>("precomputation/magy", magY_, {});
-    nh.param<std::vector<float>>("precomputation/magz", magZ_, {});
+    nh.param<std::vector<float>>("/precomputation/magx", magX_, {});
+    nh.param<std::vector<float>>("/precomputation/magy", magY_, {});
+    nh.param<std::vector<float>>("/precomputation/magz", magZ_, {});
 
-    baseTransform_ << -M_PI_2, 0, M_PI;
+    baseTransform_ << M_PI_2, 0, -M_PI;
     // baseTransform_ << 0, M_PI / 4, M_PI * 3 /4;
     // baseTransform_ << 0, 0, 0;
 

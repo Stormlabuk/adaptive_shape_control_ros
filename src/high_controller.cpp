@@ -241,6 +241,7 @@ void HighController::recalcField() {
                                    precompRes.field.bz));
     }
     fieldCalculated = true;
+    ROS_INFO("HC:Calculated %d fields", fields_.size());
 }
 
 void HighController::spinController(bool spin) {

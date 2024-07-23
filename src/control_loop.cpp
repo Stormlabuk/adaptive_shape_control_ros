@@ -132,6 +132,8 @@ void ControlNode::adjustField() {
 
         ROS_INFO("CL: Base field: %f, %f, %f", baseField_[0], baseField_[1],
                  baseField_[2]);
+        ROS_INFO("CL: Adjustment: %f, %f, %f", adjustment[0], adjustment[1],
+                 adjustment[2]);
         ROS_INFO("CL: Adjusted field: %f, %f, %f", adjField_[0], adjField_[1],
                  adjField_[2]);
 
