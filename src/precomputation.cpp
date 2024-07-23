@@ -14,7 +14,7 @@ Precomputation::Precomputation() {
     nh.param<std::vector<float>>("precomputation/magz", magZ_, {});
 
     baseTransform_ << -M_PI_2, 0, M_PI;
-    // baseTransform_ << 0, M_PI / 4, M_PI * 3 /4; 
+    // baseTransform_ << 0, M_PI / 4, M_PI * 3 /4;
     // baseTransform_ << 0, 0, 0;
 
     preCalcService_ =
@@ -70,7 +70,8 @@ bool Precomputation::calculateField(
     MatrixXd RHS = Jt * S;
     MatrixXd LHS = K * Q;
     Vector3d solution = RHS.completeOrthogonalDecomposition().solve(LHS);
-    ROS_INFO("PR:Solution: %f, %f, %f", solution(0), solution(1), solution(2));
+    // ROS_INFO("PR:Solution: %f, %f, %f", solution(0), solution(1),
+    // solution(2));
     solution = rotateField(solution, baseTransform_);
     // solution = rotateField(solution, inserterOrientation);
     // solution = rotateField(solution, Vector3d(0, M_PI_2, 0));
@@ -80,7 +81,7 @@ bool Precomputation::calculateField(
     res.field.header.stamp = ros::Time::now();
     res.field.bx = solution(0) * 1000;
     res.field.by = solution(1) * 1000;
-    res.field.bz = solution(2) * 1000;
+    res.field.bz = 6;
 
     ros_coils::magField field;
     field = res.field;
@@ -93,8 +94,8 @@ bool Precomputation::calculateField(
     // MatrixXd RHS2 = Jt * S * solution;
     // MatrixXd Q2 = LHS2.completeOrthogonalDecomposition().solve(RHS2);
     // for (int i = 0; i < obvJointNo_; i++) {
-    //     ROS_INFO("PR:Joint %d: q1: %f, q2: %f, q3: %f", i, Q2(3 * i, 0) * 180 /
-    //     M_PI,
+    //     ROS_INFO("PR:Joint %d: q1: %f, q2: %f, q3: %f", i, Q2(3 * i, 0) * 180
+    //     / M_PI,
     //              Q2(3 * i + 1, 0) * 180 / M_PI, Q2(3 * i + 2, 0));
     // }
 
@@ -146,7 +147,7 @@ void Precomputation::populateStructs(std::vector<Joint> &joints_,
     }
 
     // iterate over joints_ from front to back
-    for(int i = joints_.size(); i --> 0; ){
+    for (int i = joints_.size(); i-- > 0;) {
         joints_.at(i).LocMag << magX_[i], magY_[i], magZ_[i];
     }
 

@@ -59,7 +59,7 @@ void ControlNode::obvAnglesCallback(
 }
 
 void ControlNode::baseFieldCallback(const ros_coils::magField::ConstPtr& msg) {
-    baseField_ = Eigen::Vector3d(msg->bx, msg->by, msg->bz) * 10;
+    baseField_ = Eigen::Vector3d(msg->bx, msg->by, 0);
     adjustedField_.publish(*msg);
 }
 
@@ -127,7 +127,7 @@ void ControlNode::adjustField() {
         // "Overall adjustment would be " << 0.1 * error_ / error_dot_  << "%"
         // << std::endl; std::cout << "Normalised field\n" << adjField_ /
         // adjField_.norm() << std::endl;
-        Eigen::Vector3d adjustment = 0.01 * error_ / error_dot_ * adjField_ / adjField_.norm();
+        Eigen::Vector3d adjustment = 0.1 * error_ / error_dot_ * adjField_ / adjField_.norm();
         adjField_ += adjustment;
 
         ROS_INFO("CL: Base field: %f, %f, %f", baseField_[0], baseField_[1],

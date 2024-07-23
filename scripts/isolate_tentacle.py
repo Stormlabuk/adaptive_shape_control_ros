@@ -96,6 +96,8 @@ class IsolateTentacle():
 
             skeleton[0:int(self.insertion_point.y),
                      0:int(self.insertion_point.x)] = 0
+            
+            skeleton[:50, :] = 0
 
             skeleton_clean, seg_img, seg_obj = pcv.morphology.prune(
                 skeleton, size=40)
