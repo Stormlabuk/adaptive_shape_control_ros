@@ -8,7 +8,7 @@ ControlNode::ControlNode() {
         "des_trunc", 1, &ControlNode::desAnglesCallback, this);
 
     baseFieldSub_ = nh_.subscribe<ros_coils::magField>(
-        "precomputation/baseField", 1, &ControlNode::baseFieldCallback, this);
+        "base_field", 1, &ControlNode::baseFieldCallback, this);
 
     errorPub_ = nh_.advertise<shapeforming_msgs::error>("error", 1);
     adjustedField_ = nh_.advertise<ros_coils::magField>("field", 1);
@@ -60,6 +60,8 @@ void ControlNode::obvAnglesCallback(
 
 void ControlNode::baseFieldCallback(const ros_coils::magField::ConstPtr& msg) {
     baseField_ = Eigen::Vector3d(msg->bx, msg->by, 0);
+    ROS_INFO("CL: Base field received: %f, %f, %f", baseField_[0],
+             baseField_[1], baseField_[2]);
     adjustedField_.publish(*msg);
 }
 
@@ -142,7 +144,7 @@ void ControlNode::adjustField() {
         field_msg.bx = adjField_[0];
         field_msg.by = adjField_[1];
         // field_msg.bz = adjField_[2];
-        field_msg.bz = 6;
+        field_msg.bz = 12;
         adjustedField_.publish(field_msg);
     } else {
         ROS_WARN("Base field is not received");

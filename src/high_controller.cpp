@@ -242,6 +242,12 @@ void HighController::recalcField() {
     }
     fieldCalculated = true;
     ROS_INFO("HC:Calculated %d fields", fields_.size());
+    ros_coils::magField initialField; 
+    initialField.bx = fields_[0].x();
+    initialField.by = fields_[0].y();
+    initialField.bz = fields_[0].z();
+    initialField.header.stamp = ros::Time::now();
+    field_pub_.publish(initialField);
 }
 
 void HighController::spinController(bool spin) {

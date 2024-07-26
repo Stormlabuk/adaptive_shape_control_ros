@@ -13,7 +13,11 @@ Precomputation::Precomputation() {
     nh.param<std::vector<float>>("/precomputation/magy", magY_, {});
     nh.param<std::vector<float>>("/precomputation/magz", magZ_, {});
 
-    baseTransform_ << M_PI_2, 0, -M_PI;
+    nh.param<float>("baseTransformx", baseX, 0);
+    nh.param<float>("baseTransformy", baseY, 0);
+    nh.param<float>("baseTransformz", baseZ, 0);
+    baseTransform_ << baseX, baseY, baseZ;
+    baseTransform_ = baseTransform_ * M_PI / 180;
     // baseTransform_ << 0, M_PI / 4, M_PI * 3 /4;
     // baseTransform_ << 0, 0, 0;
 

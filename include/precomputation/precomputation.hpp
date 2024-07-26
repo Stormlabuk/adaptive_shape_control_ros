@@ -24,6 +24,7 @@ class Precomputation {
      * 
      */
     Vector3d baseTransform_;
+    float baseX, baseY, baseZ;
 
    public:
     Precomputation();
