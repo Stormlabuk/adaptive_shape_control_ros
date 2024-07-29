@@ -1,8 +1,18 @@
 <launch>
     <arg name="output" default="screen"/>
     <arg name="write_bag" default="true"/>
+    <arg name="exp_name" default="dflt_exp"/>
+
     <node name="bag_recorder" pkg="rosbag" type="record" args=" -o 
-    /home/vittorio/ros_ws/src/adaptive_ctrl/bags/massive_field_change
+    /home/vittorio/ros_ws/src/adaptive_ctrl/bags/$(arg exp_name)
     \error \field \base_field \obv_trunc \des_trunc \des_angles" if="$(arg write_bag)"/>
-    <include file="$(find launch_utils)/launch/record_video.launch"/>
+
+    <node pkg="launch_utils" type="record_view.py" name="record_view" output="screen">
+        <!-- Set the input image topic -->
+        <param name="image_topic" value="/pylon_camera_node/image_rect"/>
+        <!-- Set the output video file -->
+        <param name="file_name" value="$(arg exp_name)"/>
+        <param name="codec" value="mp4v"/>
+    </node>
+
 </launch>
