@@ -74,8 +74,8 @@ bool Precomputation::calculateField(
     MatrixXd RHS = Jt * S;
     MatrixXd LHS = K * Q;
     Vector3d solution = RHS.completeOrthogonalDecomposition().solve(LHS);
-    // ROS_INFO("PR:Solution: %f, %f, %f", solution(0), solution(1),
-    // solution(2));
+    ROS_INFO("PR:Solution in world frame: %f, %f, %f", solution(0), solution(1),
+        solution(2));
     solution = rotateField(solution, baseTransform_);
     // solution = rotateField(solution, inserterOrientation);
     // solution = rotateField(solution, Vector3d(0, M_PI_2, 0));
@@ -85,7 +85,7 @@ bool Precomputation::calculateField(
     res.field.header.stamp = ros::Time::now();
     res.field.bx = solution(0) * 1000;
     res.field.by = solution(1) * 1000;
-    res.field.bz = 6;
+    res.field.bz = 12;
 
     ros_coils::magField field;
     field = res.field;
