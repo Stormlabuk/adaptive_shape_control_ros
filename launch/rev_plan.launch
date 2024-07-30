@@ -15,7 +15,7 @@
     <rosparam param="baseTransformy">180</rosparam>
     <rosparam param="baseTransformz">0</rosparam>
 
-    <rosparam param="error_lb">5</rosparam>
+    <rosparam param="error_lb">8</rosparam>
     <!-- <rosparam param="error_dot_lb">0.5</rosparam> -->
 
     <include file="$(find adaptive_ctrl)/launch/path_planner.launch"/>

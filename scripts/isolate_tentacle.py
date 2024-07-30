@@ -100,7 +100,7 @@ class IsolateTentacle():
             skeleton[:50, :] = 0
 
             skeleton_clean, seg_img, seg_obj = pcv.morphology.prune(
-                skeleton, size=40)
+                skeleton, size=60)
 
             ## Debugging
             # concat = np.concatenate((

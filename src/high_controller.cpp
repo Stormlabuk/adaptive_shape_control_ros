@@ -109,6 +109,12 @@ void HighController::highLoop() {
 
         if (fieldCalculated && targetReached) {
             obvAnglesNo_ = obv_angles_.count;
+            if(obvAnglesNo_ != targetAnglesNo_){
+                ROS_ERROR("HC:Obv angles and target angles do not match. Returning to inserting");
+                inserting = true;
+                targetReached = false;
+                return;
+            }
             Vector3d currField = fields_.at(obvAnglesNo_-1);
             ros_coils::magField fieldMsg;
             fieldMsg.bx = currField.x();
@@ -121,8 +127,8 @@ void HighController::highLoop() {
             shapeforming_msgs::rl_angles des_slice;
             des_slice.angles =
                 std::vector<float>(des_angles_.angles.begin(),
-                                   des_angles_.angles.begin() + obvAnglesNo_);
-            des_slice.count = obvAnglesNo_;
+                                   des_angles_.angles.begin() + targetAnglesNo_);
+            des_slice.count = targetAnglesNo_;
             des_trunc_.publish(des_slice);
             obv_trunc_.publish(obv_slice);
             field_pub_.publish(fieldMsg);

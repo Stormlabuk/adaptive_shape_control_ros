@@ -43,6 +43,7 @@ bool ControlNode::spinController(std_srvs::SetBool::Request& req,
 
 void ControlNode::desAnglesCallback(
     const shapeforming_msgs::rl_angles::ConstPtr& msg) {
+    desAngles_.clear();
     for (auto i : msg->angles) {
         desAngles_.push_back(Eigen::Vector3d(0, i, 0));
     }
@@ -150,13 +151,13 @@ void ControlNode::adjustField() {
             field_msg.bz = 12;
             break;
         case 2:
-            field_msg.bz = 0;
+            field_msg.bz = 4;
             break;
         
         default:
             field_msg.bz = -6;
         }
-        field_msg.bz = desCount_;
+        // field_msg.bz = desCount_;
         adjustedField_.publish(field_msg);
     } else {
         ROS_WARN("Base field is not received");

@@ -8,6 +8,8 @@ TentacleExtractor::TentacleExtractor() : it_(nh_) {
         "obv_discretise_curve");
 
     mm_pixel_ = ros::param::param<int>("mm_to_pixel", 15);
+    double link_float = ros::param::param<double>("/precomputation/len", 10.0); 
+    link_mm = static_cast<int>(link_float * 1000);
     pixel_mm_ = 1.0 / mm_pixel_;
 }
 
@@ -67,7 +69,9 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
         cv::Point2i currPoint = points[i];
         double dx = currPoint.x - firstPoint.x;
         double dy = currPoint.y - firstPoint.y;
-        distances.push_back(std::sqrt(dx * dx + dy * dy));
+        double distance = std::sqrt(dx * dx + dy * dy);
+        distances.push_back(distance);
+
     }
     std::vector<double> distances_cumulative;
     distances_cumulative.push_back(0.0);
@@ -80,12 +84,9 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
 
     // Find the next highest multiple of 10mm (converted to pixels) that covers
     // the points
-    int link_px = link_mm * mm_pixel_;
-    int numLinks = std::ceil(totalDistance / link_px);
-    // if (totalDistance != 0) {
-    //     ROS_INFO("Total distance old method %f. Total distance new method:
-    //     %f", distances.back() * pixel_mm_, totalDistance * pixel_mm_);
-    // }
+    int link_px = link_mm * mm_pixel_;    
+    int numLinks = std::floor(totalDistance / link_px);
+    
     if (totalDistance < link_px) {
         // ROS_INFO("Tentacle is too short");
         req.tentacle.num_points = 0;
@@ -103,13 +104,13 @@ void TentacleExtractor::extract_tentacle(cv::Mat& tent_only) {
 
     if (numLinks > 1) {
         int linksToFind = numLinks - 1;
-        req.tentacle.num_points = numLinks;
-        req.tentacle.px.resize(numLinks);
-        req.tentacle.py.resize(numLinks);
+        req.tentacle.num_points = numLinks + 1;
+        req.tentacle.px.resize(numLinks + 1);
+        req.tentacle.py.resize(numLinks + 1);
         req.tentacle.px[0] = points[0].x;
         req.tentacle.py[0] = points[0].y;
-        req.tentacle.px[numLinks - 1] = points.back().x;
-        req.tentacle.py[numLinks - 1] = points.back().y;
+        req.tentacle.px[numLinks] = points.back().x;
+        req.tentacle.py[numLinks] = points.back().y;
 
         for (int i = 0; i < linksToFind; i++) {
             double targetDistance = (i + 1) * link_px;
