@@ -41,7 +41,7 @@ class DiscretisingNode:
             angles = np.arctan2(dy, dx) * 180 / np.pi
             
             res = DiscretiseCurveResponse(angles, True)
-            angles_msg = rl_angles(angles=res.angles, count=num_points)
+            angles_msg = rl_angles(angles=res.angles, count=num_points-1)
             self.obvAnglesPub_.publish(angles_msg)
             self.visualiseAngles(np.column_stack((x, y)), angles)
             return res

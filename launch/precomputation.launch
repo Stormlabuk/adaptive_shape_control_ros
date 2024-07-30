@@ -1,7 +1,7 @@
 <launch>
 
     <group ns="precomputation">
-        <rosparam file="$(find adaptive_ctrl)/config/default_tent_vals.yaml" />
+        <rosparam file="$(find adaptive_ctrl)/config/b2_s2.yaml" />
     </group>
 
     <node name="precomps" pkg="adaptive_ctrl" type="precomputation" output="screen" />

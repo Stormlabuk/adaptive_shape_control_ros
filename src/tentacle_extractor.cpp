@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
     TentacleExtractor tentacle_extractor;
     while (ros::ok()) {
         ros::spinOnce();
-        ros::Rate(10).sleep();
+        ros::Rate(15).sleep();
     }
 
     return 0;

@@ -85,7 +85,7 @@ class HighController {
     std::vector<Vector3d> fields_;
     bool controllerSpinning = false, inserting = false, targetReached = false,
          fieldCalculated = false, firstError = false, solved = true;
-    int obvJointNo_ = 0, targetJointNo_ = 0;
+    int obvAnglesNo_ = 0, targetAnglesNo_ = 0;
 };
 
 int main(int argc, char* argv[]);
