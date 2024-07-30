@@ -2,8 +2,9 @@
 #include <ros_coils/magField.h>
 #include <shapeforming_msgs/error.h>
 #include <shapeforming_msgs/rl_angles.h>
-#include <std_srvs/SetBool.h>
 #include <std_msgs/Bool.h>
+#include <std_srvs/SetBool.h>
+
 #include <eigen3/Eigen/Core>
 
 class ControlNode {
@@ -21,10 +22,10 @@ class ControlNode {
     Eigen::Vector3d held_field;
     std::vector<Eigen::Vector3d> desAngles_, obvAngles_;
 
-   std_msgs::Bool spinning_msg_;
+    std_msgs::Bool spinning_msg_;
 
     int desCount_, obvCount_;
-    float error_ = 0, error_prev_ = 0, error_dot_ = 0;
+    int error_ = 0, error_prev_ = 0, error_dot_ = 0;
     bool controller_spinning_ = false;
 
    public:

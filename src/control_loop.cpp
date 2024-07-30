@@ -93,7 +93,7 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
 
     std::vector<Eigen::Vector3d> diff(desAngles_.size());
     for (int i = 0; i < desAngles_.size(); i++) {
-        diff[i] = (obvAngles_[i] - desAngles_[i]) * (1 + i * 0.1);
+        diff[i] = (obvAngles_[i] - desAngles_[i]) * (1 + i * 0.05);
         // Eigen::Vector3d((obvAngles_[i].x() - desAngles_[i].x()) * (i + 1),
         //                 (obvAngles_[i].y() - desAngles_[i].y()) * (i + 1),
         //                 (obvAngles_[i].z() - desAngles_[i].z()) * (i + 1));
@@ -116,10 +116,10 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
 
 void ControlNode::adjustField() {
     if (baseField_.norm() != 0) {
-        if (error_dot_ == 0) {
-            error_dot_ = 1;
-        }
         error_dot_ = abs(error_dot_);
+        if (error_dot_ == 0) {
+            error_dot_ = error_;
+        }
         if (adjField_.norm() == 0) {
             adjField_ = baseField_;
         }
@@ -132,6 +132,20 @@ void ControlNode::adjustField() {
         // adjField_.norm() << std::endl;
         Eigen::Vector3d adjustment =
             0.1 * error_ / error_dot_ * adjField_ / adjField_.norm();
+
+        if (adjustment.x() > 10) {
+            ROS_ERROR("CL: Adjustment x is too high: %f", adjustment.x());
+            return;
+        }
+        if (adjustment.y() > 10) {
+            ROS_ERROR("CL: Adjustment y is too high: %f", adjustment.y());
+            return;
+        }
+        if (adjustment.z() > 10) {
+            ROS_ERROR("CL: Adjustment z is too high: %f", adjustment.z());
+            return;
+        }
+
         adjField_ += adjustment;
 
         ROS_INFO("CL: Base field: %f, %f, %f", baseField_[0], baseField_[1],
@@ -151,11 +165,11 @@ void ControlNode::adjustField() {
                 field_msg.bz = 12;
                 break;
             case 2:
-                field_msg.bz = 4;
+                field_msg.bz = 6;
                 break;
 
             default:
-                field_msg.bz = -6;
+                field_msg.bz = 6;
         }
         // field_msg.bz = desCount_;
         adjustedField_.publish(field_msg);

@@ -77,7 +77,7 @@ void HighController::highLoop() {
             ROS_INFO("HC: Success! Moving onto next target, if available");
             obvAnglesNo_ = obv_angles_.count;
 
-            if (obvAnglesNo_ > des_angles_.count) {
+            if (obvAnglesNo_ >= des_angles_.count) {
                 ROS_INFO("HC:No more targets to reach. Waiting for new target");
                 return;
             } else {
