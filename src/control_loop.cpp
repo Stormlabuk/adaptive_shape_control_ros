@@ -93,13 +93,13 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
 
     std::vector<Eigen::Vector3d> diff(desAngles_.size());
     for (int i = 0; i < desAngles_.size(); i++) {
-        diff[i] = (obvAngles_[i] - desAngles_[i]) * (i + 1);
-            // Eigen::Vector3d((obvAngles_[i].x() - desAngles_[i].x()) * (i + 1),
-            //                 (obvAngles_[i].y() - desAngles_[i].y()) * (i + 1),
-            //                 (obvAngles_[i].z() - desAngles_[i].z()) * (i + 1));
+        diff[i] = (obvAngles_[i] - desAngles_[i]) * (1 + i * 0.1);
+        // Eigen::Vector3d((obvAngles_[i].x() - desAngles_[i].x()) * (i + 1),
+        //                 (obvAngles_[i].y() - desAngles_[i].y()) * (i + 1),
+        //                 (obvAngles_[i].z() - desAngles_[i].z()) * (i + 1));
     }
     Eigen::Vector3d diffCollapsed = Eigen::Vector3d::Zero();
-    for(int i = 0; i < diff.size(); i++) {
+    for (int i = 0; i < diff.size(); i++) {
         diffCollapsed += diff[i];
     }
 
@@ -130,7 +130,8 @@ void ControlNode::adjustField() {
         // "Overall adjustment would be " << 0.1 * error_ / error_dot_  << "%"
         // << std::endl; std::cout << "Normalised field\n" << adjField_ /
         // adjField_.norm() << std::endl;
-        Eigen::Vector3d adjustment = 0.1 * error_ / error_dot_ * adjField_ / adjField_.norm();
+        Eigen::Vector3d adjustment =
+            0.1 * error_ / error_dot_ * adjField_ / adjField_.norm();
         adjField_ += adjustment;
 
         ROS_INFO("CL: Base field: %f, %f, %f", baseField_[0], baseField_[1],
@@ -145,17 +146,16 @@ void ControlNode::adjustField() {
         field_msg.bx = adjField_[0];
         field_msg.by = adjField_[1];
         // field_msg.bz = adjField_[2];
-        switch (desCount_)
-        {
-        case 1:
-            field_msg.bz = 12;
-            break;
-        case 2:
-            field_msg.bz = 4;
-            break;
-        
-        default:
-            field_msg.bz = -6;
+        switch (desCount_) {
+            case 1:
+                field_msg.bz = 12;
+                break;
+            case 2:
+                field_msg.bz = 4;
+                break;
+
+            default:
+                field_msg.bz = -6;
         }
         // field_msg.bz = desCount_;
         adjustedField_.publish(field_msg);

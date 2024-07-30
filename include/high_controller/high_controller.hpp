@@ -55,6 +55,7 @@ class HighController {
     void recalcPath();
     void spinController(bool spin);
 
+    std::vector<double> error_vals;
     double error_lb = 0, error_dot_lb = 0;
     bool controller_spinning_ = false;
 

@@ -26,9 +26,13 @@ HighController::HighController() {
     field_pub_ = nh_.advertise<ros_coils::magField>("base_field", 1);
 
     // ros parameters
-    nh_.param<double>("error_lb", error_lb, 10);
-    nh_.param<double>("error_dot_lb", error_dot_lb, 10);
-
+    // nh_.param<double>("error_lb", error_lb, 10);
+    // nh_.param<double>("error_dot_lb", error_dot_lb, 10);
+    nh_.param<std::vector<double>>("error_vals", error_vals,
+                                   {10, 20, 30, 40, 50});
+    for(auto i : error_vals) {
+        ROS_INFO("HC:Error value: %f", i);
+    }
     // ros service clients
     initial_imgproc_ = nh_.serviceClient<std_srvs::SetBool>("initial_imgproc");
     skeleton_init_ = nh_.serviceClient<std_srvs::SetBool>("publish_skeleton");
@@ -65,27 +69,27 @@ HighController::HighController() {
 
 void HighController::highLoop() {
     if (!controllerSpinning) {
-        if(des_angles_.count == 0){
+        if (des_angles_.count == 0) {
             return;
         }
 
-        if(solved){
+        if (solved) {
             ROS_INFO("HC: Success! Moving onto next target, if available");
             obvAnglesNo_ = obv_angles_.count;
 
-            if(obvAnglesNo_ > des_angles_.count){
+            if (obvAnglesNo_ > des_angles_.count) {
                 ROS_INFO("HC:No more targets to reach. Waiting for new target");
                 return;
             } else {
                 targetAnglesNo_++;
                 inserting = true;
                 solved = false;
-                ROS_INFO("HC:New target to reach %d. Inserting", targetAnglesNo_);
+                ROS_INFO("HC:New target to reach %d. Inserting",
+                         targetAnglesNo_);
             }
             return;
         }
 
-        
         if (inserting) {
             std_msgs::Int32 stepper_msg;
             stepper_msg.data = 1;
@@ -109,25 +113,27 @@ void HighController::highLoop() {
 
         if (fieldCalculated && targetReached) {
             obvAnglesNo_ = obv_angles_.count;
-            if(obvAnglesNo_ != targetAnglesNo_){
-                ROS_ERROR("HC:Obv angles and target angles do not match. Returning to inserting");
+            if (obvAnglesNo_ != targetAnglesNo_) {
+                ROS_ERROR(
+                    "HC:Obv angles and target angles do not match. Returning "
+                    "to inserting");
                 inserting = true;
                 targetReached = false;
                 return;
             }
-            Vector3d currField = fields_.at(obvAnglesNo_-1);
+            Vector3d currField = fields_.at(obvAnglesNo_ - 1);
             ros_coils::magField fieldMsg;
             fieldMsg.bx = currField.x();
             fieldMsg.by = currField.y();
             fieldMsg.bz = currField.z();
-            ROS_INFO("HC:Publishing field: %f, %f, %f", fieldMsg.bx, fieldMsg.by,
-                     fieldMsg.bz);
+            ROS_INFO("HC:Publishing field: %f, %f, %f", fieldMsg.bx,
+                     fieldMsg.by, fieldMsg.bz);
 
             shapeforming_msgs::rl_angles obv_slice = obv_angles_;
             shapeforming_msgs::rl_angles des_slice;
-            des_slice.angles =
-                std::vector<float>(des_angles_.angles.begin(),
-                                   des_angles_.angles.begin() + targetAnglesNo_);
+            des_slice.angles = std::vector<float>(
+                des_angles_.angles.begin(),
+                des_angles_.angles.begin() + targetAnglesNo_);
             des_slice.count = targetAnglesNo_;
             des_trunc_.publish(des_slice);
             obv_trunc_.publish(obv_slice);
@@ -141,8 +147,9 @@ void HighController::highLoop() {
         //  spinController(controllerSpinning);
         //  targetReached = false;
     } else {
-        if(firstError && error_.error < error_lb){
-            ROS_INFO("HC:Error is below threshold. Stopping controller");
+        if (firstError && error_.error < error_vals[targetAnglesNo_ - 1]) {
+            ROS_INFO("HC:Error is below threshold %f. Stopping controller",
+                     error_vals[targetAnglesNo_ - 1]);
             controllerSpinning = false;
             spinController(false);
             firstError = false;
@@ -222,8 +229,8 @@ void HighController::recalcField() {
     shapeforming_msgs::CalcInitialFieldResponse precompRes;
     ROS_INFO("HC:Recived a path made of %d joints. Will calculate %d fields.",
              des_angles_.count, des_angles_.count - 1);
-    
-    for(int i = 0; i < des_angles_.count ; i++){
+
+    for (int i = 0; i < des_angles_.count; i++) {
         ROS_INFO("HC:Angle %d: %f", i, des_angles_.angles[i]);
     }
 
@@ -248,7 +255,7 @@ void HighController::recalcField() {
     }
     fieldCalculated = true;
     ROS_INFO("HC:Calculated %ld fields", fields_.size());
-    ros_coils::magField initialField; 
+    ros_coils::magField initialField;
     initialField.bx = fields_[0].x();
     initialField.by = fields_[0].y();
     initialField.bz = fields_[0].z();
@@ -273,7 +280,7 @@ void HighController::errorCallback(
     const shapeforming_msgs::error::ConstPtr& msg) {
     // ROS_INFO("HC:Received error values");
     error_ = *msg;
-    if(!firstError) firstError = true;
+    if (!firstError) firstError = true;
 }
 
 void HighController::desAnglesCallback(
