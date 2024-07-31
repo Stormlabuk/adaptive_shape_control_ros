@@ -80,13 +80,13 @@ bool Precomputation::calculateField(
     ROS_INFO("PR:Solution in world frame: %f, %f, %f", solution(0), solution(1),
              solution(2));
     solution = rotateField(solution, baseTransform_);
-    // solution = rotateField(solution, inserterOrientation);
+    solution = rotateField(solution, inserterOrientation);
     // solution = rotateField(solution, Vector3d(M_PI, 0, M_PI_2));
 
     res.success = true;
     res.field.header.frame_id = "world";
     res.field.header.stamp = ros::Time::now();
-    res.field.bx = solution(0) * 1000;
+    res.field.bx = abs(solution(0)) * 1000;
     res.field.by = solution(1) * 1000;
     res.field.bz = 12;
 

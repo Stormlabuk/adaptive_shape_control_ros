@@ -116,10 +116,11 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
 
 void ControlNode::adjustField() {
     if (baseField_.norm() != 0) {
-        error_dot_ = abs(error_dot_);
+        // error_dot_ = error_dot_ * -1;
         if (error_dot_ == 0) {
             error_dot_ = error_;
         }
+        error_dot_ = abs(error_dot_);
         if (adjField_.norm() == 0) {
             adjField_ = baseField_;
         }
