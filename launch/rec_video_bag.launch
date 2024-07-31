@@ -3,9 +3,15 @@
     <arg name="write_bag" default="true"/>
     <arg name="exp_name" default="dflt_exp"/>
 
+    <!-- <node name="bag_recorder" pkg="rosbag" type="record" args=" -o 
+    /home/vittorio/ros_ws/src/adaptive_ctrl/bags/$(arg exp_name)
+    \error \field \base_field \obv_trunc \des_trunc \des_angles" if="$(arg write_bag)"/> -->
+
+    <arg name="exclude_topics" default="pylon_camera_node(.*)|base_img|inserter_img|phantom_img|tentacle_img"/>
+
     <node name="bag_recorder" pkg="rosbag" type="record" args=" -o 
     /home/vittorio/ros_ws/src/adaptive_ctrl/bags/$(arg exp_name)
-    \error \field \base_field \obv_trunc \des_trunc \des_angles" if="$(arg write_bag)"/>
+    -a -x $(arg exclude_topics) " if="$(arg write_bag)"/>
 
     <node pkg="launch_utils" type="record_view.py" name="record_view" output="screen">
         <!-- Set the input image topic -->
