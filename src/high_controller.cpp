@@ -92,7 +92,7 @@ void HighController::highLoop() {
 
         if (inserting) {
             std_msgs::Int32 stepper_msg;
-            stepper_msg.data = 1;
+            // stepper_msg.data = 2;
             inserter_pub_.publish(stepper_msg);
             ROS_INFO("HC:Inserting. Obv joints: %d, Target joints: %d",
                      obv_angles_.count, targetAnglesNo_);
@@ -223,7 +223,7 @@ void HighController::recalcPath() {
  */
 void HighController::recalcField() {
     // by this point we have already guaranteed that des_angles != 0
-
+    fields_.clear();
     // 1. Initialise a calcinitialfield service
     shapeforming_msgs::CalcInitialFieldRequest precompReq;
     shapeforming_msgs::CalcInitialFieldResponse precompRes;
@@ -238,13 +238,21 @@ void HighController::recalcField() {
         shapeforming_msgs::rl_angles des_slice;
         des_slice.angles = std::vector<float>(
             des_angles_.angles.begin(), des_angles_.angles.begin() + i + 1);
-        des_slice.count = i + 2;
-        ROS_INFO("HC:Calculating field for %d joints", i + 1);
+        des_slice.count = i + 1;
+        ROS_INFO("HC:Calculating field for %d angles", i + 1);
         precompReq.tentacle = des_slice;
         precompReq.orientation = insertion_ori_;
         precompReq.tentacle.header.stamp = ros::Time::now();
         precomputation_client_.waitForExistence();
-        precomputation_client_.call(precompReq, precompRes);
+        try
+        {
+            precomputation_client_.call(precompReq, precompRes);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+        
         if (!precompRes.success) {
             ROS_ERROR("Failed to call precomputation service at iteration %d",
                       i);

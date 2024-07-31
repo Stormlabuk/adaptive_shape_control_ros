@@ -40,7 +40,10 @@ bool Precomputation::calculateField(
     tentacle = req.tentacle;
 
     desiredAngles_ = tentacle.angles;
-    obvJointNo_ = tentacle.count;
+    obvLinkNo = tentacle.count;
+    obvJointNo_ = obvLinkNo + 1;
+
+
     ROS_INFO("PR:Received desired angles. Num: %d", obvJointNo_);
     ROS_INFO("PR:Initialising structs");
     try {
@@ -75,7 +78,7 @@ bool Precomputation::calculateField(
     MatrixXd LHS = K * Q;
     Vector3d solution = RHS.completeOrthogonalDecomposition().solve(LHS);
     ROS_INFO("PR:Solution in world frame: %f, %f, %f", solution(0), solution(1),
-        solution(2));
+             solution(2));
     solution = rotateField(solution, baseTransform_);
     // solution = rotateField(solution, inserterOrientation);
     // solution = rotateField(solution, Vector3d(M_PI, 0, M_PI_2));
@@ -124,7 +127,9 @@ void Precomputation::populateStructs(std::vector<Joint> &joints_,
         joints_[i] = Joint();
         joints_[i].index = i;
         joints_[i].q = Vector3d(0, desiredAngles_[i] * M_PI / 180, 0);
-
+        if(i == obvLinkNo){
+            joints_[i].q = Vector3d(0, 0, 0);
+        }
         links_[i] = Link();
         links_[i].index = i;
         links_[i].d = d_;

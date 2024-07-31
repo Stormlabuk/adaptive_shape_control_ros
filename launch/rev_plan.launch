@@ -22,7 +22,6 @@
 
     <include file="$(find adaptive_ctrl)/launch/path_planner.launch"/>
 
-    <node name="image_fetcher" pkg="adaptive_ctrl" type="image_fetcher.py" output="$(arg output)"/>
     <node name="image_processsor" pkg="adaptive_ctrl" type="image_processor.py" output="$(arg output)"/>
     <node name="find_insertion_point" pkg="adaptive_ctrl" type="find_insertion_point.py" output="$(arg output)"/>
     <node name="process_costmap" pkg="adaptive_ctrl" type="process_costmap.py" output="$(arg output)"/>

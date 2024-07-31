@@ -14,6 +14,7 @@ class Precomputation {
     int E_;
     float len_, d_, v_;
     int obvJointNo_ = 0;
+    int obvLinkNo = 0;
     std::vector<float> desiredAngles_;
     std::vector<float> magX_, magY_, magZ_;
     ros::ServiceServer preCalcService_;
