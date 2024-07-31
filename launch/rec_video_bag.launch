@@ -7,7 +7,7 @@
     /home/vittorio/ros_ws/src/adaptive_ctrl/bags/$(arg exp_name)
     \error \field \base_field \obv_trunc \des_trunc \des_angles" if="$(arg write_bag)"/> -->
 
-    <arg name="exclude_topics" default="pylon_camera_node(.*)|base_img|inserter_img|phantom_img|tentacle_img"/>
+    <arg name="exclude_topics" default="/pylon_camera_node(.*)|/base_img|/inserter_img|/phantom_img|/tentacle_img|/image|/diagnostics|/tf"/>
 
     <node name="bag_recorder" pkg="rosbag" type="record" args=" -o 
     /home/vittorio/ros_ws/src/adaptive_ctrl/bags/$(arg exp_name)
