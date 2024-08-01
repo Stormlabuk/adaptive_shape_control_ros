@@ -18,7 +18,8 @@ class ControlNode {
     ros::Timer calcError_;
 
     Eigen::Vector3d baseField_ = Eigen::Vector3d::Zero(),
-                    adjField_ = Eigen::Vector3d::Zero();
+                    adjField_ = Eigen::Vector3d::Zero(),
+                    currentField_ = Eigen::Vector3d::Zero();
     Eigen::Vector3d held_field;
     std::vector<Eigen::Vector3d> desAngles_, obvAngles_;
 

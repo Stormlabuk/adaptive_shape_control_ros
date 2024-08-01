@@ -138,11 +138,11 @@ void ControlNode::adjustField() {
                 field_msg.bz = 12;
                 break;
             case 2:
-                field_msg.bz = 6;
+                field_msg.bz = 10;
                 break;
 
             default:
-                field_msg.bz = 6;
+                field_msg.bz = 4;
         }
         // field_msg.bz = desCount_;
         adjustedField_.publish(field_msg);

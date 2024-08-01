@@ -77,11 +77,11 @@ bool Precomputation::calculateField(
     MatrixXd RHS = Jt * S;
     MatrixXd LHS = K * Q;
     Vector3d solution = RHS.completeOrthogonalDecomposition().solve(LHS);
-    ROS_INFO("PR:Solution in world frame: %f, %f, %f", solution(0), solution(1),
+    ROS_WARN("PR:Solution in world frame: %f, %f, %f", solution(0), solution(1),
              solution(2));
     solution = rotateField(solution, baseTransform_);
     solution = rotateField(solution, inserterOrientation);
-    // solution = rotateField(solution, Vector3d(M_PI, 0, M_PI_2));
+    solution = rotateField(solution, Vector3d(0, 0, M_PI_4));
 
     res.success = true;
     res.field.header.frame_id = "world";

@@ -63,7 +63,39 @@ void ControlNode::baseFieldCallback(const ros_coils::magField::ConstPtr& msg) {
     baseField_ = Eigen::Vector3d(msg->bx, msg->by, 0);
     ROS_INFO("CL: Base field received: %f, %f, %f", baseField_[0],
              baseField_[1], baseField_[2]);
-    adjustedField_.publish(*msg);
+    ros_coils::magField field_msg;
+
+    if (currentField_.norm() == 0) {
+        currentField_ = baseField_;
+        field_msg.header.stamp = ros::Time::now();
+        field_msg.bx = currentField_[0];
+        field_msg.by = currentField_[1];
+        field_msg.bz = 12;
+        adjustedField_.publish(field_msg);
+    } else {
+        Eigen::Vector3d diff = currentField_ - baseField_;
+        if (abs(diff.x()) > 15) {
+            double adj_val = diff.x() > 0 ? diff.x() - 15 : diff.x() + 15;
+            currentField_.x() = currentField_.x() + adj_val;
+            ROS_INFO("CL: Change in Z is too great");
+        }
+        if (abs(diff.y()) > 15) {
+            double adj_val = diff.y() > 0 ? diff.y() - 15 : diff.y() + 15;
+            currentField_.y() = currentField_.y() + adj_val;
+            ROS_INFO("CL: Change in Y is too great. Adjusted by %f", adj_val);
+        }
+        if (abs(diff.x()) > 15) {
+            double adj_val = diff.z() > 0 ? diff.z() - 15 : diff.z() + 15;
+            currentField_.z() = currentField_.z() + adj_val;
+            ROS_INFO("CL: Change in Z is too great");
+        }
+    }
+    field_msg.header.stamp = ros::Time::now();
+    field_msg.bx = currentField_[0];
+    field_msg.by = currentField_[1];
+    field_msg.bz = currentField_[2];
+    adjustedField_.publish(field_msg);
+    currentField_ = baseField_;
 }
 
 void ControlNode::ComputeError(const ros::TimerEvent&) {
@@ -166,14 +198,15 @@ void ControlNode::adjustField() {
                 field_msg.bz = 12;
                 break;
             case 2:
-                field_msg.bz = 6;
+                field_msg.bz = 10;
                 break;
 
             default:
-                field_msg.bz = 6;
+                field_msg.bz = 4;
         }
         // field_msg.bz = desCount_;
         adjustedField_.publish(field_msg);
+        currentField_ = adjField_;
     } else {
         ROS_WARN("Base field is not received");
     }
