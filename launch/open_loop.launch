@@ -36,9 +36,9 @@
         <param name="angle_pub_type" value="obv_"/>
     </node>
 
-    <node name="high_controller" pkg="adaptive_ctrl" type="high_controller" output="$(arg output)"/>
+    <node name="open_high_controller" pkg="adaptive_ctrl" type="open_high_controller" output="$(arg output)"/>
 
-    <node name="control_loop" pkg="adaptive_ctrl" type="control_node" output="$(arg output)"/>
+    <node name="open_loop" pkg="adaptive_ctrl" type="open_loop" output="$(arg output)"/>
 
     <include file="$(find adaptive_ctrl)/launch/precomputation.launch"/>
 

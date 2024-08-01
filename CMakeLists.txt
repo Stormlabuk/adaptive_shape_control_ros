@@ -140,6 +140,7 @@ add_executable(open_loop src/open_loop.cpp)
 add_executable(precomputation src/precomputation.cpp)
 add_executable(tentacle_extractor src/tentacle_extractor.cpp)
 add_executable(high_controller src/high_controller.cpp)
+add_executable(open_high_controller src/open_high_controller.cpp)
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -176,6 +177,9 @@ target_link_libraries(high_controller
   ${catkin_LIBRARIES}
 )
 
+target_link_libraries(open_high_controller
+  ${catkin_LIBRARIES}
+)
 #############
 ## Install ##
 #############
