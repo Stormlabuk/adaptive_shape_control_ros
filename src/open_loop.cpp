@@ -61,7 +61,7 @@ void ControlNode::obvAnglesCallback(
 
 void ControlNode::baseFieldCallback(const ros_coils::magField::ConstPtr& msg) {
     baseField_ = Eigen::Vector3d(msg->bx, msg->by, 0);
-    ROS_INFO("CL: Base field received: %f, %f, %f", baseField_[0],
+    ROS_INFO("OL: Base field received: %f, %f, %f", baseField_[0],
              baseField_[1], baseField_[2]);
     adjustedField_.publish(*msg);
 }
@@ -70,7 +70,7 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
     shapeforming_msgs::error error_msg;
     error_msg.header.stamp = ros::Time::now();
 
-    // ROS_INFO("CL: Computing the error. Desired Angles:");
+    // ROS_INFO("OL: Computing the error. Desired Angles:");
     // for (auto i : desAngles_) {
     //     ROS_INFO("%f, %f, %f ", i.x(), i.y(), i.z());
     // }
@@ -89,7 +89,7 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
         return;
     }
     ROS_INFO(
-        "CL:Desired and observed angles are received, proceeding with loop");
+        "OL:Desired and observed angles are received, proceeding with loop");
 
     std::vector<Eigen::Vector3d> diff(desAngles_.size());
     for (int i = 0; i < desAngles_.size(); i++) {
@@ -117,43 +117,15 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
 void ControlNode::adjustField() {
     if (baseField_.norm() != 0) {
         // error_dot_ = error_dot_ * -1;
-        if (error_dot_ == 0) {
-            error_dot_ = error_;
-        }
-        error_dot_ = abs(error_dot_);
+        
         if (adjField_.norm() == 0) {
             adjField_ = baseField_;
         }
-        // std::cout << "\n---------\n";
-        // std::cout << "Desired angles:\n" << desAngles_ << "\nObserved
-        // angles:\n" << obvAngles_ << std::endl; std::cout << "Error: " <<
-        // error_ << " Error_dot: " << error_dot_ << std::endl; std::cout <<
-        // "Overall adjustment would be " << 0.1 * error_ / error_dot_  << "%"
-        // << std::endl; std::cout << "Normalised field\n" << adjField_ /
-        // adjField_.norm() << std::endl;
-        Eigen::Vector3d adjustment =
-            0.1 * error_ / error_dot_ * adjField_ / adjField_.norm();
 
-        if (adjustment.x() > 10) {
-            ROS_ERROR("CL: Adjustment x is too high: %f", adjustment.x());
-            return;
-        }
-        if (adjustment.y() > 10) {
-            ROS_ERROR("CL: Adjustment y is too high: %f", adjustment.y());
-            return;
-        }
-        if (adjustment.z() > 10) {
-            ROS_ERROR("CL: Adjustment z is too high: %f", adjustment.z());
-            return;
-        }
-
-        adjField_ += adjustment;
-
-        ROS_INFO("CL: Base field: %f, %f, %f", baseField_[0], baseField_[1],
+        ROS_INFO("OL: Base field: %f, %f, %f", baseField_[0], baseField_[1],
                  baseField_[2]);
-        ROS_INFO("CL: Adjustment: %f, %f, %f", adjustment[0], adjustment[1],
-                 adjustment[2]);
-        ROS_INFO("CL: Adjusted field: %f, %f, %f", adjField_[0], adjField_[1],
+
+        ROS_INFO("OL: Adjusted field: %f, %f, %f", adjField_[0], adjField_[1],
                  adjField_[2]);
 
         ros_coils::magField field_msg;
@@ -174,6 +146,8 @@ void ControlNode::adjustField() {
         }
         // field_msg.bz = desCount_;
         adjustedField_.publish(field_msg);
+        spinning_msg_.data = false;
+        spinningPub_.publish(spinning_msg_);
     } else {
         ROS_WARN("Base field is not received");
     }

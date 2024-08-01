@@ -136,6 +136,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/adaptive_ctrl_node.cpp)
 add_executable(control_node src/control_loop.cpp)
+add_executable(open_loop src/open_loop.cpp)
 add_executable(precomputation src/precomputation.cpp)
 add_executable(tentacle_extractor src/tentacle_extractor.cpp)
 add_executable(high_controller src/high_controller.cpp)
@@ -155,6 +156,10 @@ add_executable(high_controller src/high_controller.cpp)
 
 
 target_link_libraries(control_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(open_loop
   ${catkin_LIBRARIES}
 )
 
