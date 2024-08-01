@@ -21,4 +21,10 @@
         <param name="codec" value="mp4v"/>
     </node>
 
+    <node pkg="launch_utils" type="record_rviz.py" name="record_rviz" output="screen">
+        <!-- Set the input image topic -->
+        <!-- Set the output video file -->
+        <param name="file_name" value="$(arg exp_name)"/>
+    </node>
+
 </launch>
