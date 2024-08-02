@@ -38,6 +38,19 @@ class ControlNode {
     void adjustField();
     bool spinController(std_srvs::SetBool::Request& req,
                         std_srvs::SetBool::Response& res);
+
+    Eigen::Vector3d limitElementwiseChange(const Eigen::Vector3d& current,
+                                           const Eigen::Vector3d& next,
+                                           double limit) {
+        Eigen::Vector3d adjustedNext = next;
+        for (int i = 0; i < 3; ++i) {
+            double change = next[i] - current[i];
+            if (std::abs(change) > limit) {
+                adjustedNext[i] = current[i] + (change > 0 ? limit : -limit);
+            }
+        }
+        return adjustedNext;
+    }
 };
 
 int main(int argc, char* argv[]);

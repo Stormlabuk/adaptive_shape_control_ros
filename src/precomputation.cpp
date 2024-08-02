@@ -86,9 +86,9 @@ bool Precomputation::calculateField(
     res.success = true;
     res.field.header.frame_id = "world";
     res.field.header.stamp = ros::Time::now();
-    res.field.bx = abs(solution(0)) * 1000;
+    res.field.bx = solution(0) * 1000;
     res.field.by = solution(1) * 1000;
-    res.field.bz = 12;
+    res.field.bz = 0;
 
     ros_coils::magField field;
     field = res.field;
