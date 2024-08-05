@@ -132,18 +132,7 @@ void ControlNode::adjustField() {
         field_msg.header.stamp = ros::Time::now();
         field_msg.bx = adjField_[0];
         field_msg.by = adjField_[1];
-        // field_msg.bz = adjField_[2];
-        switch (desCount_) {
-            case 1:
-                field_msg.bz = 12;
-                break;
-            case 2:
-                field_msg.bz = 10;
-                break;
 
-            default:
-                field_msg.bz = 4;
-        }
         // field_msg.bz = desCount_;
         adjustedField_.publish(field_msg);
         spinning_msg_.data = false;

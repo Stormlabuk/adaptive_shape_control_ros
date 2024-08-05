@@ -81,7 +81,7 @@ bool Precomputation::calculateField(
              solution(2));
     solution = rotateField(solution, baseTransform_);
     solution = rotateField(solution, inserterOrientation);
-    solution = rotateField(solution, Vector3d(0, 0, M_PI_4));
+    // solution = rotateField(solution, Vector3d(0, 0, -M_PI_4));
 
     res.success = true;
     res.field.header.frame_id = "world";
@@ -89,6 +89,24 @@ bool Precomputation::calculateField(
     res.field.bx = solution(0) * 1000;
     res.field.by = solution(1) * 1000;
     res.field.bz = 0;
+
+    switch (desiredAngles_.size()) {
+        case 1:
+            res.field.bz = 12;
+            break;
+        case 2:
+            res.field.bz = -2;
+            break;
+        case 3:
+            res.field.bz = -8;
+            break;
+        case 4:
+            res.field.bz = -12;
+            break;
+
+        default:
+            res.field.bz = 0;
+    }
 
     ros_coils::magField field;
     field = res.field;

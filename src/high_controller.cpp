@@ -93,6 +93,11 @@ void HighController::highLoop() {
         if (inserting) {
             std_msgs::Int32 stepper_msg;
             stepper_msg.data = 2;
+            if(obv_angles_.count > targetAnglesNo_) {
+                ROS_ERROR("HC:Obv angles are greater than target angles. Returning to inserting");
+                stepper_msg.data = stepper_msg.data * -1;
+            }
+            if(obv_angles_.count > 2) stepper_msg.data - 1;
             inserter_pub_.publish(stepper_msg);
             ROS_INFO("HC:Inserting. Obv joints: %d, Target joints: %d",
                      obv_angles_.count, targetAnglesNo_);

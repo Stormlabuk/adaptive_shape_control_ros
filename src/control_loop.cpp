@@ -135,6 +135,8 @@ void ControlNode::ComputeError(const ros::TimerEvent&) {
     errorPub_.publish(error_msg);
     spinningPub_.publish(spinning_msg_);
     adjustField();
+    // desAngles_.clear();
+    // obvAngles_.clear();
 }
 
 void ControlNode::adjustField() {
@@ -175,26 +177,27 @@ void ControlNode::adjustField() {
         ROS_INFO("CL: Base field: %f, %f, %f", baseField_[0], baseField_[1],
                  baseField_[2]);
         ROS_INFO("CL: Adjustment: %f, %f, %f", adjustment[0], adjustment[1],
-                 adjustment[2]);
+                 0);
         ROS_INFO("CL: Adjusted field: %f, %f, %f", adjField_[0], adjField_[1],
-                 adjField_[2]);
+                 baseField_[2]);
 
         ros_coils::magField field_msg;
         field_msg.header.stamp = ros::Time::now();
         field_msg.bx = adjField_[0];
         field_msg.by = adjField_[1];
+        field_msg.bz = baseField_[2];
         // field_msg.bz = adjField_[2];
-        switch (desCount_) {
-            case 1:
-                field_msg.bz = 10;
-                break;
-            case 2:
-                field_msg.bz = 8;
-                break;
+        // switch (desCount_) {
+        //     case 1:
+        //         field_msg.bz = 12;
+        //         break;
+        //     case 2:
+        //         field_msg.bz = -2;
+        //         break;
 
-            default:
-                field_msg.bz = 4;
-        }
+        //     default:
+        //         field_msg.bz = -12;
+        // }
         // field_msg.bz = desCount_;
         adjustedField_.publish(field_msg);
         currentField_ = adjField_;

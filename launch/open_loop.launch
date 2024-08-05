@@ -6,7 +6,7 @@
 
     <rosparam file="$(find adaptive_ctrl)/config/b2_s2.yaml" />
     <rosparam file="$(find adaptive_ctrl)/config/threshold_vals.yaml" />
-    <rosparam file="$(find adaptive_ctrl)/config/error_vals.yaml" />
+    <rosparam file="$(find adaptive_ctrl)/config/x0y0z0_error_vals.yaml" />
 
     <rosparam param="cam_width">1088</rosparam>
     <rosparam param="cam_height">996</rosparam>
