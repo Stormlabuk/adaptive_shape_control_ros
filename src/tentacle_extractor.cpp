@@ -9,7 +9,7 @@ TentacleExtractor::TentacleExtractor() : it_(nh_) {
 
     mm_pixel_ = ros::param::param<int>("mm_to_pixel", 15);
     double link_float = ros::param::param<double>("/precomputation/len", 10.0); 
-    link_mm = static_cast<int>(link_float * 1000);
+    link_mm = static_cast<int>(link_float * 1000) - 2;
     pixel_mm_ = 1.0 / mm_pixel_;
 }
 

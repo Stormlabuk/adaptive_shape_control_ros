@@ -176,7 +176,7 @@ void ControlNode::adjustField() {
 
         ROS_INFO("CL: Base field: %f, %f, %f", baseField_[0], baseField_[1],
                  baseField_[2]);
-        ROS_INFO("CL: Adjustment: %f, %f, %f", adjustment[0], adjustment[1],
+        ROS_INFO("CL: Adjustment: %f, %f, %d", adjustment[0], adjustment[1],
                  0);
         ROS_INFO("CL: Adjusted field: %f, %f, %f", adjField_[0], adjField_[1],
                  baseField_[2]);
@@ -200,7 +200,7 @@ void ControlNode::adjustField() {
         // }
         // field_msg.bz = desCount_;
         adjustedField_.publish(field_msg);
-        currentField_ = adjField_;
+        currentField_ = Eigen::Vector3d(adjField_[0], adjField_[1], baseField_[2]);
     } else {
         ROS_WARN("Base field is not received");
     }

@@ -66,7 +66,7 @@ class FindInsertionPoint:
         insertion_point.x = ins_point[0]
         insertion_point.y = ins_point[1]
         self.insertion_point_pub.publish(insertion_point)
-        self.orientation_pub.publish(Vector3(0, 0, orientation * np.pi / 180))
+        self.orientation_pub.publish(Vector3(0, 0, (orientation) * np.pi / 180))
         marker = self.PopulateMarker([insertion_point.x, insertion_point.y, 0])
         self.insertion_point_marker.publish(marker)
         return

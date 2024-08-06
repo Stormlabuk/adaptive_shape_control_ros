@@ -39,10 +39,23 @@ class ControlNode {
     bool spinController(std_srvs::SetBool::Request& req,
                         std_srvs::SetBool::Response& res);
 
+    /**
+     * @brief Limits the element-wise change between two vectors.
+     *
+     * This function takes in two vectors, `current` and `next`, and limits the element-wise change between them
+     * by adjusting the `next` vector if the change exceeds the specified `limit`.
+     *
+     * @param current The current vector.
+     * @param next The next vector.
+     * @param limit The limit for element-wise change.
+     * @return The adjusted `next` vector with limited element-wise change.
+     */
     Eigen::Vector3d limitElementwiseChange(const Eigen::Vector3d& current,
                                            const Eigen::Vector3d& next,
                                            double limit) {
         Eigen::Vector3d adjustedNext = next;
+        ROS_WARN("Limiting change. Current field: %f %f %f", current[0], current[1], current[2]);
+        ROS_WARN("Limiting change. Next field: %f %f %f", next[0], next[1], next[2]);
         for (int i = 0; i < 3; ++i) {
             double change = next[i] - current[i];
             if (std::abs(change) > limit) {
