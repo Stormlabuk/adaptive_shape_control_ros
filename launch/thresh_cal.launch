@@ -1,10 +1,16 @@
 <launch>
     <arg name="output" default="screen"/>
     
-    <rosparam param="cam_width">1088</rosparam>
+    <!-- <rosparam param="cam_width">1088</rosparam>
     <rosparam param="cam_height">996</rosparam>
     <rosparam param="cam_offset_x">416</rosparam>
     <rosparam param="cam_offset_y">130</rosparam>
+     -->
+
+    <rosparam param="cam_width">1164</rosparam>
+    <rosparam param="cam_height">1090</rosparam>
+    <rosparam param="cam_offset_x">324</rosparam>
+    <rosparam param="cam_offset_y">64</rosparam>
     
     <rosparam file="$(find adaptive_ctrl)/config/threshold_vals.yaml" />
 

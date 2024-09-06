@@ -38,10 +38,10 @@ class ThresholdCal():
         self.inserter_high_ = (180,255,255)
         self.bridge = CvBridge()
 
-        self.cam_width = rospy.get_param("cam_width", 1124)
-        self.cam_height = rospy.get_param("cam_height", 1040)
-        self.cam_offset_x = rospy.get_param("cam_offset_x", 284)
-        self.cam_offset_y = rospy.get_param("cam_offset_y", 74)
+        self.cam_width = rospy.get_param("cam_width", 1164)
+        self.cam_height = rospy.get_param("cam_height", 1090)
+        self.cam_offset_x = rospy.get_param("cam_offset_x", 324)
+        self.cam_offset_y = rospy.get_param("cam_offset_y", 64)
 
         rospy.spin()
 

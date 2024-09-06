@@ -60,10 +60,33 @@ void ControlNode::obvAnglesCallback(
 }
 
 void ControlNode::baseFieldCallback(const ros_coils::magField::ConstPtr& msg) {
-    baseField_ = Eigen::Vector3d(msg->bx, msg->by, 0);
-    ROS_INFO("OL: Base field received: %f, %f, %f", baseField_[0],
+    baseField_ = Eigen::Vector3d(msg->bx, msg->by, msg->bz);
+    ROS_INFO("CL: Base field received: %f, %f, %f", baseField_[0],
              baseField_[1], baseField_[2]);
-    adjustedField_.publish(*msg);
+    ros_coils::magField field_msg;
+
+    if (currentField_.norm() == 0) {
+        currentField_ = baseField_;
+        field_msg.header.stamp = ros::Time::now();
+        field_msg.bx = currentField_[0];
+        field_msg.by = currentField_[1];
+        // field_msg.bz = 12;
+        adjustedField_.publish(field_msg);
+        return;
+    } else {
+        ROS_WARN("CL: Base field received, limiting the change");
+        ROS_WARN("CL: Base field: %f, %f, %f", baseField_[0], baseField_[1],
+                 baseField_[2]);
+        baseField_ = limitElementwiseChange(currentField_, baseField_, 15);
+        ROS_WARN("CL: Adjusted Base field: %f, %f, %f", baseField_[0], baseField_[1],
+                 baseField_[2]);
+    }
+    field_msg.header.stamp = ros::Time::now();
+    field_msg.bx = baseField_[0];
+    field_msg.by = baseField_[1];
+    field_msg.bz = baseField_[2];
+    adjustedField_.publish(field_msg);
+    currentField_ = baseField_;
 }
 
 void ControlNode::ComputeError(const ros::TimerEvent&) {

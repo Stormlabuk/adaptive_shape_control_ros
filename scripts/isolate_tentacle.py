@@ -94,15 +94,22 @@ class IsolateTentacle():
             skeleton = skeletonize(tent_only)
             skeleton = skeleton.astype(np.uint8) * 255
 
-            skeleton[0:int(self.insertion_point.y),
-                     0:int(self.insertion_point.x)] = 0
+            # skeleton[0:int(self.insertion_point.y),
+            #          0:int(self.insertion_point.x)] = 0
             
-            skeleton[:50, :] = 0
+            # skeleton[:50, :] = 0
+            # skeleton[:, :int(self.insertion_point.x) - 20] = 0
+            # concat = np.concatenate((
+            #     cv2.cvtColor(tent_only, cv2.COLOR_GRAY2BGR),
+            #     cv2.cvtColor(skeleton, cv2.COLOR_GRAY2BGR)
+            # ), axis=1)
+            # cv2.imshow("Tentacle", concat)
+            # cv2.waitKey(1)
 
             skeleton_clean, seg_img, seg_obj = pcv.morphology.prune(
                 skeleton, size=60)
 
-            ## Debugging
+            # # Debugging
             # concat = np.concatenate((
             #     cv2.cvtColor( tent_only, cv2.COLOR_GRAY2BGR), 
             #     cv2.cvtColor( skeleton_clean , cv2.COLOR_GRAY2BGR),

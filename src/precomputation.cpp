@@ -95,13 +95,13 @@ bool Precomputation::calculateField(
             res.field.bz = 12;
             break;
         case 2:
-            res.field.bz = 4;
+            res.field.bz = -3;
             break;
         case 3:
-            res.field.bz = -12;
+            res.field.bz = -15;
             break;
         case 4:
-            res.field.bz = -12;
+            res.field.bz = -15;
             break;
 
         default:
